@@ -81,7 +81,7 @@ class bStat_Daemon
 		));
 
 		// output useful data
-		if( $searchterms = $this->get_search_terms( $_REQUEST['pr'] ))
+		if( $searchterms = bstat_get_search_terms( $_REQUEST['pr'] ))
 		{
 			// output a json object to highlight search terms
 			echo "var bsuite_json = {terms:['". implode("','", array_map('htmlentities',$searchterms) ) ."']};";
@@ -258,7 +258,7 @@ if( $debug )
 	echo "<h2>Bamn! 4</h2>";
 
 			// look for search words
-			if( ( $referers = implode( $this->get_search_terms( $hit->in_from ), ' ') ) && ( 0 < strlen( $referers )))
+			if( ( $referers = implode( bstat_get_search_terms( $hit->in_from ), ' ') ) && ( 0 < strlen( $referers )))
 			{
 				$term_id = $this->insert_term( $referers );
 				$searchwords[] = "($hit->in_blog, $object_id, $object_type, $term_id, 1)";
@@ -411,70 +411,6 @@ if( $debug )
 		update_option( 'bsuite_doing_migration', 0 );
 		update_option( 'bsuite_doing_migration_status', array() );
 		return TRUE;
-	}
-
-	function get_search_engine( $ref )
-	{
-		// a lot of inspiration and code for this function was taken from
-		// Search Hilite by Ryan Boren and Matt Mullenweg
-		global $wp_query;
-		if( empty( $ref ))
-			return FALSE;
-
-		$referer = urldecode( $ref );
-		if (preg_match('|^https?://(www)?\.?google.*|i', $referer))
-			return 'google';
-
-		if (preg_match('|^https?://(www)?\.?bing.*|i', $referer))
-			return 'bing';
-
-		if (preg_match('|^https?://search\.yahoo.*|i', $referer))
-			return 'yahoo';
-
-		$home = parse_url( get_settings( 'siteurl' ));
-		$ref = parse_url( $referer );
-		if ( strpos( ' '. $ref['host'] , $home['host'] ))
-			return 'internal';
-
-		return FALSE;
-	}
-
-	function get_search_terms( $ref )
-	{
-		// a lot of inspiration and code for this function was taken from
-		// Search Hilite by Ryan Boren and Matt Mullenweg
-//		if( !$engine = $this->get_search_engine( $ref ))
-//			return FALSE;
-
-		$engine = $this->get_search_engine( $ref );
-
-		$referer = parse_url( $ref );
-		parse_str( $referer['query'], $query_vars );
-
-		$query_array = array();
-		switch ($engine) {
-		case 'google':
-		case 'bing':
-			if( $query_vars['q'] )
-				$query_array = explode(' ', urldecode( $query_vars['q'] ));
-			break;
-
-		case 'yahoo':
-			if( $query_vars['p'] )
-				$query_array = explode(' ', urldecode( $query_vars['p'] ));
-			break;
-
-		case 'internal':
-			if( $query_vars['s'] )
-				$query_array = explode(' ', urldecode( $query_vars['s'] ));
-
-			// also need to handle the case where a search matches the /search/ pattern
-			break;
-		}
-
-		$query_array = array_filter( array_map( array(&$this, 'trimquotes') , $query_array ));
-
-		return $query_array;
 	}
 
 	//

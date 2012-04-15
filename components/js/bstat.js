@@ -134,29 +134,19 @@ var bsuite={
 	'log':function(){var args=arguments;if(args[0]){this.img(args[0]);}else{this.img();}}
 };
 
-bsuite.api_location = bsuite_api_location;
+bsuite.api_location = bstat['api_endpoint'];
 bsuite.log();
-
-
-
-/*
-** select all text in the link-to-me text boxes on click
-*/
-function bsuite_linktome_selectall() {
-	jQuery('input.linktome_input').click( function() { 
-		jQuery(this).select();
-	} );
-}
-jQuery(document).ready(bsuite_linktome_selectall);
 
 
 /*
 ** the search word highlighting callback
 */
 function bsuite_highlight( words ) {
-	jQuery('.hentry').each( function() {
-		for( var i in words.terms ) {
-			jQuery.highlight(this, words.terms[i].toUpperCase() );
-		}
-	} );
+	if( bstat['highlight'] ) {
+		jQuery('.hentry').each( function() {
+			for( var i in words.terms ) {
+				jQuery.highlight(this, words.terms[i].toUpperCase() );
+			}
+		} );
+	}
 }

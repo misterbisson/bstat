@@ -9,4 +9,4 @@ Author URI: http://maisonbisson.com/blog/
 */
 
 require_once __DIR__ . '/components/class-bstat.php';
-bstat():
+bstat();

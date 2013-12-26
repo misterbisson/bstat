@@ -12,6 +12,8 @@ class bStat_Db_Wpdb extends bStat_Db
 
 	public function insert_footstep( $footstep )
 	{
+$this->initial_setup();
+
 		if ( ! $footstep = $this->sanitize_footstep( $footstep ) )
 		{
 			$this->errors[] = new WP_Error( 'db_insert_error', 'Could not sanitize input data' );
@@ -29,11 +31,6 @@ class bStat_Db_Wpdb extends bStat_Db
 		}
 
 		return TRUE;
-	}
-
-	public function initial_setup()
-	{
-		$this->createtables();
 	}
 
 	// get the shared wpdb object, or create a new one
@@ -56,6 +53,11 @@ class bStat_Db_Wpdb extends bStat_Db
 		return $this->wpdb;
 	}
 
+	public function initial_setup()
+	{
+		$this->createtables();
+	}
+
 	private function createtables()
 	{
 		$charset_collate = '';
@@ -63,25 +65,28 @@ class bStat_Db_Wpdb extends bStat_Db
 		{
 			if ( ! empty( $this->wpdb()->charset ) )
 			{
-				$charset_collate = "DEFAULT CHARACTER SET $this->wpdb()->charset";
+				$charset_collate = 'DEFAULT CHARACTER SET ' . $this->wpdb()->charset;
 			}
 			if ( ! empty( $this->wpdb()->collate ) )
 			{
-				$charset_collate .= " COLLATE $this->wpdb()->collate";
+				$charset_collate .= ' COLLATE '. $this->wpdb()->collate;
 			}
 		}
 
 		require_once( ABSPATH . 'wp-admin/upgrade-functions.php' );
 
 		dbDelta( "
-			CREATE TABLE $this->hits_incoming (
-				in_time timestamp NOT NULL default CURRENT_TIMESTAMP,
-				in_type tinyint(4) NOT NULL default '0',
-				in_session varchar(32) default '',
-				in_blog bigint(20) NOT NULL,
-				in_to text NOT NULL,
-				in_from text,
-				in_extra text
+			CREATE TABLE $this->activity_table (
+				`post` int NOT NULL default '0',
+				`blog` int NOT NULL default '0',
+				`user` int NOT NULL default '0',
+				`group` tinyint,
+				`component` char(8) NOT NULL default '',
+				`action` char(8) NOT NULL default '',
+				`date` date NOT NULL default '1970-01-01',
+				`time` time NOT NULL default '00:00:00',
+				`session` char(32) NOT NULL default '0',
+				`info` varchar(180)
 			) ENGINE=MyISAM $charset_collate
 		" );
 	}

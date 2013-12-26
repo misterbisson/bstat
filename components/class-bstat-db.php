@@ -15,7 +15,7 @@ abstract class bStat_Db
 	// return a footstep object will all keys set
 	public function parse_footstep( $footstep )
 	{
-		return = (object) wp_parse_args( (array) $footstep,
+		return (object) wp_parse_args( (array) $footstep,
 			array(
 				'post'      => FALSE, // int, required, the post_id
 				'blog'      => FALSE, // int, required, the blog_id
@@ -55,7 +55,7 @@ abstract class bStat_Db
 			empty( $footstep->component ) ||
 			empty( $footstep->action ) ||
 			! $footstep->timestamp ||
-			empty( $footstep->session ) ||
+			empty( $footstep->session )
 		)
 		{
 			return FALSE;

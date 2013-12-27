@@ -33,8 +33,6 @@ class bStat_Admin extends bStat
 
 	public function bstat_ajax()
 	{
-//print_r( $this->db()->select( 'mixedusers', $this->db()->select( 'post', 17283, 'mixedusers' ), 'posts' ) );
-
 		// send headers
 		header( 'Content-Type: text/javascript; charset='. get_option('blog_charset') );
 		nocache_headers();

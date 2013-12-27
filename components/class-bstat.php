@@ -5,11 +5,12 @@ class bStat
 	public  $db      = FALSE;
 	public  $id_base = 'bstat';
 	private $options = FALSE;
+	private $report  = FALSE;
 	public  $version = 1;
 
 	public function __construct()
 	{
-		add_action( 'init', array( $this, 'init' ) );
+		add_action( 'init', array( $this, 'init' ), 1 );
 	} // END __construct
 
 	public function init()
@@ -19,6 +20,7 @@ class bStat
 		if( is_admin() )
 		{
 			$this->admin();
+			$this->report();
 		}
 		else
 		{
@@ -37,6 +39,18 @@ class bStat
 		}
 
 		return $this->admin;
+	} // END admin
+
+	// a singleton for the report object
+	public function report()
+	{
+		if ( ! $this->report )
+		{
+			require_once __DIR__ . '/class-bstat-report.php';
+			$this->report = new bStat_Report();
+		}
+
+		return $this->report;
 	} // END admin
 
 	// a singleton for the db object

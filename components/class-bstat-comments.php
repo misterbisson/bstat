@@ -39,7 +39,7 @@ class bStat_Comments
 		bstat()->db()->insert( $this->footstep( get_comment( $comment_id ) ) );
 	}//end insert
 
-	public function insert_conditionally( $comment_id, $force_log = FALSE )
+	public function insert_conditionally( $comment_id, $force = FALSE )
 	{
 		if ( isset( $comment_id->comment_ID ) )
 		{
@@ -53,7 +53,7 @@ class bStat_Comments
 
 		$comment = get_comment( $comment_id );
 
-		if ( $comment->comment_approved == 1 || TRUE == $force_log )
+		if ( $comment->comment_approved == 1 || TRUE == $force )
 		{
 			bstat()->db()->insert( $this->footstep( $comment ) );
 		}

@@ -18,9 +18,9 @@ class bStat_Db_Wpdb extends bStat_Db
 			return FALSE;
 		}
 
-		 $footstep->date = date( 'Y-m-d', $footstep->timestamp );
-		 $footstep->time = date( 'H:i:s', $footstep->timestamp );
-		 unset( $footstep->timestamp );
+		$footstep->date = date( 'Y-m-d', $footstep->timestamp );
+		$footstep->time = date( 'H:i:s', $footstep->timestamp );
+		unset( $footstep->timestamp );
 
 		if ( FALSE === $this->wpdb()->insert( $this->activity_table, (array) $footstep ) )
 		{
@@ -255,9 +255,12 @@ class bStat_Db_Wpdb extends bStat_Db
 			return FALSE;
 		}
 
-		 $footstep->date = date( 'Y-m-d', $footstep->timestamp );
-		 $footstep->time = date( 'H:i:s', $footstep->timestamp );
-		 unset( $footstep->timestamp );
+		// group and info cannot be used in the selection criteria for deletes, so unset them
+		unset( $footstep->group, $footstep->info );
+
+		$footstep->date = date( 'Y-m-d', $footstep->timestamp );
+		$footstep->time = date( 'H:i:s', $footstep->timestamp );
+		unset( $footstep->timestamp );
 
 		if ( FALSE === $this->wpdb()->delete( $this->activity_table, (array) $footstep ) )
 		{

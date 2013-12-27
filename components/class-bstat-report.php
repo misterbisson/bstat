@@ -25,6 +25,11 @@ class bStat_Report extends bStat
 		echo '<h2>bStat Viewer</h2>';
 
 echo '<pre>';
+//print_r( $this->db()->select( NULL, NULL, 'posts' ) );
+
+//print_r( $this->db()->select( 'post', 17283, 'mixedusers', FALSE, array( 'blog' => FALSE ) ) );
+
+
 print_r( $this->db()->select( 'mixedusers', $this->db()->select( 'post', 17283, 'mixedusers' ), 'posts' ) );
 echo '</pre>';
 

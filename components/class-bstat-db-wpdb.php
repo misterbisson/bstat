@@ -10,14 +10,8 @@ class bStat_Db_Wpdb extends bStat_Db
 		$this->activity_table = ( isset( $wpdb->base_prefix ) ? $wpdb->base_prefix : $wpdb->prefix ) . 'bstat_activity';
 	}
 
-	public function insert( $footstep )
+	public function _insert( $footstep )
 	{
-		if ( ! $footstep = $this->sanitize_footstep( $footstep ) )
-		{
-			$this->errors[] = new WP_Error( 'db_insert_error', 'Could not sanitize input data' );
-			return FALSE;
-		}
-
 		$footstep->date = date( 'Y-m-d', $footstep->timestamp );
 		$footstep->time = date( 'H:i:s', $footstep->timestamp );
 		unset( $footstep->timestamp );
@@ -31,46 +25,10 @@ class bStat_Db_Wpdb extends bStat_Db
 		return TRUE;
 	}
 
-	public function select( $for = FALSE, $ids = FALSE, $return = FALSE, $limit = 250, $date = FALSE )
+	public function _select( $for, $ids, $return, $return_format, $limit, $filter )
 	{
 
-		// @TODO: some of this sanitization and cleanup at the top of the function should move into the parent class
-		// methods there could then sub-call the specific methods in the child class
-
-		$limit = absint( $limit );
-		$limit = min( ( $limit ?: 250 ), 1000 );
-
-		// @TODO: $date needs to be changed to $filter
-		// the default value for $filter['blog'] is the current blog
-
-		if ( is_array( $date ) )
-		{
-			$date = (object) array_map( 'absint', wp_parse_args( $date, array(
-				'min' => time() - 1440*60*30, // 30 days ago
-				'max' => time(), // now
-			) ) );
-
-			// time only works within the same day, otherwise we get whole days of results
-			if ( date( 'Y-m-d', $date->min ) == date( 'Y-m-d', $date->max ) )
-			{
-				$date_where = 'AND ( `date` >= "' . date( 'Y-m-d', $date->min ) . '" AND `time` >= "' . date( 'H:i:s', $date->min ) . '" AND `time` <= "' . date( 'H:i:s', $date->max ) . '" )';
-			}
-			else
-			{
-				$date_where = 'AND ( `date` >= "' . date( 'Y-m-d', $date->min ) . '" AND `date` <= "' . date( 'Y-m-d', $date->max ) . '" )';
-			}
-
-		}
-		else
-		{
-			$date_where = '';
-		}
-
-		if ( ! is_array( $ids ) )
-		{
-			$ids = array( (string) $ids );
-		}
-
+		// starting WHERE clauses
 		switch ( $for )
 		{
 			case NULL:
@@ -85,6 +43,16 @@ class bStat_Db_Wpdb extends bStat_Db
 			case 'posts':
 				$ids = array_filter( array_map( 'absint', $ids ) );
 				$where = 'WHERE post IN ("' . implode( ",", $ids ) . '")';
+				if ( ! $return )
+				{
+					$return = 'sessions';
+				}
+				break;
+
+			case 'blog':
+			case 'blogs':
+				$ids = array_filter( array_map( 'absint', $ids ) );
+				$where = 'WHERE blog IN ("' . implode( ",", $ids ) . '")';
 				if ( ! $return )
 				{
 					$return = 'sessions';
@@ -167,6 +135,7 @@ class bStat_Db_Wpdb extends bStat_Db
 				return FALSE;
 		}
 
+		// starting SELECT, GROUP BY, and ORDER BY clauses
 		switch ( $return )
 		{
 			case 'all':
@@ -177,10 +146,26 @@ class bStat_Db_Wpdb extends bStat_Db
 
 			case 'post':
 			case 'posts':
-				$select = 'SELECT post, COUNT(1) AS hits';
-				$group = 'GROUP BY post';
+				if ( isset( $filter->blog ) )
+				{
+					$select = 'SELECT post, COUNT(1) AS hits';
+					$group = 'GROUP BY post';
+				}
+				else
+				{
+					$select = 'SELECT blog, post, COUNT(1) AS hits';
+					$group = 'GROUP BY blog, post';
+				}
 				$order = 'ORDER BY hits DESC';
 				break;
+
+			case 'blog':
+			case 'blogs':
+				$select = 'SELECT blog, COUNT(1) AS hits';
+				$group = 'GROUP BY blog';
+				$order = 'ORDER BY hits DESC';
+				break;
+
 
 			case 'user':
 			case 'users':
@@ -197,7 +182,7 @@ class bStat_Db_Wpdb extends bStat_Db
 				break;
 
 			case 'mixedusers':
-				return array_merge( (array) $this->select( $for, $ids, 'users', $limit ), (array) $this->select( $for, $ids, 'sessions', $limit ) );
+				return array_merge( (array) $this->_select( $for, $ids, 'users', $return_format, $limit, $filter ), (array) $this->_select( $for, $ids, 'sessions', $return_format, $limit, $filter ) );
 				break;
 
 			case 'group':
@@ -235,29 +220,57 @@ class bStat_Db_Wpdb extends bStat_Db
 
 		}
 
-		$sql = $select . ' FROM ' . $this->activity_table . ' ' . $where . ' ' . $date_where . ' ' . $group . ' ' . $order . ' LIMIT ' . $limit;
+		// filtering by date
+		if ( is_object( $filter->timestamp ) )
+		{
+			// time only works within the same day, otherwise we get whole days of results
+			if ( date( 'Y-m-d', $filter->timestamp->min ) == date( 'Y-m-d', $filter->timestamp->max ) )
+			{
+				$date_where = 'AND ( `date` >= "' . date( 'Y-m-d', $filter->timestamp->min ) . '" AND `time` >= "' . date( 'H:i:s', $filter->timestamp->min ) . '" AND `time` <= "' . date( 'H:i:s', $filter->timestamp->max ) . '" )';
+			}
+			else
+			{
+				$date_where = 'AND ( `date` >= "' . date( 'Y-m-d', $filter->timestamp->min ) . '" AND `date` <= "' . date( 'Y-m-d', $filter->timestamp->max ) . '" )' . "\n";
+			}
+
+			// unset this so it doesn't get in the way later
+			unset( $filter->timestamp );
+		}
+		else
+		{
+			$date_where = '';
+		}
+
+		// filtering by other criteria
+		if ( count( (array) $filter ) )
+		{
+			$filters = array();
+			foreach ( (array) $filter as $field => $value )
+			{
+				$filters[] = $field .' = "' . $value . '"';
+			}
+			$filter_where = "\nAND " . implode( "\nAND ", $filters );
+		}
+		else
+		{
+			$filter_where = '';
+		}
+
+		// all the SQL together in one place
+		$sql = $select . "\nFROM " . $this->activity_table . "\n" . $where . $filter_where . $date_where . $group . "\n" . $order . "\nLIMIT " . $limit ."\n";
 
 //echo $sql;
 
-		if ( 'all' == $return )
+		if ( 'col' == $return_format )
 		{
-			return $this->wpdb()->get_results( $sql );
+			return $this->wpdb()->get_col( $sql );
 		}
 
-		return $this->wpdb()->get_col( $sql );
+		return $this->wpdb()->get_results( $sql );
 	}
 
-	public function delete( $footstep )
+	public function _delete( $footstep )
 	{
-		if ( ! $footstep = $this->sanitize_footstep( $footstep ) )
-		{
-			$this->errors[] = new WP_Error( 'db_delete_error', 'Could not sanitize input data' );
-			return FALSE;
-		}
-
-		// group and info cannot be used in the selection criteria for deletes, so unset them
-		unset( $footstep->group, $footstep->info );
-
 		$footstep->date = date( 'Y-m-d', $footstep->timestamp );
 		$footstep->time = date( 'H:i:s', $footstep->timestamp );
 		unset( $footstep->timestamp );

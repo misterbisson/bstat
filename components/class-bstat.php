@@ -84,7 +84,7 @@ class bStat
 		global $wpdb;
 		$details = array(
 			'post'       => apply_filters( 'bstat_post_id', ( is_singular() ? get_queried_object_id() : FALSE ) ),
-			'blog'       => ( isset( $wpdb->blogid ) ? $wpdb->blogid : 1 ),
+			'blog'       => $this->get_blog(),
 			'endpoint'   => $this->options()->endpoint,
 		);
 		$details['signature'] = $this->get_signature( $details );
@@ -105,6 +105,12 @@ class bStat
 		}
 
 		return $this->get_signature( $details ) == $details['signature'];
+	}
+
+	public function get_blog()
+	{
+		global $wpdb;
+		return isset( $wpdb->blogid ) ? $wpdb->blogid : 1;
 	}
 
 	public function get_session()

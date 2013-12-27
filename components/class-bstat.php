@@ -123,8 +123,8 @@ class bStat
 		setcookie(
 			$this->get_field_name( 'session' ),
 			$session,
-			time() + $this->options()->session_length,
-			SITECOOKIEPATH, // WordPress-provided constant
+			time() + $this->options()->session_duration,
+			'/',
 			COOKIE_DOMAIN // WordPress-provided constant
 		);
 

@@ -96,11 +96,22 @@ class bStat_Comments
 			'timestamp' => strtotime( $comment->comment_date_gmt ),
 			'session'   => ( get_comment_meta( $comment->comment_ID, $this->meta_name, TRUE ) ?: md5( $comment->comment_author_email ) ),
 			'info'      => $comment->comment_ID . '|' . $comment->comment_author_email,
-		)
+		);
 
 		date_default_timezone_set( $old_tz );
 
 		return $footstep;
 	}//end footstep
-
 }
+
+function bstat_comments()
+{
+	global $bstat_comments;
+
+	if ( ! $bstat_comments )
+	{
+		$bstat_comments = new bStat_Comments;
+	}
+
+	return $bstat_comments;
+} // end bstat_comments

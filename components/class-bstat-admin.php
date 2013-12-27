@@ -33,6 +33,8 @@ class bStat_Admin extends bStat
 
 	public function bstat_ajax()
 	{
+//print_r( $this->db()->select( 'mixedusers', $this->db()->select( 'post', 17283, 'mixedusers' ), 'posts' ) );
+
 		// send headers
 		header( 'Content-Type: text/javascript; charset='. get_option('blog_charset') );
 		nocache_headers();
@@ -53,7 +55,7 @@ class bStat_Admin extends bStat
 
 		// format the inputted data to insert (it's sanitized in the DB class)
 		$footstep = stripslashes_deep( $_POST[ $this->id_base ] );
-		$this->db()->insert_footstep( array(
+		$this->db()->insert( array(
 			'post'      => $footstep['post'],
 			'blog'      => $footstep['blog'],
 			'user'      => get_current_user_id(),
@@ -64,5 +66,6 @@ class bStat_Admin extends bStat
 			'session'   => $this->get_session(),
 			'info'      => $footstep['info'],
 		) );
+
 	}
 }

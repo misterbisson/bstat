@@ -2,14 +2,8 @@
 abstract class bStat_Db
 {
 
-	abstract public function insert_footstep( $footstep );
-/*
-	abstract public function get_tracks_by_user( );
-	abstract public function get_users_by_post( );
-	abstract public function get_active_posts( );
-	abstract public function get_active_users( );
-	abstract public function get_active_actions( );
-*/
+	abstract public function insert( $footstep );
+	abstract public function select( $for, $ids, $return, $limit );
 	abstract public function initial_setup();
 
 	// return a footstep object will all keys set

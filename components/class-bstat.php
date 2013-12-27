@@ -121,7 +121,7 @@ class bStat
 
 		// set or update the cookie to expire in 30 minutes or so (configurable)
 		setcookie(
-			$this->get_field_name( 'session' ),
+			$this->admin()->get_field_name( 'session' ),
 			$session,
 			time() + $this->options()->session_duration,
 			'/',
@@ -130,6 +130,12 @@ class bStat
 
 		return $session;
 	}
+
+	public function initial_setup()
+	{
+		$this->db()->initial_setup();
+	}
+
 }
 
 function bstat()

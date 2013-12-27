@@ -10,10 +10,8 @@ class bStat_Db_Wpdb extends bStat_Db
 		$this->activity_table = ( isset( $wpdb->base_prefix ) ? $wpdb->base_prefix : $wpdb->prefix ) . 'bstat_activity';
 	}
 
-	public function insert_footstep( $footstep )
+	public function insert( $footstep )
 	{
-$this->initial_setup();
-
 		if ( ! $footstep = $this->sanitize_footstep( $footstep ) )
 		{
 			$this->errors[] = new WP_Error( 'db_insert_error', 'Could not sanitize input data' );
@@ -31,6 +29,215 @@ $this->initial_setup();
 		}
 
 		return TRUE;
+	}
+
+	public function select( $for = FALSE, $ids = FALSE, $return = FALSE, $limit = 250, $date = FALSE )
+	{
+		$limit = absint( $limit );
+		$limit = min( ( $limit ?: 250 ), 1000 );
+
+		if ( is_array( $date ) )
+		{
+			$date = (object) array_map( 'absint', wp_parse_args( $date, array(
+				'min' => time() - 1440*60*30, // 30 days ago
+				'max' => time(), // now
+			) ) );
+
+			// time only works within the same day, otherwise we get whole days of results
+			if ( date( 'Y-m-d', $date->min ) == date( 'Y-m-d', $date->max ) )
+			{
+				$date_where = 'AND ( `date` >= "' . date( 'Y-m-d', $date->min ) . '" AND `time` >= "' . date( 'H:i:s', $date->min ) . '" AND `time` <= "' . date( 'H:i:s', $date->max ) . '" )';
+			}
+			else
+			{
+				$date_where = 'AND ( `date` >= "' . date( 'Y-m-d', $date->min ) . '" AND `date` <= "' . date( 'Y-m-d', $date->max ) . '" )';
+			}
+
+		}
+		else
+		{
+			$date_where = '';
+		}
+
+		if ( ! is_array( $ids ) )
+		{
+			$ids = array( (string) $ids );
+		}
+
+		switch ( $for )
+		{
+			case NULL:
+			case FALSE:
+				$where = 'WHERE 1=1';
+				if ( ! $return )
+				{
+					$return = 'all';
+				}
+				break;
+			case 'post':
+			case 'posts':
+				$ids = array_filter( array_map( 'absint', $ids ) );
+				$where = 'WHERE post IN ("' . implode( ",", $ids ) . '")';
+				if ( ! $return )
+				{
+					$return = 'sessions';
+				}
+				break;
+
+			case 'user':
+			case 'users':
+				$ids = array_filter( array_map( 'absint', $ids ) );
+				$where = 'WHERE user IN ("' . implode( ",", $ids ) . '")';
+				if ( ! $return )
+				{
+					$return = 'posts';
+				}
+				break;
+
+			case 'session':
+			case 'sessions':
+				$ids = array_filter( array_map( 'sanitize_title_with_dashes', $ids ) );
+				$where = 'WHERE session IN ("' . implode( ",", $ids ) . '")';
+				if ( ! $return )
+				{
+					$return = 'posts';
+				}
+				break;
+
+			case 'mixedusers':
+				$users = array_filter( array_map( 'absint', array_filter( $ids, 'is_numeric' ) ) );
+				$sessions = array_filter( array_map( 'sanitize_title_with_dashes', array_filter( $ids, 'is_string' ) ) );
+				$where = 'WHERE 1=1 AND ( user IN ("' . implode( ",", $users ) . '") OR session IN ("' . implode( ",", $sessions ) . '") )';
+				if ( ! $return )
+				{
+					$return = 'posts';
+				}
+				break;
+
+			case 'group':
+			case 'groups':
+				$ids = array_filter( array_map( 'absint', $ids ) );
+				$where = 'WHERE group IN ("' . implode( ",", $ids ) . '")';
+				if ( ! $return )
+				{
+					$return = 'posts';
+				}
+				break;
+
+			case 'component':
+			case 'components':
+				$ids = array_filter( array_map( 'sanitize_title_with_dashes', $ids ) );
+				$where = 'WHERE component IN ("' . implode( ",", $ids ) . '")';
+				if ( ! $return )
+				{
+					$return = 'posts';
+				}
+				break;
+
+			case 'action':
+			case 'actions':
+				$ids = array_filter( array_map( 'sanitize_title_with_dashes', $ids ) );
+				$where = 'WHERE action IN ("' . implode( ",", $ids ) . '")';
+				if ( ! $return )
+				{
+					$return = 'posts';
+				}
+				break;
+
+			case 'component_and_action':
+			case 'action_and_component':
+			case 'components_and_actions':
+			case 'actions_and_components':
+				$ids = array_filter( array_map( 'sanitize_title_with_dashes', $ids ) );
+				$where = 'WHERE action IN ("' . implode( ",", $ids ) . '")';
+				if ( ! $return )
+				{
+					$return = 'posts';
+				}
+				break;
+
+			default:
+				return FALSE;
+		}
+
+		switch ( $return )
+		{
+			case 'all':
+				$select = 'SELECT *';
+				$group = '';
+				$order = 'ORDER BY date, time DESC';
+				break;
+
+			case 'post':
+			case 'posts':
+				$select = 'SELECT post, COUNT(1) AS hits';
+				$group = 'GROUP BY post';
+				$order = 'ORDER BY hits DESC';
+				break;
+
+			case 'user':
+			case 'users':
+				$select = 'SELECT user, COUNT(1) AS hits';
+				$group = 'GROUP BY user';
+				$order = 'ORDER BY hits DESC';
+				break;
+
+			case 'session':
+			case 'sessions':
+				$select = 'SELECT session, COUNT(1) AS hits';
+				$group = 'GROUP BY session';
+				$order = 'ORDER BY hits DESC';
+				break;
+
+			case 'mixedusers':
+				return array_merge( (array) $this->select( $for, $ids, 'users', $limit ), (array) $this->select( $for, $ids, 'sessions', $limit ) );
+				break;
+
+			case 'group':
+			case 'groups':
+				$select = 'SELECT group, COUNT(1) AS hits';
+				$group = 'GROUP BY group';
+				$order = 'ORDER BY hits DESC';
+				break;
+
+			case 'component':
+			case 'components':
+				$select = 'SELECT component, COUNT(1) AS hits';
+				$group = 'GROUP BY component';
+				$order = 'ORDER BY hits DESC';
+				break;
+
+			case 'action':
+			case 'actions':
+				$select = 'SELECT action, COUNT(1) AS hits';
+				$group = 'GROUP BY action';
+				$order = 'ORDER BY hits DESC';
+				break;
+
+			case 'component_and_action':
+			case 'action_and_component':
+			case 'components_and_actions':
+			case 'actions_and_components':
+				$select = 'SELECT component, action, COUNT(1) AS hits';
+				$group = 'GROUP BY component, action';
+				$order = 'ORDER BY hits DESC';
+				break;
+
+			default:
+				return FALSE;
+
+		}
+
+		$sql = $select . ' FROM ' . $this->activity_table . ' ' . $where . ' ' . $date_where . ' ' . $group . ' ' . $order . ' LIMIT ' . $limit;
+
+//echo $sql;
+
+		if ( 'all' == $return )
+		{
+			return $this->wpdb()->get_results( $sql );
+		}
+
+		return $this->wpdb()->get_col( $sql );
 	}
 
 	// get the shared wpdb object, or create a new one

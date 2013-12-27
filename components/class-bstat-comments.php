@@ -10,21 +10,21 @@ class bStat_Comments
 		add_action( 'wp_insert_comment', array( $this, 'wp_insert_comment' ) );
 
 		// log commenting activity
-		add_action( 'delete_comment', array( $this, 'comment_delete' ) );
-		add_action( 'comment_approved_to_unapproved', array( $this, 'comment_delete' ) );
-		add_action( 'comment_approved_to_spam', array( $this, 'comment_delete' ) );
-		add_action( 'comment_approved_to_trash', array( $this, 'comment_delete' ) );
-		add_action( 'comment_unapproved_to_approved', array( $this, 'comment_insert' ) );
-		add_action( 'edit_comment', array( $this, 'comment_conditionally_insert' ) );
-		add_action( 'comment_post', array( $this, 'comment_conditionally_insert' ) );
+		add_action( 'delete_comment', array( $this, 'delete' ) );
+		add_action( 'comment_approved_to_unapproved', array( $this, 'delete' ) );
+		add_action( 'comment_approved_to_spam', array( $this, 'delete' ) );
+		add_action( 'comment_approved_to_trash', array( $this, 'delete' ) );
+		add_action( 'comment_unapproved_to_approved', array( $this, 'insert' ) );
+		add_action( 'edit_comment', array( $this, 'insert_conditionally' ) );
+		add_action( 'comment_post', array( $this, 'insert_conditionally' ) );
 	} // END __construct
 
 	public function wp_insert_comment( $comment_id )
 	{
 		update_comment_meta( $comment_id, $this->meta_name, bstat()->get_session() );
-	}
+	}//end wp_insert_comment
 
-	public function comment_insert( $comment_id )
+	public function insert( $comment_id )
 	{
 		if ( isset( $comment_id->comment_ID ) )
 		{
@@ -36,10 +36,10 @@ class bStat_Comments
 			return;
 		}//end if
 
-		bstat()->db()->insert( $this->comment_footstep( get_comment( $comment_id ) ) );
-	}//end force_log_comment
+		bstat()->db()->insert( $this->footstep( get_comment( $comment_id ) ) );
+	}//end insert
 
-	public function comment_conditionally_insert( $comment_id, $force_log = FALSE )
+	public function insert_conditionally( $comment_id, $force_log = FALSE )
 	{
 		if ( isset( $comment_id->comment_ID ) )
 		{
@@ -55,15 +55,15 @@ class bStat_Comments
 
 		if ( $comment->comment_approved == 1 || TRUE == $force_log )
 		{
-			bstat()->db()->insert( $this->comment_footstep( $comment ) );
+			bstat()->db()->insert( $this->footstep( $comment ) );
 		}
 		else
 		{
-			bstat()->db()->delete( $this->comment_footstep( $comment ) );
+			bstat()->db()->delete( $this->footstep( $comment ) );
 		}
-	}//end log_comment
+	}//end insert_conditionally
 
-	public function comment_delete( $comment_id )
+	public function delete( $comment_id )
 	{
 		if ( isset( $comment_id->comment_ID ) )
 		{
@@ -75,10 +75,10 @@ class bStat_Comments
 			return;
 		}//end if
 
-		bstat()->db()->delete( $this->comment_footstep( get_comment( $comment_id ) ) );
-	}//end delete_comment
+		bstat()->db()->delete( $this->footstep( get_comment( $comment_id ) ) );
+	}//end delete
 
-	public function comment_footstep( $comment )
+	public function footstep( $comment )
 	{
 
 		// set the timezone to UTC for the later strtotime() call,
@@ -101,6 +101,6 @@ class bStat_Comments
 		date_default_timezone_set( $old_tz );
 
 		return $footstep;
-	}
+	}//end footstep
 
 }

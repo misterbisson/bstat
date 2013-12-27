@@ -24,7 +24,7 @@ class bStat_Db_Wpdb extends bStat_Db
 
 		if ( FALSE === $this->wpdb()->insert( $this->activity_table, (array) $footstep ) )
 		{
-			$this->errors[] = new WP_Error( 'db_insert_error', 'Could not insert footstep into the activity table', $this->wpdb()->last_error );
+			$this->errors[] = new WP_Error( 'db_insert_error', 'Could not insert footstep into activity table', $this->wpdb()->last_error );
 			return FALSE;
 		}
 
@@ -33,8 +33,15 @@ class bStat_Db_Wpdb extends bStat_Db
 
 	public function select( $for = FALSE, $ids = FALSE, $return = FALSE, $limit = 250, $date = FALSE )
 	{
+
+		// @TODO: some of this sanitization and cleanup at the top of the function should move into the parent class
+		// methods there could then sub-call the specific methods in the child class
+
 		$limit = absint( $limit );
 		$limit = min( ( $limit ?: 250 ), 1000 );
+
+		// @TODO: $date needs to be changed to $filter
+		// the default value for $filter['blog'] is the current blog
 
 		if ( is_array( $date ) )
 		{
@@ -240,6 +247,32 @@ class bStat_Db_Wpdb extends bStat_Db
 		return $this->wpdb()->get_col( $sql );
 	}
 
+	public function delete( $footstep )
+	{
+		if ( ! $footstep = $this->sanitize_footstep( $footstep ) )
+		{
+			$this->errors[] = new WP_Error( 'db_delete_error', 'Could not sanitize input data' );
+			return FALSE;
+		}
+
+		 $footstep->date = date( 'Y-m-d', $footstep->timestamp );
+		 $footstep->time = date( 'H:i:s', $footstep->timestamp );
+		 unset( $footstep->timestamp );
+
+		if ( FALSE === $this->wpdb()->delete( $this->activity_table, (array) $footstep ) )
+		{
+			$this->errors[] = new WP_Error( 'db_delete_error', 'Could not delete footstep from activity table', $this->wpdb()->last_error );
+			return FALSE;
+		}
+
+		return TRUE;
+	}
+
+	public function initial_setup()
+	{
+		$this->createtables();
+	}
+
 	// get the shared wpdb object, or create a new one
 	private function wpdb()
 	{
@@ -258,11 +291,6 @@ class bStat_Db_Wpdb extends bStat_Db
 		}
 
 		return $this->wpdb;
-	}
-
-	public function initial_setup()
-	{
-		$this->createtables();
 	}
 
 	private function createtables()

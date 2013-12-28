@@ -182,7 +182,10 @@ class bStat_Db_Wpdb extends bStat_Db
 				break;
 
 			case 'mixedusers':
-				return array_merge( (array) $this->_select( $for, $ids, 'users', $return_format, $limit, $filter ), (array) $this->_select( $for, $ids, 'sessions', $return_format, $limit, $filter ) );
+				return array_merge(
+					(array) $this->_select( $for, $ids, 'users', $return_format, $limit, $filter ),
+					(array) $this->_select( $for, $ids, 'sessions', $return_format, $limit, $filter )
+				);
 				break;
 
 			case 'group':
@@ -223,6 +226,7 @@ class bStat_Db_Wpdb extends bStat_Db
 		// filtering by date
 		if ( is_object( $filter->timestamp ) )
 		{
+
 			// time only works within the same day, otherwise we get whole days of results
 			if ( date( 'Y-m-d', $filter->timestamp->min ) == date( 'Y-m-d', $filter->timestamp->max ) )
 			{
@@ -230,7 +234,7 @@ class bStat_Db_Wpdb extends bStat_Db
 			}
 			else
 			{
-				$date_where = 'AND ( `date` >= "' . date( 'Y-m-d', $filter->timestamp->min ) . '" AND `date` <= "' . date( 'Y-m-d', $filter->timestamp->max ) . '" )' . "\n";
+				$date_where = "\n" . 'AND ( `date` >= "' . date( 'Y-m-d', $filter->timestamp->min ) . '" AND `date` <= "' . date( 'Y-m-d', $filter->timestamp->max ) . '" )';
 			}
 
 			// unset this so it doesn't get in the way later

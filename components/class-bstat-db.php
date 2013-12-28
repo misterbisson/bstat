@@ -167,7 +167,7 @@ abstract class bStat_Db
 		// the timestamp sanitization is more complex
 		if ( isset( $filter->timestamp ) && is_array( $filter->timestamp ) )
 		{
-			$filter->timestamp = (object) array_map( 'absint', wp_parse_args( $date, array(
+			$filter->timestamp = (object) array_map( 'absint', wp_parse_args( $filter->timestamp, array(
 				'min' => time() - 1440*60*30, // 30 days ago
 				'max' => time(), // now
 			) ) );

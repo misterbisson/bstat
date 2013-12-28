@@ -6,7 +6,7 @@ class bStat
 	public  $id_base = 'bstat';
 	private $options = FALSE;
 	private $report  = FALSE;
-	public  $version = 1;
+	public  $version = 2;
 
 	public function __construct()
 	{

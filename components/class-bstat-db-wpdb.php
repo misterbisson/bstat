@@ -141,7 +141,7 @@ class bStat_Db_Wpdb extends bStat_Db
 			case 'all':
 				$select = 'SELECT *';
 				$group = '';
-				$order = 'ORDER BY date, time DESC';
+				$order = 'ORDER BY date DESC, time DESC';
 				break;
 
 			case 'post':
@@ -156,14 +156,14 @@ class bStat_Db_Wpdb extends bStat_Db
 					$select = 'SELECT blog, post, COUNT(1) AS hits';
 					$group = 'GROUP BY blog, post';
 				}
-				$order = 'ORDER BY hits DESC';
+				$order = 'ORDER BY hits DESC, date DESC, time DESC';
 				break;
 
 			case 'blog':
 			case 'blogs':
 				$select = 'SELECT blog, COUNT(1) AS hits';
 				$group = 'GROUP BY blog';
-				$order = 'ORDER BY hits DESC';
+				$order = 'ORDER BY hits DESC, date DESC, time DESC';
 				break;
 
 
@@ -171,14 +171,14 @@ class bStat_Db_Wpdb extends bStat_Db
 			case 'users':
 				$select = 'SELECT user, COUNT(1) AS hits';
 				$group = 'GROUP BY user';
-				$order = 'ORDER BY hits DESC';
+				$order = 'ORDER BY hits DESC, date DESC, time DESC';
 				break;
 
 			case 'session':
 			case 'sessions':
 				$select = 'SELECT session, COUNT(1) AS hits';
 				$group = 'GROUP BY session';
-				$order = 'ORDER BY hits DESC';
+				$order = 'ORDER BY hits DESC, date DESC, time DESC';
 				break;
 
 			case 'mixedusers':
@@ -192,21 +192,21 @@ class bStat_Db_Wpdb extends bStat_Db
 			case 'groups':
 				$select = 'SELECT `group`, COUNT(1) AS hits';
 				$group = 'GROUP BY `group`';
-				$order = 'ORDER BY hits DESC';
+				$order = 'ORDER BY hits DESC, date DESC, time DESC';
 				break;
 
 			case 'component':
 			case 'components':
 				$select = 'SELECT component, COUNT(1) AS hits';
 				$group = 'GROUP BY component';
-				$order = 'ORDER BY hits DESC';
+				$order = 'ORDER BY hits DESC, date DESC, time DESC';
 				break;
 
 			case 'action':
 			case 'actions':
 				$select = 'SELECT action, COUNT(1) AS hits';
 				$group = 'GROUP BY action';
-				$order = 'ORDER BY hits DESC';
+				$order = 'ORDER BY hits DESC, date DESC, time DESC';
 				break;
 
 			case 'component_and_action':
@@ -215,7 +215,7 @@ class bStat_Db_Wpdb extends bStat_Db
 			case 'actions_and_components':
 				$select = 'SELECT component, action, COUNT(1) AS hits';
 				$group = 'GROUP BY component, action';
-				$order = 'ORDER BY hits DESC';
+				$order = 'ORDER BY hits DESC, date DESC, time DESC';
 				break;
 
 			default:

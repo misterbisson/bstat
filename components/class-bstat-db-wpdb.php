@@ -187,8 +187,8 @@ class bStat_Db_Wpdb extends bStat_Db
 
 			case 'group':
 			case 'groups':
-				$select = 'SELECT group, COUNT(1) AS hits';
-				$group = 'GROUP BY group';
+				$select = 'SELECT `group`, COUNT(1) AS hits';
+				$group = 'GROUP BY `group`';
 				$order = 'ORDER BY hits DESC';
 				break;
 
@@ -257,9 +257,9 @@ class bStat_Db_Wpdb extends bStat_Db
 		}
 
 		// all the SQL together in one place
-		$sql = $select . "\nFROM " . $this->activity_table . "\n" . $where . $filter_where . $date_where . $group . "\n" . $order . "\nLIMIT " . $limit ."\n";
+		$sql = $select . "\nFROM " . $this->activity_table . "\n" . $where . $filter_where . $date_where . "\n" . $group . "\n" . $order . "\nLIMIT " . $limit ."\n";
 
-//echo $sql;
+echo $sql;
 
 		if ( 'col' == $return_format )
 		{

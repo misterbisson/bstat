@@ -6,6 +6,7 @@ class bStat_Report extends bStat
 	public function __construct()
 	{
 		add_action( 'init', array( $this, 'init' ) );
+		$this->rickshaw();
 	}
 
 	public function init()
@@ -91,12 +92,12 @@ class bStat_Report extends bStat
 		return $get_posts;
 	}
 
-	public function timeseries( $seconds = 300, $filter = FALSE )
+	public function timeseries( $quantize_minutes = 1, $filter = FALSE )
 	{
-		// seconds are a positive integer, equal to or larger than 60
-		// $seconds should preferably be an even multiple of 60
-		$seconds = absint( $seconds );
-		$seconds = max( $seconds, 60 );
+		// minutes are a positive integer, equal to or larger than 1
+		$quantize_minutes = absint( $quantize_minutes );
+		$quantize_minutes = max( $quantize_minutes, 1 );
+		$seconds = $quantize_minutes * 60;
 
 		if ( ! $filter )
 		{
@@ -110,7 +111,7 @@ class bStat_Report extends bStat
 			$timeseries = array();
 			foreach ( $timeseries_raw as $item )
 			{
-				$quantized_time = (int) $item->timestamp / $seconds;
+				$quantized_time = $seconds * (int) ( $item->timestamp / $seconds );
 
 				if ( ! isset( $timeseries[ $quantized_time ] ) )
 				{
@@ -127,7 +128,7 @@ class bStat_Report extends bStat
 
 			// get an array of all the quantized timeslots, including those with no activity
 			$keys = array_keys( $timeseries );
-			$keys = array_fill_keys( range( reset( $keys ), end( $keys ) ), 0 );
+			$keys = array_fill_keys( range( reset( $keys ), end( $keys ), $seconds ), 0 );
 
 			$timeseries = array_replace( $keys, $timeseries );
 
@@ -135,7 +136,7 @@ class bStat_Report extends bStat
 		}
 
 		// tips for using the output:
-		// multiply the array key by the quantize value ($seconds in the input) to get a timestamp.
+		// the array key is a quantized timestamp, pass it into date( $format, $quantized_time ) and get a human readable date.
 		// the value is the count of activity hits for that quantized time segment.
 		return $timeseries;
 	}
@@ -395,9 +396,71 @@ class bStat_Report extends bStat
 		$this->set_filter();
 
 		echo '<h2>bStat Viewer</h2>';
+?>
+<style>
+#chart_container {
+        display: inline-block;
+        font-family: Arial, Helvetica, sans-serif;
+}
+#chart {
+        float: left;
+}
+#legend {
+        float: left;
+        margin-left: 15px;
+}
+#y_axis {
+        float: left;
+        width: 40px;
+}
+</style>
 
+
+<div id="chart_container">
+        <div id="y_axis"></div>
+        <div id="chart"></div>
+        <div id="legend"></div>
+</div>
+
+<script>
+
+var data = <?php echo json_encode( $this->rickshaw()->array_to_series( $this->timeseries( 1 ) ) ); ?>;
+var palette = new Rickshaw.Color.Palette();
+
+var graph = new Rickshaw.Graph( {
+        element: document.querySelector("#chart"),
+        width: 540,
+        height: 240,
+        renderer: 'line',
+        series: [
+                {
+                        name: "Northeast",
+                        data: <?php echo json_encode( $this->rickshaw()->array_to_series( $this->timeseries( 15 ) ) ); ?>,
+                        color: palette.color()
+                }
+        ]
+} );
+
+var x_axis = new Rickshaw.Graph.Axis.Time( { graph: graph } );
+
+var y_axis = new Rickshaw.Graph.Axis.Y( {
+        graph: graph,
+        orientation: 'left',
+        tickFormat: Rickshaw.Fixtures.Number.formatKMBT,
+        element: document.getElementById('y_axis'),
+} );
+
+var legend = new Rickshaw.Graph.Legend( {
+        element: document.querySelector('#legend'),
+        graph: graph
+} );
+
+graph.render();
+
+</script>
+<?php
 		echo '<pre>';
-print_r( $this->timeseries( 3600 ) );
+//print_r( json_encode( $this->rickshaw()->array_to_series( $this->timeseries( 1 ) ) ) );
 
 		/*
 		Active posts (last 24-36 hours). All activity, or by $component:$action

@@ -6,6 +6,7 @@ class bStat
 	public  $id_base = 'bstat';
 	private $options = FALSE;
 	private $report  = FALSE;
+	private $rickshaw= FALSE;
 	public  $version = 2;
 
 	public function __construct()
@@ -51,7 +52,19 @@ class bStat
 		}
 
 		return $this->report;
-	} // END admin
+	} // END report
+
+	// a singleton for the rickshaw object
+	public function rickshaw()
+	{
+		if ( ! $this->rickshaw )
+		{
+			require_once __DIR__ . '/class-bstat-rickshaw.php';
+			$this->rickshaw = new bStat_Rickshaw();
+		}
+
+		return $this->rickshaw;
+	} // END rickshaw
 
 	// a singleton for the db object
 	public function db()

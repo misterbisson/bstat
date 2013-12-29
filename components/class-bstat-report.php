@@ -343,7 +343,7 @@ class bStat_Report extends bStat
 		if ( ! $top_terms = wp_cache_get( $this->cache_key( 'top_terms', $filter ), $this->id_base ) )
 		{
 			global $wpdb;
-			$sql = "SELECT b.term_id, c.term_taxonomy_id, b.slug, b.name, a.taxonomy, a.description, a.count, COUNT(c.term_taxonomy_id) AS `hits`
+			$sql = "SELECT b.term_id, c.term_taxonomy_id, b.slug, b.name, a.taxonomy, a.description, a.count, COUNT(c.term_taxonomy_id) AS `count_in_set`
 				FROM $wpdb->term_relationships c
 				INNER JOIN $wpdb->term_taxonomy a ON a.term_taxonomy_id = c.term_taxonomy_id
 				INNER JOIN $wpdb->terms b ON a.term_id = b.term_id
@@ -352,6 +352,14 @@ class bStat_Report extends bStat
 				/* generated in bStat_Report::top_terms() */";
 
 			$top_terms = $wpdb->get_results( $sql );
+
+			// reiterate to insert hits from recent activity
+			foreach ( $top_terms as $k => $v )
+			{
+				$top_terms[ $k ]->hits = array_sum( wp_list_pluck( $this->top_posts_for_term( $v, array( 'posts_per_page' => -1, 'post_type' => 'any' ) ), 'hits' ) );
+				$top_terms[ $k ]->hits_per_post_score = $top_terms[ $k ]->hits + (int) ( 100 * $top_terms[ $k ]->hits / $top_terms[ $k ]->count_in_set );
+				$top_terms[ $k ]->depth_of_coverage_score = (int) ( 100 * $top_terms[ $k ]->count_in_set / $top_terms[ $k ]->count );
+			}
 
 			wp_cache_set( $this->cache_key( 'top_terms', $filter ), $top_terms, $this->id_base, $this->cache_ttl() );
 		}
@@ -476,13 +484,13 @@ class bStat_Report extends bStat
 		*/
 		include __DIR__ . '/templates/report-top-authors.php';
 
-		echo '<pre>';
 		/*
 		Top taxonomy terms (last 24-36 hours)
 		Optionally, limit to posts published in that timespan
 		*/
 		include __DIR__ . '/templates/report-top-terms.php';
 
+		echo '<pre>';
 		/*
 		Top $components and $actions (last 24-36 hours)
 		Optionally, limit to posts published in that timespan

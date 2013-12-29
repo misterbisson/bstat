@@ -133,32 +133,10 @@ class bStat_Report extends bStat
 
 			ksort( $timeseries ); 
 
-			// determine the min and max timestamps
-			// these can be provided in the query filters
-			// or derived from the result data if not specified
-			$keys = array_keys( $timeseries );
-			if ( isset( $filter['timestamp']['min'] ) )
-			{
-				$min = $seconds * (int) ( $filter['timestamp']['min'] / $seconds );
-			}
-			else
-			{
-				$min = reset( $keys );
-			}
-
-			if ( isset( $filter['timestamp']['max'] ) )
-			{
-				$max = $seconds * (int) ( $filter['timestamp']['max'] / $seconds );
-			}
-			else
-			{
-				$max = end( $keys );
-			}
-
 			// get an array of all the quantized timeslots, including those with no activity
-			$keys = array_fill_keys( range( $min, $max, $seconds ), 0 );
+			$keys = array_keys( $timeseries );
+			$keys = array_fill_keys( range( reset( $keys ), end( $keys ), $seconds ), 0 );
 
-			// fill out the result array so all the timeslots are represented
 			$timeseries = array_replace( $keys, $timeseries );
 
 			wp_cache_set( $this->cache_key( 'timeseries ' . $seconds, $filter ), $timeseries, $this->id_base, $this->cache_ttl() );
@@ -460,6 +438,7 @@ foreach ( $components as $component )
 
 <script>
 
+var data = <?php echo json_encode( $this->rickshaw()->array_to_series( $this->timeseries( 1 ) ) ); ?>;
 var palette = new Rickshaw.Color.Palette();
 
 var graph = new Rickshaw.Graph( {
@@ -474,14 +453,7 @@ foreach ( $components as $component )
 ?>
                 {
                         name: "<?php echo $component->component .':' . $component->action; ?>",
-                        data: <?php echo json_encode( $this->rickshaw()->array_to_series( $this->timeseries( 15, array( 
-                        	'component' => $component->component,
-                        	'action' => $component->action,
-                        	'timestamp' => array(
-                        		'min' => 15 * 60 * (int) ( ( time() - 115200 ) / 1515 * 60 ),
-                        		'max' => 15 * 60 * (int) ( time() / 1515 * 60 ),
-                        	),
-                        ) ) ) ); ?>,
+                        data: <?php echo json_encode( $this->rickshaw()->array_to_series( $this->timeseries( 15, $this->default_filter( array( 'component' => $component->component, 'action' => $component->action ) ) ) ) ); ?>,
                         color: palette.color()
                 },
 <?php

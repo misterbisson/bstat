@@ -142,6 +142,7 @@ class bStat_Db_Wpdb extends bStat_Db
 				$select = 'SELECT *';
 				$group = '';
 				$order = 'ORDER BY date DESC, time DESC';
+				$convert_date_and_time_to_timestamp = TRUE;
 				break;
 
 			case 'post':
@@ -270,6 +271,11 @@ echo $sql;
 			return $this->wpdb()->get_col( $sql );
 		}
 
+		if ( isset( $convert_date_and_time_to_timestamp ) )
+		{
+			return $this->date_and_time_to_timestamp( $this->wpdb()->get_results( $sql ) );
+		}
+
 		return $this->wpdb()->get_results( $sql );
 	}
 
@@ -311,6 +317,24 @@ echo $sql;
 		}
 
 		return $this->wpdb;
+	}
+
+	private function date_and_time_to_timestamp( $input )
+	{
+		// set the timezone to UTC for the later strtotime() call,
+		// preserve the old timezone so we can set it back when done
+		$old_tz = date_default_timezone_get();
+		date_default_timezone_set( 'UTC' );
+
+		foreach ( $input as $k => $v )
+		{
+			$input[ $k ]->timestamp = strtotime( $input[ $k ]->date . ' ' . $input[ $k ]->time );
+			unset( $input[ $k ]->date, $input[ $k ]->time );
+		}
+
+		date_default_timezone_set( $old_tz );
+
+		return $input;
 	}
 
 	private function createtables()

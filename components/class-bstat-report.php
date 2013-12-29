@@ -47,9 +47,14 @@ class bStat_Report extends bStat
 		$this->filter = (array) $filter;
 	}
 
-	public function cache_key( $part )
+	public function cache_key( $part, $filter = FALSE )
 	{
-		return $part .' '. md5( serialize( (array) $this->filter ) );
+		if ( ! $filter )
+		{
+			$filter = $this->filter;
+		}
+
+		return $part .' '. md5( serialize( (array) $filter ) );
 	}
 
 	public function cache_ttl()
@@ -86,60 +91,134 @@ class bStat_Report extends bStat
 		return $get_posts;
 	}
 
-	public function top_posts()
+	public function timeseries( $seconds = 300, $filter = FALSE )
 	{
-		if ( ! $top_posts = wp_cache_get( $this->cache_key( 'top_posts' ), $this->id_base ) )
+		// seconds are a positive integer, equal to or larger than 60
+		// $seconds should preferably be an even multiple of 60
+		$seconds = absint( $seconds );
+		$seconds = max( $seconds, 60 );
+
+		if ( ! $filter )
 		{
-			$top_posts = $this->db()->select( FALSE, FALSE, 'post,hits', 1000, $this->filter );
-			wp_cache_set( $this->cache_key( 'top_posts' ), $top_posts, $this->id_base, $this->cache_ttl() );
+			$filter = $this->filter;
+		}
+
+		if ( ! $timeseries = wp_cache_get( $this->cache_key( 'timeseries ' . $seconds, $filter ), $this->id_base ) )
+		{
+			$timeseries_raw = $this->db()->select( FALSE, FALSE, 'all', 10000, $filter );
+
+			$timeseries = array();
+			foreach ( $timeseries_raw as $item )
+			{
+				$quantized_time = (int) $item->timestamp / $seconds;
+
+				if ( ! isset( $timeseries[ $quantized_time ] ) )
+				{
+					$timeseries[ $quantized_time ] = 1;
+				}
+				else
+				{
+					$timeseries[ $quantized_time ] ++;
+				}
+
+			}
+
+			ksort( $timeseries ); 
+
+			// get an array of all the quantized timeslots, including those with no activity
+			$keys = array_keys( $timeseries );
+			$keys = array_fill_keys( range( reset( $keys ), end( $keys ) ), 0 );
+
+			$timeseries = array_replace( $keys, $timeseries );
+
+			wp_cache_set( $this->cache_key( 'timeseries ' . $seconds, $filter ), $timeseries, $this->id_base, $this->cache_ttl() );
+		}
+
+		// tips for using the output:
+		// multiply the array key by the quantize value ($seconds in the input) to get a timestamp.
+		// the value is the count of activity hits for that quantized time segment.
+		return $timeseries;
+	}
+
+	public function top_posts( $filter = FALSE )
+	{
+		if ( ! $filter )
+		{
+			$filter = $this->filter;
+		}
+
+		if ( ! $top_posts = wp_cache_get( $this->cache_key( 'top_posts', $filter ), $this->id_base ) )
+		{
+			$top_posts = $this->db()->select( FALSE, FALSE, 'post,hits', 1000, $filter );
+			wp_cache_set( $this->cache_key( 'top_posts', $filter ), $top_posts, $this->id_base, $this->cache_ttl() );
 		}
 
 		return $top_posts;
 	}
 
-	public function top_sessions()
+	public function top_sessions( $filter = FALSE )
 	{
-		if ( ! $top_sessions = wp_cache_get( $this->cache_key( 'top_sessions' ), $this->id_base ) )
+		if ( ! $filter )
 		{
-			$top_sessions = $this->db()->select( FALSE, FALSE, 'sessions', 1000, $this->filter );
-			wp_cache_set( $this->cache_key( 'top_sessions' ), $top_sessions, $this->id_base, $this->cache_ttl() );
+			$filter = $this->filter;
+		}
+
+		if ( ! $top_sessions = wp_cache_get( $this->cache_key( 'top_sessions', $filter ), $this->id_base ) )
+		{
+			$top_sessions = $this->db()->select( FALSE, FALSE, 'sessions', 1000, $filter );
+			wp_cache_set( $this->cache_key( 'top_sessions', $filter ), $top_sessions, $this->id_base, $this->cache_ttl() );
 		}
 
 		return $top_sessions;
 	}
 
-	public function posts_for_session( $session )
+	public function posts_for_session( $session, $filter = FALSE )
 	{
-		if ( ! $posts_for_session = wp_cache_get( $this->cache_key( 'posts_for_session ' . $session ), $this->id_base ) )
+		if ( ! $filter )
 		{
-			$posts_for_session = $this->db()->select( 'session', $session, 'post,hits', 250, $this->filter );
-			wp_cache_set( $this->cache_key( 'posts_for_session ' . $session ), $posts_for_session, $this->id_base, $this->cache_ttl() );
+			$filter = $this->filter;
+		}
+
+		if ( ! $posts_for_session = wp_cache_get( $this->cache_key( 'posts_for_session ' . $session, $filter ), $this->id_base ) )
+		{
+			$posts_for_session = $this->db()->select( 'session', $session, 'post,hits', 250, $filter );
+			wp_cache_set( $this->cache_key( 'posts_for_session ' . $session, $filter ), $posts_for_session, $this->id_base, $this->cache_ttl() );
 		}
 
 		return $posts_for_session;
 	}
 
-	public function posts_for_user( $user )
+	public function posts_for_user( $user, $filter = FALSE )
 	{
-		if ( ! $posts_for_user = wp_cache_get( $this->cache_key( 'posts_for_user ' . $user ), $this->id_base ) )
+		if ( ! $filter )
 		{
-			$posts_for_user = $this->db()->select( 'user', $user, 'post,hits', 250, $this->filter );
-			wp_cache_set( $this->cache_key( 'posts_for_user ' . $user ), $posts_for_user, $this->id_base, $this->cache_ttl() );
+			$filter = $this->filter;
+		}
+
+		if ( ! $posts_for_user = wp_cache_get( $this->cache_key( 'posts_for_user ' . $user, $filter ), $this->id_base ) )
+		{
+			$posts_for_user = $this->db()->select( 'user', $user, 'post,hits', 250, $filter );
+			wp_cache_set( $this->cache_key( 'posts_for_user ' . $user, $filter ), $posts_for_user, $this->id_base, $this->cache_ttl() );
 		}
 
 		return $posts_for_user;
 	}
 
-	public function top_tentpole_posts()
+	public function top_tentpole_posts( $filter = FALSE )
 	{
-		if ( ! $top_tentpole_posts = wp_cache_get( $this->cache_key( 'top_tentpole_posts' ), $this->id_base ) )
+		if ( ! $filter )
+		{
+			$filter = $this->filter;
+		}
+
+		if ( ! $top_tentpole_posts = wp_cache_get( $this->cache_key( 'top_tentpole_posts', $filter ), $this->id_base ) )
 		{
 			$top_tentpole_posts = $posts_raw = $sessions = array();
 
-			$sessions_raw = $this->top_sessions();
+			$sessions_raw = $this->top_sessions( $filter );
 			foreach ( $sessions_raw as $session )
 			{
-				$sessions[ $session ] = wp_list_pluck( $this->posts_for_session( $session ), 'post' );
+				$sessions[ $session ] = wp_list_pluck( $this->posts_for_session( $session, $filter ), 'post' );
 
 				if ( 1 >= count( $sessions[ $session ] ) )
 				{
@@ -166,57 +245,72 @@ class bStat_Report extends bStat
 				);
 			}
 
-			wp_cache_set( $this->cache_key( 'top_tentpole_posts' ), $top_tentpole_posts, $this->id_base, $this->cache_ttl() );
+			wp_cache_set( $this->cache_key( 'top_tentpole_posts', $filter ), $top_tentpole_posts, $this->id_base, $this->cache_ttl() );
 		}
 
 		return $top_tentpole_posts;
 	}
 
-	public function top_authors()
+	public function top_authors( $filter = FALSE )
 	{
-		if ( ! $top_authors = wp_cache_get( $this->cache_key( 'top_authors' ), $this->id_base ) )
+		if ( ! $filter )
+		{
+			$filter = $this->filter;
+		}
+
+		if ( ! $top_authors = wp_cache_get( $this->cache_key( 'top_authors', $filter ), $this->id_base ) )
 		{
 			global $wpdb;
 
 			$sql = 'SELECT post_author, COUNT(1) AS hits
 				FROM ' . $wpdb->posts . '
-				WHERE ID IN(' . implode( ',', array_map( 'absint', wp_list_pluck( $this->top_posts(), 'post' ) ) ) . ')
+				WHERE ID IN(' . implode( ',', array_map( 'absint', wp_list_pluck( $this->top_posts( $filter ), 'post' ) ) ) . ')
 				GROUP BY post_author
 				ORDER BY hits DESC
 				/* generated in bStat_Report::top_authors() */';
 
 			$top_authors = $wpdb->get_results( $sql );
 
-			wp_cache_set( $this->cache_key( 'top_authors' ), $top_authors, $this->id_base, $this->cache_ttl() );
+			wp_cache_set( $this->cache_key( 'top_authors', $filter ), $top_authors, $this->id_base, $this->cache_ttl() );
 		}
 
 		return $top_authors;
 	}
 
-	public function top_terms()
+	public function top_terms( $filter = FALSE )
 	{
-		if ( ! $top_terms = wp_cache_get( $this->cache_key( 'top_terms' ), $this->id_base ) )
+		if ( ! $filter )
+		{
+			$filter = $this->filter;
+		}
+
+		if ( ! $top_terms = wp_cache_get( $this->cache_key( 'top_terms', $filter ), $this->id_base ) )
 		{
 			global $wpdb;
 			$sql = "SELECT b.term_id, c.term_taxonomy_id, b.slug, b.name, a.taxonomy, a.description, a.count, COUNT(c.term_taxonomy_id) AS `hits`
 				FROM $wpdb->term_relationships c
 				INNER JOIN $wpdb->term_taxonomy a ON a.term_taxonomy_id = c.term_taxonomy_id
 				INNER JOIN $wpdb->terms b ON a.term_id = b.term_id
-				WHERE c.object_id IN (" . implode( ',', array_map( 'absint', wp_list_pluck( $this->top_posts(), 'post' ) ) ) . ")
+				WHERE c.object_id IN (" . implode( ',', array_map( 'absint', wp_list_pluck( $this->top_posts( $filter ), 'post' ) ) ) . ")
 				GROUP BY c.term_taxonomy_id ORDER BY count DESC LIMIT 2000
 				/* generated in bStat_Report::top_terms() */";
 
 			$top_terms = $wpdb->get_results( $sql );
 
-			wp_cache_set( $this->cache_key( 'top_terms' ), $top_terms, $this->id_base, $this->cache_ttl() );
+			wp_cache_set( $this->cache_key( 'top_terms', $filter ), $top_terms, $this->id_base, $this->cache_ttl() );
 		}
 
 		return $top_terms;
 	}
 
-	public function top_posts_for_term( $term, $query_args = array() )
+	public function top_posts_for_term( $term, $query_args = array(), $filter = FALSE )
 	{
-		return $this->get_posts( $this->top_posts(), array_merge(
+		if ( ! $filter )
+		{
+			$filter = $this->filter;
+		}
+
+		return $this->get_posts( $this->top_posts( $filter ), array_merge(
 			array(
 				'tax_query' => array(
 					array(
@@ -230,48 +324,67 @@ class bStat_Report extends bStat
 		) );
 	}
 
-	public function top_components_and_actions()
+	public function top_components_and_actions( $filter = FALSE )
 	{
-		if ( ! $top_components_and_actions = wp_cache_get( $this->cache_key( 'top_components_and_actions' ), $this->id_base ) )
+		if ( ! $filter )
 		{
-			$top_components_and_actions = $this->db()->select( FALSE, FALSE, 'components_and_actions,hits', 1000, $this->filter );
-			wp_cache_set( $this->cache_key( 'top_components_and_actions' ), $top_components_and_actions, $this->id_base, $this->cache_ttl() );
+			$filter = $this->filter;
+		}
+
+		if ( ! $top_components_and_actions = wp_cache_get( $this->cache_key( 'top_components_and_actions', $filter ), $this->id_base ) )
+		{
+			$top_components_and_actions = $this->db()->select( FALSE, FALSE, 'components_and_actions,hits', 1000, $filter );
+			wp_cache_set( $this->cache_key( 'top_components_and_actions', $filter ), $top_components_and_actions, $this->id_base, $this->cache_ttl() );
 		}
 
 		return $top_components_and_actions;
 	}
 
-	public function top_users()
+	public function top_users( $filter = FALSE )
 	{
-		if ( ! $top_users = wp_cache_get( $this->cache_key( 'top_users' ), $this->id_base ) )
+		if ( ! $filter )
 		{
-			$top_users = $this->db()->select( FALSE, FALSE, 'user,hits', 1000, $this->filter );
-			wp_cache_set( $this->cache_key( 'top_users' ), $top_users, $this->id_base, $this->cache_ttl() );
+			$filter = $this->filter;
+		}
+
+		if ( ! $top_users = wp_cache_get( $this->cache_key( 'top_users', $filter ), $this->id_base ) )
+		{
+			$top_users = $this->db()->select( FALSE, FALSE, 'user,hits', 1000, $filter );
+			wp_cache_set( $this->cache_key( 'top_users', $filter ), $top_users, $this->id_base, $this->cache_ttl() );
 		}
 
 		return $top_users;
 	}
 
-	public function top_groups()
+	public function top_groups( $filter = FALSE )
 	{
-		if ( ! $top_groups = wp_cache_get( $this->cache_key( 'top_groups' ), $this->id_base ) )
+		if ( ! $filter )
 		{
-			$top_groups = $this->db()->select( FALSE, FALSE, 'group,hits', 1000, $this->filter );
-			wp_cache_set( $this->cache_key( 'top_groups' ), $top_groups, $this->id_base, $this->cache_ttl() );
+			$filter = $this->filter;
+		}
+
+		if ( ! $top_groups = wp_cache_get( $this->cache_key( 'top_groups', $filter ), $this->id_base ) )
+		{
+			$top_groups = $this->db()->select( FALSE, FALSE, 'group,hits', 1000, $filter );
+			wp_cache_set( $this->cache_key( 'top_groups', $filter ), $top_groups, $this->id_base, $this->cache_ttl() );
 		}
 
 		return $top_groups;
 	}
 
-	public function top_blogs()
+	public function top_blogs( $filter = FALSE )
 	{
-		$filter = (array) $this->filter;
+		if ( ! $filter )
+		{
+			$filter = $this->filter;
+		}
+
 		$filter['blog'] = FALSE;
 
-		if ( ! $top_blogs = wp_cache_get( $this->cache_key( 'top_blogs' ), $this->id_base ) )
+		if ( ! $top_blogs = wp_cache_get( $this->cache_key( 'top_blogs', $filter ), $this->id_base ) )
 		{
 			$top_blogs = $this->db()->select( FALSE, FALSE, 'blog,hits', 1000, $filter );
-			wp_cache_set( $this->cache_key( 'top_blogs' ), $top_blogs, $this->id_base, $this->cache_ttl() );
+			wp_cache_set( $this->cache_key( 'top_blogs', $filter ), $top_blogs, $this->id_base, $this->cache_ttl() );
 		}
 
 		return $top_blogs;
@@ -284,6 +397,7 @@ class bStat_Report extends bStat
 		echo '<h2>bStat Viewer</h2>';
 
 		echo '<pre>';
+print_r( $this->timeseries( 3600 ) );
 
 		/*
 		Active posts (last 24-36 hours). All activity, or by $component:$action

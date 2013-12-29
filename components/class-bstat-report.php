@@ -6,7 +6,6 @@ class bStat_Report extends bStat
 	public function __construct()
 	{
 		add_action( 'init', array( $this, 'init' ) );
-		$this->rickshaw();
 	}
 
 	public function init()
@@ -146,6 +145,33 @@ class bStat_Report extends bStat
 		// the array key is a quantized timestamp, pass it into date( $format, $quantized_time ) and get a human readable date.
 		// the value is the count of activity hits for that quantized time segment.
 		return $timeseries;
+	}
+
+	public function multi_timeseries( $quantize_minutes = 1, $filters = array() )
+	{
+		if ( ! is_array( $filters ) )
+		{
+			return FALSE;
+		}
+
+		// get the data for each filter
+		foreach ( $filters as $k => $v )
+		{
+			$filters[ $k ] = $this->timeseries( $quantize_minutes, $v );
+			$min = isset( $min ) ? min( $min, min( array_keys( $filters[ $k ] ) ) ) : min( array_keys( $filters[ $k ] ) );
+			$max = isset( $max ) ? max( $max, max( array_keys( $filters[ $k ] )	) ) : max( array_keys( $filters[ $k ] ) );
+		}
+
+		// get a single time space that covers all the data
+		$keys = array_fill_keys( range( $min, $max, $quantize_minutes * 60 ), 0 );
+
+		// reiterate the array, conform all the returned data to a single time space
+		foreach ( $filters as $k => $v )
+		{
+			$filters[ $k ] = array_replace( $keys, $v );
+		}
+
+		return $filters;
 	}
 
 	public function top_posts( $filter = FALSE )
@@ -402,84 +428,10 @@ class bStat_Report extends bStat
 	{
 		$this->set_filter();
 
-		echo '<h2>bStat Viewer</h2><pre>';
+		echo '<h2>bStat Viewer</h2>';
 
-$components = array_slice( $this->top_components_and_actions(), 0, 5 );
-foreach ( $components as $component )
-{
-//	print_r( $this->timeseries( 15, $this->default_filter( array( 'component' => $component->component, 'action' => $component->action ) ) ) );
-}
-//print_r( $components );
-?>
-<style>
-#chart_container {
-        display: inline-block;
-        font-family: Arial, Helvetica, sans-serif;
-}
-#chart {
-        float: left;
-}
-#legend {
-        float: left;
-        margin-left: 15px;
-}
-#y_axis {
-        float: left;
-        width: 40px;
-}
-</style>
+		include __DIR__ . '/templates/report-timeseries.php';
 
-
-<div id="chart_container">
-        <div id="y_axis"></div>
-        <div id="chart"></div>
-        <div id="legend"></div>
-</div>
-
-<script>
-
-var data = <?php echo json_encode( $this->rickshaw()->array_to_series( $this->timeseries( 1 ) ) ); ?>;
-var palette = new Rickshaw.Color.Palette();
-
-var graph = new Rickshaw.Graph( {
-        element: document.querySelector("#chart"),
-        width: 540,
-        height: 240,
-        renderer: 'stack',
-        series: [
-<?php
-foreach ( $components as $component )
-{
-?>
-                {
-                        name: "<?php echo $component->component .':' . $component->action; ?>",
-                        data: <?php echo json_encode( $this->rickshaw()->array_to_series( $this->timeseries( 15, $this->default_filter( array( 'component' => $component->component, 'action' => $component->action ) ) ) ) ); ?>,
-                        color: palette.color()
-                },
-<?php
-}
-?>
-        ]
-} );
-
-var x_axis = new Rickshaw.Graph.Axis.Time( { graph: graph } );
-
-var y_axis = new Rickshaw.Graph.Axis.Y( {
-        graph: graph,
-        orientation: 'left',
-        tickFormat: Rickshaw.Fixtures.Number.formatKMBT,
-        element: document.getElementById('y_axis'),
-} );
-
-var legend = new Rickshaw.Graph.Legend( {
-        element: document.querySelector('#legend'),
-        graph: graph
-} );
-
-graph.render();
-
-</script>
-<?php
 		echo '<pre>';
 //print_r( json_encode( $this->rickshaw()->array_to_series( $this->timeseries( 1 ) ) ) );
 

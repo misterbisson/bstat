@@ -11,7 +11,8 @@ class bStat_Report extends bStat
 	public function init()
 	{
 		add_action( 'admin_menu', array( $this, 'admin_menu_init' ) );
-		wp_enqueue_style( $this->id_base . '-report', plugins_url( 'css/bstat-report.css', __FILE__ ), array(), $this->version );
+		wp_register_style( $this->id_base . '-report', plugins_url( 'css/bstat-report.css', __FILE__ ), array(), $this->version );
+		wp_register_script( $this->id_base . '-report', plugins_url( 'js/bstat-report.js', __FILE__ ), array( 'bstat-rickshaw' ), $this->version, TRUE );
 	} // END init
 
 	// add the menu item to the dashboard
@@ -119,13 +120,13 @@ class bStat_Report extends bStat
 			{
 				$quantized_time = $seconds * (int) ( $item->timestamp / $seconds );
 
-				if ( ! isset( $timeseries[ $quantized_time ] ) )
+				if ( isset( $timeseries[ $quantized_time ] ) )
 				{
-					$timeseries[ $quantized_time ] = 1;
+					$timeseries[ $quantized_time ] ++;
 				}
 				else
 				{
-					$timeseries[ $quantized_time ] ++;
+					$timeseries[ $quantized_time ] = 1;
 				}
 
 			}
@@ -262,7 +263,7 @@ class bStat_Report extends bStat
 				$post = end( $sessions[ $session ] );
 				if ( isset( $posts_raw[ $post ] ) )
 				{
-					$posts_raw[ $post ]++;
+					$posts_raw[ $post ] ++;
 				}
 				else
 				{
@@ -282,6 +283,7 @@ class bStat_Report extends bStat
 			wp_cache_set( $this->cache_key( 'top_tentpole_posts', $filter ), $top_tentpole_posts, $this->id_base, $this->cache_ttl() );
 		}
 
+		// this method often returns empty on sites with low activity
 		return $top_tentpole_posts;
 	}
 
@@ -294,16 +296,36 @@ class bStat_Report extends bStat
 
 		if ( ! $top_authors = wp_cache_get( $this->cache_key( 'top_authors', $filter ), $this->id_base ) )
 		{
-			global $wpdb;
+			$posts = $this->get_posts( $this->top_posts( $filter ), array( 'posts_per_page' => -1, 'post_type' => 'any' ) );
 
-			$sql = 'SELECT post_author, COUNT(1) AS hits
-				FROM ' . $wpdb->posts . '
-				WHERE ID IN(' . implode( ',', array_map( 'absint', wp_list_pluck( $this->top_posts( $filter ), 'post' ) ) ) . ')
-				GROUP BY post_author
-				ORDER BY hits DESC
-				/* generated in bStat_Report::top_authors() */';
+			if ( ! count( $posts ) )
+			{
+				return FALSE;
+			}
 
-			$top_authors = $wpdb->get_results( $sql );
+			$top_authors = $authors = array();
+			foreach ( $posts as $post )
+			{
+				
+				if ( isset( $authors[ $post->post_author ] ) )
+				{
+					$authors[ $post->post_author ] += $post->hits;
+				}
+				else
+				{
+					$authors[ $post->post_author ] = $post->hits;
+				}
+			}
+
+			arsort( $authors );
+
+			foreach ( $authors as $k => $v )
+			{
+				$top_authors[] = (object) array( 
+					'post_author' => $k,
+					'hits' => $v,
+				);
+			}
 
 			wp_cache_set( $this->cache_key( 'top_authors', $filter ), $top_authors, $this->id_base, $this->cache_ttl() );
 		}
@@ -428,78 +450,56 @@ class bStat_Report extends bStat
 	{
 		$this->set_filter();
 
+		wp_enqueue_style( $this->id_base . '-report' );
+		wp_enqueue_script( $this->id_base . '-report' );
+
 		echo '<h2>bStat Viewer</h2>';
 
+		// a timeseries graph of all activity, broken out by component:action
 		include __DIR__ . '/templates/report-timeseries.php';
-
-		echo '<pre>';
-//print_r( json_encode( $this->rickshaw()->array_to_series( $this->timeseries( 1 ) ) ) );
 
 		/*
 		Active posts (last 24-36 hours). All activity, or by $component:$action
 		Optionally, limit to posts published in that timespan
 		*/
-		echo '<h2>Posts, by total activity</h2>';
-		print_r( $this->top_posts() );
+		include __DIR__ . '/templates/report-top-posts.php';
 
 		/*
 		Posts that led to most second pageviews, or other $component:$action
 		Optionally, limit to posts published in that timespan
 		*/
-		echo '<h2>Posts that led to most second pageviews, by total activity</h2>';
-		print_r( $this->top_tentpole_posts() );
+		include __DIR__ . '/templates/report-top-tentpole-posts.php';
 
 		/*
 		Top authors (last 24-36 hours)
 		Optionally, limit to posts published in that timespan
 		*/
-		echo '<h2>Authors, by total activity</h2>';
-		print_r( $this->top_authors() );
-		foreach ( array_slice( $this->top_authors(), 0, 3 ) as $author )
-		{
-			print_r( $this->get_posts( $this->top_posts(), array( 'author' => $author->post_author, 'posts_per_page' => 1 ) ) );
-		}
+		include __DIR__ . '/templates/report-top-authors.php';
 
+		echo '<pre>';
 		/*
 		Top taxonomy terms (last 24-36 hours)
 		Optionally, limit to posts published in that timespan
 		*/
-		echo '<h2>Taxonomy terms, by total activity</h2>';
-		print_r( $this->top_terms() );
-		foreach ( array_slice( $this->top_terms(), 0, 3 ) as $term )
-		{
-			print_r( $this->top_posts_for_term( $term, array( 'posts_per_page' => 1 ) ) );
-		}
-
+		include __DIR__ . '/templates/report-top-terms.php';
 
 		/*
 		Top $components and $actions (last 24-36 hours)
 		Optionally, limit to posts published in that timespan
 		*/
-		echo '<h2>Components and actions, by total activity</h2>';
-		print_r( $this->top_components_and_actions() );
+		include __DIR__ . '/templates/report-top-components-and-actions.php';
 
 		/*
 		Top users (last 24-36 hours)
 		Optionally filter by role
 		*/
-		echo '<h2>Users, by total activity</h2>';
-		print_r( $this->top_users() );
-		foreach ( array_slice( $this->top_users(), 0, 3 ) as $user )
-		{
-			print_r( $this->get_posts( $this->posts_for_user( $user->user ), array( 'posts_per_page' => 1 ) ) );
-		}
+		include __DIR__ . '/templates/report-top-users.php';
 
 		/*
 		Filter by:
-		Blog
 		Group
 		*/
-		echo '<h2>Groups, by total activity</h2>';
-		print_r( $this->top_groups() );
-
-		echo '<h2>Blogs, by total activity</h2>';
-		print_r( $this->top_blogs() );
+		include __DIR__ . '/templates/report-top-groups.php';
 
 		echo '</pre>';
 	}

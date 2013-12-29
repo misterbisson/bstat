@@ -264,7 +264,7 @@ class bStat_Db_Wpdb extends bStat_Db
 		// all the SQL together in one place
 		$sql = $select . "\nFROM " . $this->activity_table . "\n" . $where . $filter_where . $date_where . "\n" . $group . "\n" . $order . "\nLIMIT " . $limit ."\n";
 
-echo $sql;
+//echo $sql;
 
 		if ( 'col' == $return_format )
 		{

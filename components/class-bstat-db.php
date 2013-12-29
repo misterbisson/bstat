@@ -23,7 +23,7 @@ abstract class bStat_Db
 	{
 
 		$limit = absint( $limit );
-		$limit = min( ( $limit ?: 250 ), 1000 );
+		$limit = min( ( $limit ?: 250 ), 10000 );
 
 		if ( ! is_array( $ids ) )
 		{

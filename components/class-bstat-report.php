@@ -23,26 +23,33 @@ class bStat_Report extends bStat
 		add_submenu_page( 'index.php', 'bStat Viewer', 'bStat Viewer', 'edit_posts', $this->id_base . '-report', array( $this, 'admin_menu' ) );
 	} // END admin_menu_init
 
+	public function default_filter( $add_filter = array() )
+	{
+		// set the timezone to UTC for the later strtotime() call,
+		// preserve the old timezone so we can set it back when done
+		$old_tz = date_default_timezone_get();
+		date_default_timezone_set( 'UTC' );
+
+		// only setting the oldest part of the time window for better caching
+		// the newest part is filled in with the current time when the query is executed
+		$filter = array(
+			'timestamp' => array(
+				'min' => strtotime( 'midnight yesterday' ),
+			),
+		);
+
+		date_default_timezone_set( $old_tz );
+
+		return array_merge( $filter, (array) $add_filter );
+	}
+
 	public function set_filter( $filter = FALSE )
 	{
 
 		// defaults
 		if ( ! $filter )
 		{
-			// set the timezone to UTC for the later strtotime() call,
-			// preserve the old timezone so we can set it back when done
-			$old_tz = date_default_timezone_get();
-			date_default_timezone_set( 'UTC' );
-
-			// only setting the oldest part of the time window for better caching
-			// the newest part is filled in with the current time when the query is executed
-			$filter = array(
-				'timestamp' => array(
-					'min' => strtotime( 'midnight yesterday' ),
-				),
-			);
-
-			date_default_timezone_set( $old_tz );
+			$filter = $this->default_filter();
 		}
 
 		$this->filter = (array) $filter;
@@ -126,10 +133,32 @@ class bStat_Report extends bStat
 
 			ksort( $timeseries ); 
 
-			// get an array of all the quantized timeslots, including those with no activity
+			// determine the min and max timestamps
+			// these can be provided in the query filters
+			// or derived from the result data if not specified
 			$keys = array_keys( $timeseries );
-			$keys = array_fill_keys( range( reset( $keys ), end( $keys ), $seconds ), 0 );
+			if ( isset( $filter['timestamp']['min'] ) )
+			{
+				$min = $seconds * (int) ( $filter['timestamp']['min'] / $seconds );
+			}
+			else
+			{
+				$min = reset( $keys );
+			}
 
+			if ( isset( $filter['timestamp']['max'] ) )
+			{
+				$max = $seconds * (int) ( $filter['timestamp']['max'] / $seconds );
+			}
+			else
+			{
+				$max = end( $keys );
+			}
+
+			// get an array of all the quantized timeslots, including those with no activity
+			$keys = array_fill_keys( range( $min, $max, $seconds ), 0 );
+
+			// fill out the result array so all the timeslots are represented
 			$timeseries = array_replace( $keys, $timeseries );
 
 			wp_cache_set( $this->cache_key( 'timeseries ' . $seconds, $filter ), $timeseries, $this->id_base, $this->cache_ttl() );
@@ -395,7 +424,14 @@ class bStat_Report extends bStat
 	{
 		$this->set_filter();
 
-		echo '<h2>bStat Viewer</h2>';
+		echo '<h2>bStat Viewer</h2><pre>';
+
+$components = array_slice( $this->top_components_and_actions(), 0, 5 );
+foreach ( $components as $component )
+{
+//	print_r( $this->timeseries( 15, $this->default_filter( array( 'component' => $component->component, 'action' => $component->action ) ) ) );
+}
+//print_r( $components );
 ?>
 <style>
 #chart_container {
@@ -424,20 +460,33 @@ class bStat_Report extends bStat
 
 <script>
 
-var data = <?php echo json_encode( $this->rickshaw()->array_to_series( $this->timeseries( 1 ) ) ); ?>;
 var palette = new Rickshaw.Color.Palette();
 
 var graph = new Rickshaw.Graph( {
         element: document.querySelector("#chart"),
         width: 540,
         height: 240,
-        renderer: 'line',
+        renderer: 'stack',
         series: [
+<?php
+foreach ( $components as $component )
+{
+?>
                 {
-                        name: "Northeast",
-                        data: <?php echo json_encode( $this->rickshaw()->array_to_series( $this->timeseries( 15 ) ) ); ?>,
+                        name: "<?php echo $component->component .':' . $component->action; ?>",
+                        data: <?php echo json_encode( $this->rickshaw()->array_to_series( $this->timeseries( 15, array( 
+                        	'component' => $component->component,
+                        	'action' => $component->action,
+                        	'timestamp' => array(
+                        		'min' => 15 * 60 * (int) ( ( time() - 115200 ) / 1515 * 60 ),
+                        		'max' => 15 * 60 * (int) ( time() / 1515 * 60 ),
+                        	),
+                        ) ) ) ); ?>,
                         color: palette.color()
-                }
+                },
+<?php
+}
+?>
         ]
 } );
 

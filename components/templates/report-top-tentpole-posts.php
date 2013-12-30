@@ -42,7 +42,12 @@ if ( count( $recent ) )
 	echo '<ol>';
 	foreach ( $recent as $post )
 	{
-		echo '<li ' . get_post_class( '', $post->ID ) . '>' . get_the_title( $post->ID ) . ' (' . (int) $post->hits . ' hits)</li>';
+		printf(
+			'<li %1$s>%2$s (%3$s hits)</li>',
+			get_post_class( '', $post->ID ),
+			get_the_title( $post->ID ),
+			(int) $post->hits
+		);
 	}
 	echo '</ol>';
 }
@@ -60,7 +65,12 @@ if ( count( $evergreen ) )
 	echo '<ol>';
 	foreach ( $evergreen as $post )
 	{
-		echo '<li ' . get_post_class( '', $post->ID ) . '>' . get_the_title( $post->ID ) . ' (' . (int) $post->hits . ' hits)</li>';
+		printf(
+			'<li %1$s>%2$s (%3$s hits)</li>',
+			get_post_class( '', $post->ID ),
+			get_the_title( $post->ID ),
+			(int) $post->hits
+		);
 	}
 	echo '</ol>';
 }

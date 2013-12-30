@@ -29,12 +29,23 @@ foreach ( $terms as $term )
 {
 	$posts = bstat()->report()->top_posts_for_term( $term, array( 'posts_per_page' => 3, 'post_type' => 'any' ) );
 
-	echo '<li>' . $term->taxonomy . ':' . $term->slug .' (' . (int) $term->hits . ' hits)';
+	printf(
+		'<li>%1$s (%2$s hits)</li>',
+		$term->taxonomy . ':' . $term->slug,
+		(int) $term->hits
+	);
+
 	echo '<ol>';
 	foreach ( $posts as $post )
 	{
-		echo '<li ' . get_post_class( '', $post->ID ) . '>' . get_the_title( $post->ID ) . ' (' . (int) $post->hits . ' hits)</li>';
+		printf(
+			'<li %1$s>%2$s (%3$s hits)</li>',
+			get_post_class( '', $post->ID ),
+			get_the_title( $post->ID ),
+			(int) $post->hits
+		);
 	}
+
 	echo '</ol></li>';
 
 

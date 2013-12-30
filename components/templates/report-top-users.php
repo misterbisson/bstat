@@ -30,12 +30,23 @@ foreach ( $users as $user )
 	$posts = bstat()->report()->get_posts( bstat()->report()->posts_for_user( $user->user ), array( 'posts_per_page' => 3, 'post_type' => 'any' ) );
 
 	// it appears WP's get_the_author() emits the author display name with no sanitization
-	echo '<li>' . $user_object->display_name . ' (' . (int) $user->hits . ' hits)';
+	printf(
+		'<li>%1$s (%2$s hits)',
+		$user_object->display_name,
+		(int) $user->hits
+	);
+
 	echo '<ol>';
 	foreach ( $posts as $post )
 	{
-		echo '<li ' . get_post_class( '', $post->ID ) . '>' . get_the_title( $post->ID ) . ' (' . (int) $post->hits . ' hits)</li>';
+		printf(
+			'<li %1$s>%2$s (%3$s hits)</li>',
+			get_post_class( '', $post->ID ),
+			get_the_title( $post->ID ),
+			(int) $post->hits
+		);
 	}
+
 	echo '</ol></li>';
 
 

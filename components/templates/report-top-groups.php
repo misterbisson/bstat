@@ -21,6 +21,10 @@ echo '<p>Showing ' . count( $groups ) . ' users with ' . $total_activity . ' tot
 echo '<ol>';
 foreach ( $groups as $group )
 {
-	echo '<li>' . (int) $group->group . ' (' . (int) $group->hits . ' hits)</li>';
+	printf(
+		'<li>%1$s (%2$s hits)</li>',
+		(int) $group->group,
+		(int) $group->hits
+	);
 }
 echo '</ol>';

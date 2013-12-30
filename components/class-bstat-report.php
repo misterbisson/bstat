@@ -89,11 +89,20 @@ class bStat_Report extends bStat
 		return mt_rand( 101, 503 ); // prime numbers for almost 2 minutes or a little over 8 minutes
 	}
 
+	function sort_by_hits_desc( $a, $b )
+	{
+		if ( $a->hits == $b->hits )
+		{
+			return 0;
+		}
+		return ( $a->hits < $b->hits ) ? 1 : -1;
+	}
+
 	public function get_posts( $top_posts_list, $query_args = array() )
 	{
 		if ( ! $get_posts = wp_cache_get( $this->cache_key( 'get_posts ' . md5( serialize( $top_posts_list ) . serialize( $query_args ) ) ), $this->id_base ) )
 		{
-			$get_posts = get_posts( array_merge( 
+			$get_posts = get_posts( array_merge(
 				array(
 					'post__in' => array_map( 'absint', wp_list_pluck( $top_posts_list, 'post' ) ),
 					'orderby' => 'post__in',
@@ -150,7 +159,7 @@ class bStat_Report extends bStat
 
 			}
 
-			ksort( $timeseries ); 
+			ksort( $timeseries );
 
 			// get an array of all the quantized timeslots, including those with no activity
 			$keys = array_keys( $timeseries );
@@ -325,7 +334,7 @@ class bStat_Report extends bStat
 			$top_authors = $authors = array();
 			foreach ( $posts as $post )
 			{
-				
+
 				if ( isset( $authors[ $post->post_author ] ) )
 				{
 					$authors[ $post->post_author ] += $post->hits;
@@ -340,7 +349,7 @@ class bStat_Report extends bStat
 
 			foreach ( $authors as $k => $v )
 			{
-				$top_authors[] = (object) array( 
+				$top_authors[] = (object) array(
 					'post_author' => $k,
 					'hits' => $v,
 				);
@@ -423,6 +432,60 @@ class bStat_Report extends bStat
 		return $top_components_and_actions;
 	}
 
+	public function component_and_action_info( $component_and_action, $filter = FALSE )
+	{
+
+		if ( is_string( $component_and_action ) )
+		{
+			$temp = explode( ':', $component_and_action );
+			$component_and_action = array(
+				'component' => trim( $temp[0] ),
+				'action' => trim( $temp[1] ),
+			);
+		}
+
+		if ( 2 != count( $component_and_action ) )
+		{
+			return FALSE;
+		}
+
+		if ( ! $filter )
+		{
+			$filter = $this->filter;
+		}
+
+		$filter = array_merge( array( 'component' => $component_and_action['component'], 'action' => $component_and_action['action'], ),  $filter );
+
+		if ( ! $component_and_action_info = wp_cache_get( $this->cache_key( 'component_and_action_info', $filter ), $this->id_base ) )
+		{
+			$component_and_action_info_raw = wp_list_pluck( $this->db()->select( FALSE, FALSE, 'all', 1000, $filter ), 'info' );
+
+			$component_and_action_info = array();
+			foreach ( $component_and_action_info_raw as $row )
+			{
+				if ( empty( $row ) )
+				{
+					$row = 'no information provided for action';
+				}
+
+				if ( ! isset( $component_and_action_info[ $row ] ) )
+				{
+					$component_and_action_info[ $row ] = (object) array( 'info' => $row, 'hits' => 1 );
+				}
+				else
+				{
+					$component_and_action_info[ $row ]->hits ++;
+				}
+			}
+
+			usort( $component_and_action_info, array( $this, 'sort_by_hits_desc' ) );
+
+			wp_cache_set( $this->cache_key( 'component_and_action_info', $filter ), $component_and_action_info, $this->id_base, $this->cache_ttl() );
+		}
+
+		return $component_and_action_info;
+	}
+
 	public function top_users( $filter = FALSE )
 	{
 		if ( ! $filter )
@@ -488,49 +551,31 @@ class bStat_Report extends bStat
 		// filter controls
 		include __DIR__ . '/templates/report-filter.php';
 
-		/*
-		Top $components and $actions (last 24-36 hours)
-		Optionally, limit to posts published in that timespan
-		*/
+		// top components and actions
 		include __DIR__ . '/templates/report-top-components-and-actions.php';
 
-		/*
-		Active posts (last 24-36 hours). All activity, or by $component:$action
-		Optionally, limit to posts published in that timespan
-		*/
+		// information for single component:action pairs
+		include __DIR__ . '/templates/report-action-info.php';
+
+		// top posts
 		include __DIR__ . '/templates/report-top-posts.php';
 
-		/*
-		Posts that led to most second pageviews, or other $component:$action
-		Optionally, limit to posts published in that timespan
-		*/
+		// tentpole posts -- the posts that led to the most follow-on pageviews
 		include __DIR__ . '/templates/report-top-tentpole-posts.php';
 
-		/*
-		Top authors (last 24-36 hours)
-		Optionally, limit to posts published in that timespan
-		*/
+		// top authors by activity on their posts
 		include __DIR__ . '/templates/report-top-authors.php';
 
-		/*
-		Top taxonomy terms (last 24-36 hours)
-		Optionally, limit to posts published in that timespan
-		*/
+		// top taxonomy terms
 		include __DIR__ . '/templates/report-top-terms.php';
 
-		/*
-		Top users (last 24-36 hours)
-		Optionally filter by role
-		*/
+		// top users
 		include __DIR__ . '/templates/report-top-users.php';
 
 		// active sessions
 		include __DIR__ . '/templates/report-top-sessions.php';
 
-		/*
-		Filter by:
-		Group
-		*/
+		// top a/b test groups
 		include __DIR__ . '/templates/report-top-groups.php';
 
 		echo '</pre>';

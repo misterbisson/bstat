@@ -16,8 +16,6 @@ date_default_timezone_set( 'UTC' );
 $mendoza_line = strtotime( 'midnight yesterday' ); 
 $recent = $evergreen = array();
 
-var_dump( $evergreen );
-
 foreach ( $posts as $post )
 {
 	if( strtotime( $post->post_date_gmt ) < $mendoza_line )

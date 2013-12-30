@@ -60,13 +60,13 @@ var bstat_timeseries = [
 	<?php
 	foreach ( $components as $k => $v )
 	{
-	?>
+		?>
 		{
 			name: "<?php echo $k; ?>",
 			data: <?php echo json_encode( bstat()->rickshaw()->array_to_series( $v ) ); ?>,
 			color: "<?php echo current( $colors ); ?>",
 		},
-	<?php
+		<?php
 		next( $colors );
 	}
 	?>

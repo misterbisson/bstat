@@ -361,7 +361,7 @@ class bStat_Report extends bStat
 				$top_terms[ $k ]->depth_of_coverage_score = (int) ( 100 * $top_terms[ $k ]->count_in_set / $top_terms[ $k ]->count );
 			}
 
-			wp_cache_set( $this->cache_key( 'top_terms', $filter ), $top_terms, $this->id_base, $this->cache_ttl() );
+			wp_cache_set( $this->cache_key( 'top_terms', $filter ), $top_terms, $this->id_base, 10 * $this->cache_ttl() );
 		}
 
 		return $top_terms;
@@ -496,7 +496,6 @@ class bStat_Report extends bStat
 		*/
 		include __DIR__ . '/templates/report-top-terms.php';
 
-		echo '<pre>';
 		/*
 		Top users (last 24-36 hours)
 		Optionally filter by role

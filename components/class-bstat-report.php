@@ -467,6 +467,12 @@ class bStat_Report extends bStat
 		include __DIR__ . '/templates/report-timeseries.php';
 
 		/*
+		Top $components and $actions (last 24-36 hours)
+		Optionally, limit to posts published in that timespan
+		*/
+		include __DIR__ . '/templates/report-top-components-and-actions.php';
+
+		/*
 		Active posts (last 24-36 hours). All activity, or by $component:$action
 		Optionally, limit to posts published in that timespan
 		*/
@@ -491,12 +497,6 @@ class bStat_Report extends bStat
 		include __DIR__ . '/templates/report-top-terms.php';
 
 		echo '<pre>';
-		/*
-		Top $components and $actions (last 24-36 hours)
-		Optionally, limit to posts published in that timespan
-		*/
-		include __DIR__ . '/templates/report-top-components-and-actions.php';
-
 		/*
 		Top users (last 24-36 hours)
 		Optionally filter by role

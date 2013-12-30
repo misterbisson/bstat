@@ -16,7 +16,7 @@ foreach ( $components_and_actions as $component_and_action )
 	$total_activity += $component_and_action->hits;
 }
 
-echo '<h2>Components and actions, by total activity</h2>';
+echo '<h2>Components and actions</h2>';
 echo '<p>Showing ' . count( $components_and_actions ) . ' component:action pairs with ' . $total_activity . ' total actions.</p>';
 echo '<ol>';
 foreach ( $components_and_actions as $component_and_action )

@@ -37,7 +37,7 @@ if ( count( $recent ) )
 		$total_activity += $post->hits;
 	}
 
-	echo '<h2>Recent posts that led to most second pageviews, by activity</h2>';
+	echo '<h2>Recent posts that led to most second pageviews</h2>';
 	echo '<p>Showing ' . count( $recent ) . ' posts with ' . $total_activity . ' total actions. Only showing activity on top 100 total posts.</p>';
 	echo '<ol>';
 	foreach ( $recent as $post )
@@ -61,7 +61,7 @@ if ( count( $evergreen ) )
 		$total_activity += $post->hits;
 	}
 
-	echo '<h2>Evergreen posts that led to most second pageviews, by activity</h2>';
+	echo '<h2>Evergreen posts that led to most second pageviews</h2>';
 	echo '<p>Showing ' . count( $recent ) . ' posts with ' . $total_activity . ' total actions. Only showing activity on top 100 total posts.</p>';
 	echo '<ol>';
 	foreach ( $evergreen as $post )

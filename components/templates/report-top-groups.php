@@ -16,7 +16,7 @@ foreach ( $groups as $group )
 	$total_activity += $group->hits;
 }
 
-echo '<h2>Groups, by total activity</h2>';
+echo '<h2>Groups</h2>';
 echo '<p>Showing ' . count( $groups ) . ' users with ' . $total_activity . ' total actions.</p>';
 echo '<ol>';
 foreach ( $groups as $group )

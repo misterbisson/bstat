@@ -22,7 +22,7 @@ usort( $terms, 'bstat_sort_emergent_terms' );
 $terms = array_slice( $terms, 0, 100 );
 
 
-echo '<h2>Terms, by emergent activity</h2>';
+echo '<h2>Terms</h2>';
 echo '<p>Showing ' . count( $terms ) . ' terms.</p>';
 echo '<ol>';
 foreach ( $terms as $term )

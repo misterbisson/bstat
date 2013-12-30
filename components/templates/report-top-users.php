@@ -16,7 +16,7 @@ foreach ( $users as $user )
 	$total_activity += $user->hits;
 }
 
-echo '<h2>Users, by total activity</h2>';
+echo '<h2>Users</h2>';
 echo '<p>Showing ' . count( $users ) . ' users with ' . $total_activity . ' total actions.</p>';
 echo '<ol>';
 foreach ( $users as $user )

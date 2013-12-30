@@ -59,7 +59,13 @@ class bStat_Report extends bStat
 	public function set_filter( $filter = FALSE )
 	{
 
-		// defaults
+		// are there filter vars in the $_GET? Okay, use those
+		if ( ! $filter )
+		{
+			$filter = array_filter( (array) $this->db()->sanitize_footstep( $_GET, TRUE ) );
+		}
+
+		// defaults, if we can't find a filter anywhere
 		if ( ! $filter )
 		{
 			$filter = array_merge( $this->default_filter(), array_filter( (array) $this->db()->sanitize_footstep( $_GET, TRUE ) ) );

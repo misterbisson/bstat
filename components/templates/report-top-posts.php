@@ -1,6 +1,11 @@
 <?php
 
+// don't show this panel if there's only one post
 $posts = bstat()->report()->get_posts( bstat()->report()->top_posts(), array( 'posts_per_page' => 100, 'post_type' => 'any' ) );
+if ( 2 > count( $posts ) )
+{
+	return;
+}
 
 // set the timezone to UTC for the later strtotime() call,
 // preserve the old timezone so we can set it back when done
@@ -31,7 +36,7 @@ if ( count( $recent ) )
 		$total_activity += $post->hits;
 	}
 
-	echo '<h2>Recent posts, by activity</h2>';
+	echo '<h2>Recent posts</h2>';
 	echo '<p>Showing ' . count( $recent ) . ' posts with ' . $total_activity . ' total actions. Only showing activity on top 100 total posts.</p>';
 	echo '<ol>';
 	foreach ( $recent as $post )
@@ -55,7 +60,7 @@ if ( count( $evergreen ) )
 		$total_activity += $post->hits;
 	}
 
-	echo '<h2>Evergreen posts, by activity</h2>';
+	echo '<h2>Evergreen posts</h2>';
 	echo '<p>Showing ' . count( $evergreen ) . ' posts with ' . $total_activity . ' total actions. Only showing activity on top 100 total posts.</p>';
 	echo '<ol>';
 	foreach ( $evergreen as $post )

@@ -16,7 +16,7 @@ foreach ( $authors as $author )
 	$total_activity += $author->hits;
 }
 
-echo '<h2>Authors, by total activity</h2>';
+echo '<h2>Authors</h2>';
 echo '<p>Showing ' . count( $authors ) . ' authors with ' . $total_activity . ' total actions.</p>';
 echo '<ol>';
 foreach ( $authors as $author )

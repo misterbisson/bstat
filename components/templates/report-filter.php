@@ -1,13 +1,13 @@
 <?php
 $filters = bstat()->report()->filter;
+unset( $filters['timestamp'] );
 
 // don't show this panel if there's only one filter
-if ( 2 > count( $filters ) )
+if ( ! count( $filters ) )
 {
 	return;
 }
 
-unset( $filters['timestamp'] );
 
 echo '<h2>Showing filtered activity</h2>';
 echo '<p><a href="' . bstat()->report()->report_url( array(), FALSE ) . '">Reset filters</a></p>';

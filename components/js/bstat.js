@@ -15,7 +15,8 @@
 
 		// post it
 		$.ajax({
-			type: "POST",
+			type : "POST",
+			async : FALSE,
 			url : bstat.endpoint,
 			dataType : 'jsonp',
 			data : {
@@ -35,7 +36,7 @@
 	// track the page view
 	// @TODO: should I make a wrapper for the ajax call?
 	$.ajax({
-		type: "POST",
+		type : "POST",
 		url : bstat.endpoint,
 		dataType : 'jsonp',
 		data : {

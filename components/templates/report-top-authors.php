@@ -40,8 +40,9 @@ foreach ( $authors as $author )
 	foreach ( $posts as $post )
 	{
 		printf(
-			'<li %1$s>%2$s (%3$s hits)</li>',
+			'<li %1$s><a href="%2$s">%3$s</a> (%4$s hits)</li>',
 			get_post_class( '', $post->ID ),
+			bstat()->report()->report_url( array( 'post' => $post->ID, ) ),
 			get_the_title( $post->ID ),
 			(int) $post->hits
 		);

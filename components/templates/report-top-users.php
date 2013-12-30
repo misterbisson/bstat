@@ -31,7 +31,8 @@ foreach ( $users as $user )
 
 	// it appears WP's get_the_author() emits the author display name with no sanitization
 	printf(
-		'<li>%1$s (%2$s hits)',
+		'<li><a href="%1$s">%2$s</a> (%2$s hits)',
+		bstat()->report()->report_url( array( 'user' => $user_object->ID, ) ),
 		$user_object->display_name,
 		(int) $user->hits
 	);
@@ -40,8 +41,9 @@ foreach ( $users as $user )
 	foreach ( $posts as $post )
 	{
 		printf(
-			'<li %1$s>%2$s (%3$s hits)</li>',
+			'<li %1$s><a href="%2$s">%3$s</a> (%4$s hits)</li>',
 			get_post_class( '', $post->ID ),
+			bstat()->report()->report_url( array( 'post' => $post->ID, ) ),
 			get_the_title( $post->ID ),
 			(int) $post->hits
 		);

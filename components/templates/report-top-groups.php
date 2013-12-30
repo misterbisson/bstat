@@ -22,7 +22,8 @@ echo '<ol>';
 foreach ( $groups as $group )
 {
 	printf(
-		'<li>%1$s (%2$s hits)</li>',
+		'<li><a href="%1$s">%2$s</a> (%2$s hits)',
+		bstat()->report()->report_url( array( 'group' => (int) $group->group, ) ),
 		(int) $group->group,
 		(int) $group->hits
 	);

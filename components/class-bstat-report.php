@@ -23,10 +23,17 @@ class bStat_Report extends bStat
 		add_submenu_page( 'index.php', 'bStat Viewer', 'bStat Viewer', 'edit_posts', $this->id_base . '-report', array( $this, 'admin_menu' ) );
 	} // END admin_menu_init
 
-	public function report_url( $args = array() )
+	public function report_url( $filter = array(), $additive = TRUE )
 	{
 		$url = admin_url( '/index.php?page=' . $this->id_base . '-report' );
-		return add_query_arg( $args, $url );
+
+		if ( $additive )
+		{
+			$filter = array_merge( $filter, $this->filter );
+			unset( $filter['timestamp'] );
+		}
+
+		return add_query_arg( $filter, $url );
 	}
 
 	public function default_filter( $add_filter = array() )
@@ -55,7 +62,7 @@ class bStat_Report extends bStat
 		// defaults
 		if ( ! $filter )
 		{
-			$filter = $this->default_filter();
+			$filter = array_merge( $this->default_filter(), array_filter( (array) $this->db()->sanitize_footstep( $_GET, TRUE ) ) );
 		}
 
 		$this->filter = (array) $filter;
@@ -471,6 +478,9 @@ class bStat_Report extends bStat
 
 		// a timeseries graph of all activity, broken out by component:action
 		include __DIR__ . '/templates/report-timeseries.php';
+
+		// filter controls
+		include __DIR__ . '/templates/report-filter.php';
 
 		/*
 		Top $components and $actions (last 24-36 hours)

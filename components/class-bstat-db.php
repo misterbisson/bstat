@@ -2,6 +2,18 @@
 abstract class bStat_Db
 {
 
+	public $columns = array(
+		'post'      => FALSE, // int, required, the post_id
+		'blog'      => FALSE, // int, required, the blog_id
+		'user'      => NULL, // int, optional, the user_id
+		'group'     => NULL, // int, optional, used for A/B testing
+		'component' => FALSE, // string (8 chars), required, the component inserting the footstep
+		'action'    => FALSE, // string (8 chars),required, the action taken by the user
+		'timestamp' => FALSE, // int, required, the seconds from epoch, GMT
+		'session'   => FALSE, // string (32 chars), required, the session cookie
+		'info'      => NULL, // string (180 chars), optional, additional unstructured info about this action
+	);
+
 	abstract public function _insert( $footstep );
 	abstract public function _select( $for, $ids, $return, $return_format, $limit, $filter );
 	abstract public function _delete( $footstep );
@@ -89,24 +101,13 @@ abstract class bStat_Db
 	// return a footstep object will all keys set
 	public function parse_footstep( $footstep )
 	{
-		return (object) wp_parse_args( (array) $footstep,
-			array(
-				'post'      => FALSE, // int, required, the post_id
-				'blog'      => FALSE, // int, required, the blog_id
-				'user'      => NULL, // int, optional, the user_id
-				'group'     => NULL, // int, optional, used for A/B testing
-				'component' => FALSE, // string (8 chars), required, the component inserting the footstep
-				'action'    => FALSE, // string (8 chars),required, the action taken by the user
-				'timestamp' => FALSE, // int, required, the seconds from epoch, GMT
-				'session'   => FALSE, // string (32 chars), required, the session cookie
-				'info'      => NULL, // string (180 chars), optional, additional unstructured info about this action 
-			)
-		);
+		// only accept whitelisted keys and set default values for all keys
+		return (object) array_replace( $this->columns, array_intersect_key( (array) $footstep, $this->columns ) );
 	}
 
 	// applies very strict sanitization rules on incoming footstep data
 	// also does very basic validation to ensure the required values are present, but not that they make sense
-	public function sanitize_footstep( $footstep )
+	public function sanitize_footstep( $footstep, $sloppy = FALSE )
 	{
 		// make sure all the keys are set
 		$footstep = $this->parse_footstep( $footstep );
@@ -123,16 +124,19 @@ abstract class bStat_Db
 		$footstep->info = wp_kses( $footstep->info, array() );
 
 		// make sure the required values are present
-		if (
-			! $footstep->post ||
-			! $footstep->blog ||
-			empty( $footstep->component ) ||
-			empty( $footstep->action ) ||
-			! $footstep->timestamp ||
-			empty( $footstep->session )
-		)
-		{
-			return FALSE;
+		if ( ! $sloppy )
+			{
+			if (
+				! $footstep->post ||
+				! $footstep->blog ||
+				empty( $footstep->component ) ||
+				empty( $footstep->action ) ||
+				! $footstep->timestamp ||
+				empty( $footstep->session )
+			)
+			{
+				return FALSE;
+			}
 		}
 
 		return $footstep;
@@ -142,17 +146,20 @@ abstract class bStat_Db
 	{
 		// parse, set defaults
 		// the input and output are arrays, but I coerce it to an object internally because the notation is easier and I'm lazy
-		$filter = (object) wp_parse_args( (array) $filter,
-			array(
-				'post'      => FALSE,
-				'blog'      => bstat()->get_blog(),
-				'user'      => FALSE,
-				'group'     => FALSE,
-				'component' => FALSE,
-				'action'    => FALSE,
-				'timestamp' => FALSE,
-				'session'   => FALSE,
-			)
+		$filter = (object) array_intersect_key(
+			wp_parse_args( (array) $filter,
+				array(
+					'post'      => FALSE,
+					'blog'      => bstat()->get_blog(),
+					'user'      => FALSE,
+					'group'     => FALSE,
+					'component' => FALSE,
+					'action'    => FALSE,
+					'timestamp' => FALSE,
+					'session'   => FALSE,
+				)
+			),
+			$this->columns
 		);
 
 		// sanitize!

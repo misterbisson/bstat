@@ -7,8 +7,8 @@ if ( 2 > count( $users ) )
 	return;
 }
 
-// for sanity, limit this to just the top 100 users
-$users = array_slice( $users, 0, 100 );
+// for sanity, limit this to just the top 10 users
+$users = array_slice( $users, 0, 10 );
 
 $total_activity = 0;
 foreach ( $users as $user )
@@ -31,7 +31,7 @@ foreach ( $users as $user )
 
 	// it appears WP's get_the_author() emits the author display name with no sanitization
 	printf(
-		'<li><a href="%1$s">%2$s</a> (%2$s hits)',
+		'<li><a href="%1$s">%2$s</a> (%3$s hits)',
 		bstat()->report()->report_url( array( 'user' => $user_object->ID, ) ),
 		$user_object->display_name,
 		(int) $user->hits

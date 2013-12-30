@@ -217,9 +217,9 @@ class bStat_Report extends bStat
 			$filter = $this->filter;
 		}
 
-		if ( ! $top_sessions = wp_cache_get( $this->cache_key( 'top_sessions', $filter ), $this->id_base ) )
+		if ( ! $top_sessions = wp_cache_get( $this->cache_key( 'top_sessionss', $filter ), $this->id_base ) )
 		{
-			$top_sessions = $this->db()->select( FALSE, FALSE, 'sessions', 1000, $filter );
+			$top_sessions = $this->db()->select( FALSE, FALSE, 'sessions,hits', 1000, $filter );
 			wp_cache_set( $this->cache_key( 'top_sessions', $filter ), $top_sessions, $this->id_base, $this->cache_ttl() );
 		}
 
@@ -269,7 +269,7 @@ class bStat_Report extends bStat
 		{
 			$top_tentpole_posts = $posts_raw = $sessions = array();
 
-			$sessions_raw = $this->top_sessions( $filter );
+			$sessions_raw = wp_list_pluck( $this->top_sessions( $filter ), 'session' );
 			foreach ( $sessions_raw as $session )
 			{
 				$sessions[ $session ] = wp_list_pluck( $this->posts_for_session( $session, $filter ), 'post' );
@@ -523,6 +523,9 @@ class bStat_Report extends bStat
 		Optionally filter by role
 		*/
 		include __DIR__ . '/templates/report-top-users.php';
+
+		// active sessions
+		include __DIR__ . '/templates/report-top-sessions.php';
 
 		/*
 		Filter by:

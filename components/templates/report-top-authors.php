@@ -7,8 +7,8 @@ if ( 2 > count( $authors ) )
 	return;
 }
 
-// for sanity, limit this to just the top 100 authors
-$authors = array_slice( $authors, 0, 100 );
+// for sanity, limit this to just the top 10 authors
+$authors = array_slice( $authors, 0, 10 );
 
 $total_activity = 0;
 foreach ( $authors as $author )

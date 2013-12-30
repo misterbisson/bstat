@@ -18,8 +18,8 @@ function bstat_sort_emergent_terms( $a, $b )
 
 usort( $terms, 'bstat_sort_emergent_terms' );
 
-// for sanity, limit this to just the top 100 authors
-$terms = array_slice( $terms, 0, 100 );
+// for sanity, limit this to just the top 10 authors
+$terms = array_slice( $terms, 0, 10 );
 
 
 echo '<h2>Terms</h2>';

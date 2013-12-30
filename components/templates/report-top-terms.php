@@ -1,7 +1,7 @@
 <?php
 
 // don't show this panel if there's only one author
-$terms = $this->top_terms();
+$terms = bstat()->report()->top_terms();
 if ( ! count( $terms ) )
 {
 	return;
@@ -27,7 +27,7 @@ echo '<p>Showing ' . count( $terms ) . ' terms.</p>';
 echo '<ol>';
 foreach ( $terms as $term )
 {
-	$posts = $this->top_posts_for_term( $term, array( 'posts_per_page' => 3, 'post_type' => 'any' ) );
+	$posts = bstat()->report()->top_posts_for_term( $term, array( 'posts_per_page' => 3, 'post_type' => 'any' ) );
 
 	echo '<li>' . $term->taxonomy . ':' . $term->slug .' (' . (int) $term->hits . ' hits)';
 	echo '<ol>';

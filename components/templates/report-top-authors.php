@@ -1,7 +1,7 @@
 <?php
 
 // don't show this panel if there's only one author
-$authors = $this->top_authors();
+$authors = bstat()->report()->top_authors();
 if ( 2 > count( $authors ) )
 {
 	return;
@@ -27,7 +27,7 @@ foreach ( $authors as $author )
 		continue;
 	}
 
-	$posts = $this->get_posts( $this->top_posts(), array( 'author' => $author->post_author, 'posts_per_page' => 3, 'post_type' => 'any' ) );
+	$posts = bstat()->report()->get_posts( bstat()->report()->top_posts(), array( 'author' => $author->post_author, 'posts_per_page' => 3, 'post_type' => 'any' ) );
 
 	// it appears WP's get_the_author() emits the author display name with no sanitization
 	echo '<li>' . $user->display_name . ' (' . (int) $author->hits . ' hits)';

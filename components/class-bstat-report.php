@@ -23,6 +23,12 @@ class bStat_Report extends bStat
 		add_submenu_page( 'index.php', 'bStat Viewer', 'bStat Viewer', 'edit_posts', $this->id_base . '-report', array( $this, 'admin_menu' ) );
 	} // END admin_menu_init
 
+	public function report_url( $args = array() )
+	{
+		$url = admin_url( '/index.php?page=' . $this->id_base . '-report' );
+		return add_query_arg( $args, $url );
+	}
+
 	public function default_filter( $add_filter = array() )
 	{
 		// set the timezone to UTC for the later strtotime() call,

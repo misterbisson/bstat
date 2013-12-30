@@ -1,7 +1,7 @@
 <?php
 
 // don't show this panel if there's only one group
-$groups = $this->top_groups();
+$groups = bstat()->report()->top_groups();
 if ( 2 > count( $groups ) )
 {
 	return;

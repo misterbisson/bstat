@@ -16,7 +16,6 @@
 		// post it
 		$.ajax({
 			type : "POST",
-			async : FALSE,
 			url : bstat.endpoint,
 			dataType : 'jsonp',
 			data : {

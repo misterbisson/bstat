@@ -1,14 +1,14 @@
 <?php
 
-// don't show this panel if there's only one session
+// don't show this panel if there are no sessions
 $sessions = bstat()->report()->top_sessions( array_merge( bstat()->report()->filter, array( 'user' => 0 ) ) ); // @TODO: array( 'user' => 0 ) doesn't work because of how the filter is sanitized
-if ( 2 > count( $sessions ) )
+if ( ! count( $sessions ) )
 {
 	return;
 }
 
-// for sanity, limit this to just the top 10 sessions
-$sessions = array_slice( $sessions, 0, 10 );
+// for sanity, limit this to just the top few sessions
+$sessions = array_slice( $sessions, 0, bstat()->options()->report->max_items );
 
 $total_activity = 0;
 foreach ( $sessions as $user )

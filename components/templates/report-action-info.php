@@ -9,8 +9,8 @@ if ( ! isset( $filter['component'], $filter['action'] ) )
 
 $infos = bstat()->report()->component_and_action_info( array( 'component' => $filter['component'], 'action' => $filter['action'] ) );
 
-// for sanity, limit this to just the top 100 component:action pairs
-$infos = array_slice( $infos, 0, 100 );
+// for sanity, limit this to just the top few component:action pairs
+$infos = array_slice( $infos, 0, bstat()->options()->report->max_items );
 
 $total_activity = 0;
 foreach ( $infos as $info )

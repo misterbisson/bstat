@@ -1,6 +1,6 @@
 <?php
 
-// don't show this panel if there's only one author
+// don't show this panel if there's only one term
 $terms = bstat()->report()->top_terms();
 if ( ! count( $terms ) )
 {
@@ -16,10 +16,10 @@ function bstat_sort_emergent_terms( $a, $b )
 	return ( $a->hits_per_post_score < $b->hits_per_post_score ) ? 1 : -1;
 }
 
-usort( $terms, 'bstat_sort_emergent_terms' );
+//usort( $terms, 'bstat_sort_emergent_terms' );
 
-// for sanity, limit this to just the top 10 authors
-$terms = array_slice( $terms, 0, 10 );
+// for sanity, limit this to just the top few terms
+$terms = array_slice( $terms, 0, bstat()->options()->report->max_items );
 
 
 echo '<h2>Terms</h2>';

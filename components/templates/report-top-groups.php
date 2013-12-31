@@ -7,8 +7,8 @@ if ( 2 > count( $groups ) )
 	return;
 }
 
-// for sanity, limit this to just the top 100 users
-$groups = array_slice( $groups, 0, 100 );
+// for sanity, limit this to just the top few groups
+$groups = array_slice( $groups, 0, bstat()->options()->report->max_items );
 
 $total_activity = 0;
 foreach ( $groups as $group )

@@ -1,7 +1,7 @@
 <?php
 
 // don't show this panel if there's only one post
-$posts = bstat()->report()->get_posts( bstat()->report()->top_posts(), array( 'posts_per_page' => 100, 'post_type' => 'any' ) );
+$posts = bstat()->report()->get_posts( bstat()->report()->top_posts(), array( 'posts_per_page' => -1, 'post_type' => 'any' ) );
 if ( 2 > count( $posts ) )
 {
 	return;
@@ -30,7 +30,7 @@ date_default_timezone_set( $old_tz );
 
 if ( count( $recent ) )
 {
-	$recent = array_slice( $recent, 0, 10 );
+	$recent = array_slice( $recent, 0, bstat()->options()->report->max_items );
 
 	$total_activity = 0;
 	foreach ( $recent as $post )
@@ -56,7 +56,7 @@ if ( count( $recent ) )
 
 if ( count( $evergreen ) )
 {
-	$evergreen = array_slice( $evergreen, 0, 10 );
+	$evergreen = array_slice( $evergreen, 0, bstat()->options()->report->max_items );
 
 	$total_activity = 0;
 	foreach ( $evergreen as $post )

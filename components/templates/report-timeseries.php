@@ -12,7 +12,7 @@ foreach ( $components as $component )
 {
 	$filters[ $component->component .':' . $component->action ] = array_merge( bstat()->report()->filter, array( 'component' => $component->component, 'action' => $component->action ) );
 }
-$components = bstat()->report()->multi_timeseries( 20, $filters );
+$components = bstat()->report()->multi_timeseries( bstat()->options()->report->quantize_time, $filters );
 
 // colors stolen from Rickshaw's 'munin' scheme, https://github.com/shutterstock/rickshaw/blob/master/src/js/Rickshaw.Fixtures.Color.js
 // though I guess that was stolen fron Munin

@@ -8,7 +8,7 @@ if ( 2 > count( $components_and_actions ) )
 }
 
 // for sanity, limit this to just the top 100 component:action pairs
-$components_and_actions = array_slice( $components_and_actions, 0, 100 );
+$components_and_actions = array_slice( $components_and_actions, 0, bstat()->options()->report->max_items );
 
 $total_activity = 0;
 foreach ( $components_and_actions as $component_and_action )

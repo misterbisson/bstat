@@ -1,14 +1,14 @@
 <?php
 
-// don't show this panel if there's only one user
+// don't show this panel if there are no users to report
 $users = bstat()->report()->top_users();
-if ( 2 > count( $users ) )
+if ( ! count( $users ) )
 {
 	return;
 }
 
-// for sanity, limit this to just the top 10 users
-$users = array_slice( $users, 0, 10 );
+// for sanity, limit this to just the top few users
+$users = array_slice( $users, 0, bstat()->options()->report->max_items );
 
 $total_activity = 0;
 foreach ( $users as $user )

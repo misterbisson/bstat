@@ -93,6 +93,10 @@ class bStat
 					'db' => 'bStat_Db_Wpdb',
 					'secret' => $this->version,
 					'session_duration' => 1800, // 30 minutes in seconds
+					'report' => (object) array(
+						'max_items' => 20, // count of posts or other items to show per section
+						'quantize_time' => 15, // minutes
+					),
 				),
 				$this->id_base
 			);

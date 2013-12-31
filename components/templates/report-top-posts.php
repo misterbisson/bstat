@@ -39,7 +39,7 @@ if ( count( $recent ) )
 	}
 
 	echo '<h2>Recent posts</h2>';
-	echo '<p>Showing ' . count( $recent ) . ' posts with ' . $total_activity . ' total actions. Only showing activity on top 100 total posts.</p>';
+	echo '<p>Showing ' . count( $recent ) . ' posts with ' . $total_activity . ' total actions.</p>';
 	echo '<ol>';
 	foreach ( $recent as $post )
 	{
@@ -65,7 +65,7 @@ if ( count( $evergreen ) )
 	}
 
 	echo '<h2>Evergreen posts</h2>';
-	echo '<p>Showing ' . count( $evergreen ) . ' posts with ' . $total_activity . ' total actions. Only showing activity on top 100 total posts.</p>';
+	echo '<p>Showing ' . count( $evergreen ) . ' posts with ' . $total_activity . ' total actions.</p>';
 	echo '<ol>';
 	foreach ( $evergreen as $post )
 	{

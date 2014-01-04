@@ -71,7 +71,7 @@ class bStat_Report
 			$filter = array_merge( $this->default_filter(), array_filter( (array) bstat()->db()->sanitize_footstep( $_GET, TRUE ) ) );
 		}
 
-		bstat()->filter = (array) $filter;
+		$this->filter = (array) $filter;
 	}
 
 	public function cache_key( $part, $filter = FALSE )

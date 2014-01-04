@@ -2,12 +2,12 @@
 class bStat
 {
 	private $admin   = FALSE;
-	public  $db      = FALSE;
+	private $db      = FALSE;
 	public  $id_base = 'bstat';
 	private $options = FALSE;
 	private $report  = FALSE;
 	private $rickshaw= FALSE;
-	public  $version = 2;
+	public  $version = 3;
 
 	public function __construct()
 	{
@@ -30,7 +30,7 @@ class bStat
 		}
 	} // END init
 
-	// a singleton for the admin object
+	// a object accessor for the admin object
 	public function admin()
 	{
 		if ( ! $this->admin )
@@ -42,7 +42,7 @@ class bStat
 		return $this->admin;
 	} // END admin
 
-	// a singleton for the report object
+	// a object accessor for the report object
 	public function report()
 	{
 		if ( ! $this->report )
@@ -54,7 +54,7 @@ class bStat
 		return $this->report;
 	} // END report
 
-	// a singleton for the rickshaw object
+	// a object accessor for the rickshaw object
 	public function rickshaw()
 	{
 		if ( ! $this->rickshaw )
@@ -66,7 +66,7 @@ class bStat
 		return $this->rickshaw;
 	} // END rickshaw
 
-	// a singleton for the db object
+	// a object accessor for the db object
 	public function db()
 	{
 		if ( ! $this->db )

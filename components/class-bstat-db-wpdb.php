@@ -3,6 +3,7 @@ class bStat_Db_Wpdb extends bStat_Db
 {
 	public $wpdb = FALSE;
 	public $errors = array();
+	public $queries = array();
 
 	public function __construct()
 	{
@@ -262,9 +263,7 @@ class bStat_Db_Wpdb extends bStat_Db
 		}
 
 		// all the SQL together in one place
-		$sql = $select . "\nFROM " . $this->activity_table . "\n" . $where . $filter_where . $date_where . "\n" . $group . "\n" . $order . "\nLIMIT " . $limit ."\n";
-
-//echo $sql;
+		$this->queries[] = $sql = $select . "\nFROM " . $this->activity_table . "\n" . $where . $filter_where . $date_where . "\n" . $group . "\n" . $order . "\nLIMIT " . $limit ."\n";
 
 		if ( 'col' == $return_format )
 		{

@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: bStat
-Plugin URI: http://maisonbisson.com/
+Plugin URI: http://wordpress.org/plugins/bstats/
 Description: Blog stats and activity stream
 Version: 6.0 alpha development
 Author: Casey Bisson

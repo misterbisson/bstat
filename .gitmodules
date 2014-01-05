@@ -1,0 +1,3 @@
+[submodule "components/external/rickshaw"]
+	path = components/external/rickshaw
+	url = git@github.com:shutterstock/rickshaw.git

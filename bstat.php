@@ -1,43 +1,19 @@
 <?php
 /*
 Plugin Name: bStat
-Plugin URI: http://maisonbisson.com/bsuite/
-Description: Stats!
-Version: 5.0
+Plugin URI: http://maisonbisson.com/
+Description: Blog stats and activity stream
+Version: 6.0 alpha development
 Author: Casey Bisson
 Author URI: http://maisonbisson.com/blog/
 */
-/*
-// get options
-$bsoptions = get_option('bstat-options');
 
-// insert default options if the options array is empty
-if( empty( $bsoptions ))
-{
-	$bsoptions = array( 
-		'open-graph' => 1,
-		'featured-comments' => 1,
-		'twitter-api' => 1,
-		'twitter-comments' => 1,
-		'twitter-app_id' => '',
-		'facebook-api' => 1,
-		'facebook-add_button' => 1,
-		'facebook-comments' => 0,
-		'facebook-admins' => '',
-		'facebook-app_id' => '',
-		'facebook-secret' => '',
-	);
+require_once __DIR__ . '/components/class-bstat.php';
+bstat();
 
-	update_option( 'bstat-options' , $bsoptions );
-}
+register_activation_hook( __FILE__, array( bstat(), 'initial_setup' ) );
 
-// the admin menu
-if ( is_admin() )
-	require_once dirname( __FILE__ ) . '/admin.php';
-*/
 
-// Better describe your content to social sites
-require_once( dirname( __FILE__ ) .'/components/daemon.php' );
-$bstat_daemon = new bStat_Daemon;
-require_once( dirname( __FILE__ ) .'/components/behavior.php' );
-$bstat_behaviors = new bStat_Behaviors;
+// comment tracking is kept separate as an example of how to build other integrations
+require_once __DIR__ . '/components/class-bstat-comments.php';
+bstat_comments();

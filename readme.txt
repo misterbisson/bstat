@@ -1,0 +1,23 @@
+=== bStat ===
+Contributors: misterbisson
+Donate link: http://MaisonBisson.com/
+Tags: bSuite, webstats, activity stream, activity, stats, statistics
+Requires at least: 3.7
+Tested up to: 3.8
+Stable tag: trunk
+
+Log and analize activity.
+
+== Description ==
+
+Log and analize activity related to posts. Pageview, comment, and click activity trackers are built-in. Other activity can be easily integrated and correlated.
+
+= History =
+
+bStat is a reboot of the stats components of bSuite, which was the outgrowth of the original bStat plugin. In a way, things have come full circle, but this plugin does not read or use data gathered by the old plugins. The focus of this plugin is now more narrowly aimed at recent and streaming activty, not deep history. 
+
+To learn more about <a href="http://wordpress.org/extend/plugins/tags/bsuite">the whole family of bSuite plugins</a>, click back there.
+
+== Installation ==
+
+1. Place the plugin folder in your `wp-content/plugins/` directory and activate it.

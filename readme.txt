@@ -6,11 +6,15 @@ Requires at least: 3.7
 Tested up to: 3.8
 Stable tag: trunk
 
-Log and analize activity.
+Log and analyze activity.
 
 == Description ==
 
-Log and analize activity related to posts. Pageview, comment, and click activity trackers are built-in. Other activity can be easily integrated and correlated.
+Log and analyze activity related to posts. Pageview, comment, and click activity trackers are built-in. Other activity can be easily integrated and correlated.
+
+== Fork me! ==
+
+This plugin is on Github: https://github.com/misterbisson/bstat
 
 = History =
 

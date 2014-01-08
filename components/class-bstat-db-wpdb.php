@@ -307,6 +307,7 @@ class bStat_Db_Wpdb extends bStat_Db
 			// The class name of the connector is the key to check for those options
 			if ( is_object( bstat()->options()->{__CLASS__} ) )
 			{
+				// typically a custom WPDB object is only useful to isolate DB load from normal WP operations
 				$this->wpdb = new wpdb(
 					bstat()->options()->{__CLASS__}->db_user,
 					bstat()->options()->{__CLASS__}->db_password,

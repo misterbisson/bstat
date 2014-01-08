@@ -7,7 +7,7 @@ class bStat
 	private $options = FALSE;
 	private $report  = FALSE;
 	private $rickshaw= FALSE;
-	public  $version = 3;
+	public  $version = 4;
 
 	public function __construct()
 	{

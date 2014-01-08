@@ -175,7 +175,7 @@
 
 		if( undefined == engine )
 		{
-			return '';
+			return;
 		}
 
 		switch ( engine ) {
@@ -251,7 +251,7 @@
 	}
 
 	// capture the UTM medium code
-	if ( undefined == this_url.queryKey.utm_medium )
+	if ( undefined != this_url.queryKey.utm_medium )
 	{
 		$.ajax({
 			type : "POST",
@@ -269,7 +269,7 @@
 	}
 
 	// capture the UTM source code
-	if ( undefined == this_url.queryKey.utm_source )
+	if ( undefined != this_url.queryKey.utm_source )
 	{
 		$.ajax({
 			type : "POST",

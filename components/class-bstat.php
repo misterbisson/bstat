@@ -74,9 +74,33 @@ class bStat
 			// the db abstract is required for all DB classes
 			require_once __DIR__ . '/class-bstat-db.php';
 
-			// @TODO: this needs to load the DB interface based on the config; for now, just wpdb is supported
-			require_once __DIR__ . '/class-bstat-db-wpdb.php';
-			$this->db = new bStat_Db_Wpdb();
+			// the DB class name is specified in the options
+			// other plugins can define classes that can be used here, but they have to be instantiated before this method is called
+			// internal db classes can be lazy loaded
+			$class = $this->options()->db;
+			if ( ! class_exists( $class ) )
+			{
+				// format the filesystem path to try to load this class file from
+				// we're trusting sanitize_title_with_dashes() here to strip out nasty characters, 
+				// especially directory separators that might allow arbitrary code execution
+				$class_path = __DIR__ . '/class-' . str_replace( '_', '-', sanitize_title_with_dashes( $class ) ) . '.php';
+				if ( ! file_exists( $class_path ) )
+				{
+					return new WP_Error( 'db_error', 'Could not load specified DB class file. Please check options and filesystem.', $class );
+				} // END if
+
+				// load the class file
+				require_once $class_path;
+
+				// did the file load, is the class we're looking for in there?
+				if ( ! class_exists( $class ) )
+				{
+					return new WP_Error( 'db_error', 'Could not find specified class in class file. Please check options and filesystem.', $class );
+				} // END if
+			} // END if
+
+			// instantiate the service
+			$this->db = new $class;
 		}
 
 		return $this->db;
@@ -86,13 +110,17 @@ class bStat
 	{
 		if ( ! $this->options )
 		{
-			$this->options = (object) apply_filters( 
+			$this->options = (object) apply_filters(
 				'go_config',
 				array(
 					'endpoint' => admin_url( '/admin-ajax.php?action=' . $this->id_base ),
 					'db' => 'bStat_Db_Wpdb',
 					'secret' => $this->version,
-					'session_duration' => 1800, // 30 minutes in seconds
+					'session_cookie' => (object) array(
+						'domain' => COOKIE_DOMAIN, // a WP-provided constant
+						'path' => '/',
+						'duration'=> 1800, // 30 minutes in seconds
+					),
 					'report' => (object) array(
 						'max_items' => 20, // count of posts or other items to show per section
 						'quantize_time' => 15, // minutes
@@ -160,9 +188,9 @@ class bStat
 		setcookie(
 			$this->admin()->get_field_name( 'session' ),
 			$session,
-			time() + $this->options()->session_duration,
-			'/',
-			COOKIE_DOMAIN // WordPress-provided constant
+			time() + $this->options()->session_cookie->duration,
+			$this->options()->session_cookie->path,
+			$this->options()->session_cookie->domain
 		);
 
 		return $session;

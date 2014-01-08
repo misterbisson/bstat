@@ -115,6 +115,14 @@ class bStat
 				array(
 					'endpoint' => admin_url( '/admin-ajax.php?action=' . $this->id_base ),
 					'db' => 'bStat_Db_Wpdb',
+					// A working, but pointless example of how to log and retrieve activity in a separate database/server
+					// This works because it uses the same config constants that WP uses, and that's also why it's pointless
+					// 'bStat_Db_Wpdb' => (object) array(
+					// 	'db_user' => DB_USER,
+					// 	'db_password' => DB_PASSWORD,
+					// 	'db_name' => DB_NAME,
+					// 	'db_host' => DB_HOST,
+					// ),
 					'secret' => $this->version,
 					'session_cookie' => (object) array(
 						'domain' => COOKIE_DOMAIN, // a WP-provided constant

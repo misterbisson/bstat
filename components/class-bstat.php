@@ -7,7 +7,7 @@ class bStat
 	private $options = FALSE;
 	private $report  = FALSE;
 	private $rickshaw= FALSE;
-	public  $version = 4;
+	public  $version = 5;
 
 	public function __construct()
 	{
@@ -131,7 +131,7 @@ class bStat
 					),
 					'report' => (object) array(
 						'max_items' => 20, // count of posts or other items to show per section
-						'quantize_time' => 15, // minutes
+						'quantize_time' => 20, // minutes
 					),
 				),
 				$this->id_base

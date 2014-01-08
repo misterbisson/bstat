@@ -578,7 +578,6 @@ class bStat_Report
 		// top a/b test groups
 		include __DIR__ . '/templates/report-top-groups.php';
 
-		echo '</pre>';
 	}
 
 }

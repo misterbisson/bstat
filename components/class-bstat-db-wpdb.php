@@ -303,10 +303,17 @@ class bStat_Db_Wpdb extends bStat_Db
 	{
 		if ( ! $this->wpdb )
 		{
-			// @TODO: this info needs to be fetched from go-config, rather than a constant
-			if ( defined( 'BSTAT_DB_NAME' ) )
+			// The DB connector can have custom options in the bstat options
+			// The class name of the connector is the key to check for those options
+			if ( is_object( bstat()->options()->{__CLASS__} ) )
 			{
-				$this->wpdb = new wpdb( BSTAT_DB_USER, BSTAT_DB_PASSWORD, BSTAT_DB_NAME, BSTAT_DB_HOST );
+				// typically a custom WPDB object is only useful to isolate DB load from normal WP operations
+				$this->wpdb = new wpdb(
+					bstat()->options()->{__CLASS__}->db_user,
+					bstat()->options()->{__CLASS__}->db_password,
+					bstat()->options()->{__CLASS__}->db_name,
+					bstat()->options()->{__CLASS__}->db_host
+				);
 			}
 			else
 			{

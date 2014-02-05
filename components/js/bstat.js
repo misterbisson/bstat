@@ -125,8 +125,10 @@
 
 	// capture the referring domain (unless it was an internal referral)
 	if (
-		undefined != referrer_url.host &&
-		document.location.domain != referrer_url.host
+		undefined != referrer_url.host && // not an empty referrer
+		'' != referrer_url.host && // not an empty referrer
+		undefined == bstat_t.get_search_engine( parsed_url.host ) && // don't bother with search engines, they're logged elsewhere
+		document.location.domain != referrer_url.host // ignore self-referrers
 	)
 	{
 		$.ajax({
@@ -212,7 +214,10 @@
 
 	// capture the search query from recognized search engines
 	bstat_t.search_string = bstat_t.get_search_string( referrer_url );
-	if( undefined != bstat_t.search_string )
+	if(
+		undefined != bstat_t.search_string &&
+		'' != bstat_t.search_string
+	)
 	{
 		$.ajax({
 			type : "POST",

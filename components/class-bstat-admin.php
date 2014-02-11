@@ -14,7 +14,7 @@ class bStat_Admin
 
 	public function verify_nonce()
 	{
-		return wp_verify_nonce( $_POST[ bstat()->id_base .'-nonce' ] , plugin_basename( __FILE__ ));
+		return wp_verify_nonce( $_REQUEST[ bstat()->id_base .'-nonce' ] , plugin_basename( __FILE__ ));
 	}
 
 	public function get_field_name( $field_name )
@@ -34,21 +34,21 @@ class bStat_Admin
 		nocache_headers();
 
 		// ignore requests without POST data
-		if ( ! is_array( $_POST[ bstat()->id_base ] ) )
+		if ( ! is_array( $_REQUEST[ bstat()->id_base ] ) )
 		{
 			echo 'no input data!';
 			die;
 		}
 
 		// ignore requests with invalid signatures
-		if ( ! bstat()->validate_signature( $_POST[ bstat()->id_base ] ) )
+		if ( ! bstat()->validate_signature( $_REQUEST[ bstat()->id_base ] ) )
 		{
 			echo 'invalid signature!';
 			die;
 		}
 
 		// format the inputted data to insert (it's sanitized in the DB class)
-		$footstep = stripslashes_deep( $_POST[ bstat()->id_base ] );
+		$footstep = stripslashes_deep( $_REQUEST[ bstat()->id_base ] );
 		bstat()->db()->insert( array(
 			'post'      => $footstep['post'],
 			'blog'      => $footstep['blog'],

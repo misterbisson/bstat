@@ -199,7 +199,7 @@
 				{
 					search_string = parsed_url.queryKey.s;
 				}
-				elseif ( parsed_url.path.match( /^\/search\// ) )
+				else if ( parsed_url.path.match( /^\/search\// ) )
 				{
 					search_string = parsed_url.path.replace( /^\/search\// , '' ).replace( /\// , '' );
 				}

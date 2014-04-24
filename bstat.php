@@ -17,4 +17,5 @@ register_activation_hook( __FILE__, array( bstat(), 'initial_setup' ) );
 // comment tracking is kept separate as an example of how to build other integrations
 require_once __DIR__ . '/components/class-bstat-comments.php';
 require_once __DIR__ . '/components/class-bstat-wpcore.php';
+bstat_comments();
 bstat_wpcore();

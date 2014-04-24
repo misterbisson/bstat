@@ -1,5 +1,8 @@
 <?php
 
+/**
+ * Class GO_bStat_WPCore
+ */
 class GO_bStat_WPCore
 {
     public function __construct()
@@ -32,7 +35,7 @@ class GO_bStat_WPCore
             ),
         );
 
-        $this->insert( $data );
+        bstat()->db()->insert( $this->footstep( $data ) );
     }//end user_register
 
     /**
@@ -50,43 +53,15 @@ class GO_bStat_WPCore
             ),
         );
 
-        $this->insert( $data );
-    }//end user_sign_in
-
-    /**
-     * insert common data into bStat
-     *
-     * @param $data data to be inserted
-     */
-    public function insert( $data )
-    {
-        if ( ! $data )
-        {
-            return;
-        }//end if
-
-        // derive and add standard payload (not 'info') fields
-        // Get post_id to facilitate tracking via footstep()
-        $data['post_id'] = go_subscriptions_bstat()->config( 'go_subscriptions_tracking_id' );
-
-        if ( is_wp_error( $data['post_id'] ) )
-        {
-            return; // no footstep possible
-        }
-
-        $old_tz = date_default_timezone_get();
-        date_default_timezone_set( 'UTC' );
-        $date = new DateTime();
-        $data['date_gmt'] = date_format( $date, 'U' );
-        date_default_timezone_set( $old_tz );
-
         bstat()->db()->insert( $this->footstep( $data ) );
-    }//end insert
+    }//end user_sign_in
 
     /**
      * prepare all required data for writing to bStat
      *
-     * @param $data data to be inserted
+     * @param $data data collected via the hooks
+     *
+     * @return object $footstep data to be recorded in bStat
      */
     public function footstep( $data )
     {
@@ -96,13 +71,13 @@ class GO_bStat_WPCore
         date_default_timezone_set( 'UTC' );
 
         $footstep = (object) array(
-            'post'      => $data['post_id'],
+            'post'      => 1,
             'blog'      => bstat()->get_blog(),
             'user'      => $data['user_id'],
             'group'     => NULL,
             'component' => 'wpcore',
             'action'    => $data['action'],
-            'timestamp' => $data['date_gmt'],
+            'timestamp' => time(),
             'session'   => bstat()->get_session(),
             'info'      => implode( '|', $data['info'] ),
         );
@@ -113,6 +88,9 @@ class GO_bStat_WPCore
     }//end footstep
 }//end class
 
+/**
+ * @return GO_bStat_WPCore
+ */
 function bstat_wpcore()
 {
     global $bstat_wpcore;

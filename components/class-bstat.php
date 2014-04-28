@@ -155,6 +155,7 @@ class bStat
 			'endpoint'   => $this->options()->endpoint,
 		);
 		$details['signature'] = $this->get_signature( $details );
+		$details['tests'] = $this->options()->tests;
 
 		return $details;
 	}

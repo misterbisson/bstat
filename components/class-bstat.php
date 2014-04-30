@@ -160,7 +160,7 @@ class bStat
 		$current_time = time();
 		foreach ( $this->options()->tests as $test_num => $test )
 		{
-			if ( strtotime( $test->date_start ) < $current_time || strtotime( $test->date_end ) > $current_time )
+			if ( $current_time < strtotime( $test->date_start ) || $current_time > strtotime( $test->date_end ))
 			{
 				continue;
 			}

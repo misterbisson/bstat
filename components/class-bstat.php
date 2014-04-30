@@ -157,10 +157,10 @@ class bStat
 		$details['signature'] = $this->get_signature( $details );
 
 		// filter valid configured tests
-		$current_time = strtotime( 'now' );
+		$current_time = time();
 		foreach ( $this->options()->tests as $test_num => $test )
 		{
-			if ( $current_time > strtotime( $test->date_end ) )
+			if ( strtotime( $test->date_start ) < $current_time || strtotime( $test->date_end ) > $current_time )
 			{
 				continue;
 			}

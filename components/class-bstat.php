@@ -155,8 +155,18 @@ class bStat
 			'endpoint'   => $this->options()->endpoint,
 		);
 		$details['signature'] = $this->get_signature( $details );
-		$details['tests'] = $this->options()->tests;
 
+		// filter configured tests, if any, and localize resulting data into bstat client-side object
+		foreach ( $this->options()->tests as $test_num => $test )
+		{
+			$details['tests'][ $test_num ] = array();
+			$details['tests'][ $test_num ]['date_start'] = strtotime( $test->date_start );
+			foreach ( $test->variations as $ab_test => $variation )
+			{
+				$variations[ $ab_test ] = $test->variations->$ab_test->class;
+			}
+			$details['tests'][ $test_num ]['variations'] = $variations;
+		}
 		return $details;
 	}
 

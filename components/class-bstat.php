@@ -165,13 +165,11 @@ class bStat
 				continue;
 			}
 
-			$details['tests'][ $test_num ] = array();
-			$details['tests'][ $test_num ]['date_start'] = strtotime( $test->date_start );
-			foreach ( $test->variations as $ab_test => $variation )
+			$details['tests'][ $test_num ] = array( 'date_start' => strtotime( $test->date_start ) );
+			foreach ( $test->variations as $variation_name => $variation )
 			{
-				$variations[ $ab_test ] = $test->variations->$ab_test->class;
+				$details['tests'][ $test_num ]['variations'][ $variation_name ] = $variation->class;
 			}
-			$details['tests'][ $test_num ]['variations'] = $variations;
 		}
 		return $details;
 	}

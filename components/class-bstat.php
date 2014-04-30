@@ -156,9 +156,15 @@ class bStat
 		);
 		$details['signature'] = $this->get_signature( $details );
 
-		// filter configured tests, if any, and localize resulting data into bstat client-side object
+		// filter valid configured tests
+		$current_time = strtotime( 'now' );
 		foreach ( $this->options()->tests as $test_num => $test )
 		{
+			if ( $current_time > strtotime( $test->date_end ) )
+			{
+				continue;
+			}
+
 			$details['tests'][ $test_num ] = array();
 			$details['tests'][ $test_num ]['date_start'] = strtotime( $test->date_start );
 			foreach ( $test->variations as $ab_test => $variation )

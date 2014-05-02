@@ -1,15 +1,15 @@
 <?php
 class bStat
 {
-	private $admin   = FALSE;
-	private $db      = FALSE;
-	public  $id_base = 'bstat';
-	private $options = FALSE;
-	private $report  = FALSE;
-	private $rickshaw= FALSE;
-	private $qv_user = 'bstat_user';  // query var for the user id
-	private $qv_redirect = 'bstat_redirect'; // query var for the redirect url
-	public  $version = 5;
+	private $admin       = FALSE;
+	private $db          = FALSE;
+	public  $id_base     = 'bstat';
+	private $options     = FALSE;
+	private $report      = FALSE;
+	private $rickshaw    = FALSE;
+	private $user_qv     = 'bstat_user';  // query var for the user id
+	private $redirect_qv = 'bstat_redirect'; // query var for the redirect url
+	public  $version     = 6;
 
 	public function __construct()
 	{
@@ -38,7 +38,7 @@ class bStat
 		add_rewrite_tag( "%{$this->qv_redirect}%", 'https?:.+' );
 
 		// set the identity cookie when WP sets the auth cookie
-        add_action( 'set_auth_cookie', array( $this, 'set_auth_cookie' ), 10, 5 );
+		add_action( 'set_auth_cookie', array( $this, 'set_auth_cookie' ), 10, 5 );
 		//  and also when we intercept a request with our rewrite_base
 		add_action( 'parse_query', array( $this, 'parse_query' ), 1 );
 	} // END init
@@ -229,18 +229,18 @@ class bStat
 		exit;
 	}//END cookie_and_redirect
 
-    /**
+	/**
 	 * hooked to 'set_auth_cookie' action to track when WP sets the auth
 	 * cookie and piggyback our identity cookie at the same time.
-     *
-     * @param $user_id (WP User ID - note: not User object)
-     */
-    public function set_auth_cookie( $unused_auth_cookie, $unused_expire, $unused_expiration, $user_id, $unused_scheme )
-    {
+	 *
+	 * @param $user_id (WP User ID - note: not User object)
+	 */
+	public function set_auth_cookie( $unused_auth_cookie, $unused_expire, $unused_expiration, $user_id, $unused_scheme )
+	{
 		$this->set_identity_cookie( $user_id );
-    }//end set_auth_cookie
+	}//end set_auth_cookie
 
-    public function set_identity_cookie( $user_id )
+	public function set_identity_cookie( $user_id )
 	{
 		$expiration_time = time() + $this->options()->identity_cookie->duration;
 		$cookie = wp_generate_auth_cookie( $user_id, $expiration_time, $this->id_base );

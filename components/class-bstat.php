@@ -7,6 +7,8 @@ class bStat
 	private $options = FALSE;
 	private $report  = FALSE;
 	private $rickshaw= FALSE;
+	private $qv_user = 'bstat_user';  // query var for the user id
+	private $qv_redirect = 'bstat_redirect'; // query var for the redirect url
 	public  $version = 5;
 
 	public function __construct()
@@ -30,12 +32,14 @@ class bStat
 		}
 
 		// set up a rewrite rule to cookie alert/newsletter users
-		$config = $this->options();
-		add_rewrite_rule( $config->cookie_url_base . '/([0-9]+)/(https?:\/\/.+)/?$', 'index.php?user=$matches[1]&redirect=$matches[2]', 'top' );
+		add_rewrite_rule( $this->options()->identity_cookie->rewrite_base . '/([0-9]+)/(https?:\/\/.+)/?$', 'index.php?' . $this->qv_user . '=$matches[1]&' . $this->qv_redirect . '=$matches[2]', 'top' );
 
-		add_rewrite_tag( '%user%', '[0-9].+' );
-		add_rewrite_tag( '%redirect%', 'https?:.+' );
+		add_rewrite_tag( "%{$this->qv_user}%", '[0-9].+' );
+		add_rewrite_tag( "%{$this->qv_redirect}%", 'https?:.+' );
 
+		// set the identity cookie when WP sets the auth cookie
+        add_action( 'set_auth_cookie', array( $this, 'set_auth_cookie' ), 10, 5 );
+		//  and also when we intercept a request with our rewrite_base
 		add_action( 'parse_query', array( $this, 'parse_query' ), 1 );
 	} // END init
 
@@ -134,15 +138,20 @@ class bStat
 					// ),
 					'secret' => $this->version,
 					'session_cookie' => (object) array(
+						'name' => 'session',
 						'domain' => COOKIE_DOMAIN, // a WP-provided constant
 						'path' => '/',
 						'duration' => 1800, // 30 minutes in seconds
+					),
+					'identity_cookie' => (object) array(
+						'name' => 'thyme',
+						'rewrite_base' => 'b',
+						'duration' => 7776000, // 90 days in seconds
 					),
 					'report' => (object) array(
 						'max_items' => 20, // count of posts or other items to show per section
 						'quantize_time' => 20, // minutes
 					),
-					'cookie_url_base' => 'bs',
 				),
 				$this->id_base
 			);
@@ -163,12 +172,12 @@ class bStat
 			return $id; // user is logged in
 		}
 
-		if ( ! isset( $_COOKIE[ $this->id_base ]['thyme'] ) )
+		if ( ! isset( $_COOKIE[ $this->id_base ][ $this->options()->identity_cookie->name ] ) )
 		{
 			return 0;
 		}
 
-		if ( FALSE === ( $id = wp_validate_auth_cookie( $_COOKIE[ $this->id_base ]['thyme'], 'bstat' ) ) )
+		if ( FALSE === ( $id = wp_validate_auth_cookie( $_COOKIE[ $this->id_base ][ $this->options()->identity_cookie->name ], $this->id_base ) ) )
 		{
 			return 0;
 		}
@@ -189,27 +198,61 @@ class bStat
 	 */
 	public function parse_query( $query )
 	{
-		if ( ! isset( $query->query_vars['user'] ) || ! isset( $query->query_vars['redirect'] ) )
+		if ( ! isset( $query->query_vars[ $this->qv_user] ) || ! isset( $query->query_vars[ $this->qv_redirect] ) )
 		{
 			return;
 		}
 
-		if ( ! $user = get_user_by( 'id', absint( $query->query_vars['user'] ) ) )
+		if ( ! $user = get_user_by( 'id', absint( $query->query_vars[ $this->qv_user ] ) ) )
 		{
 			return;
 		}
 
-		$expiration_time = time() + 60 * 60 * 24 * 30; // 30 days from now
-		$cookie = wp_generate_auth_cookie( $user->ID, $expiration_time, 'bstat' );
-		setcookie( $this->admin()->get_field_name( 'thyme' ), $cookie, $expiration_time, '/', COOKIE_DOMAIN );
+		$this->cookie_and_redirect( $user->ID, $query->query_vars[ $this->qv_redirect ] );
+	}//END parse_query
+
+	/**
+	 * cookie the user and then redirect
+	 *
+	 * @param int $user_id id of the user to generate a cookie for
+	 * @param string $redirect_url where to redirect after we're done
+	 */
+	public function cookie_and_redirect( $user_id, $redirect_url )
+	{
+		$this->set_identity_cookie( $user_id );
 
 		// wp redirect ignores any query params which we have to assume are
 		// all meant for the redirect url. reconstruct them here
-		$redirect_url = empty( $_GET ) ? $query->query_vars['redirect'] : add_query_arg( $_GET, $query->query_vars['redirect'] );
+		$redirect_url = empty( $_GET ) ? $redirect_url : add_query_arg( $_GET, $redirect_url );
 
 		wp_safe_redirect( $redirect_url );
 		exit;
-	}// END parse_query
+	}//END cookie_and_redirect
+
+    /**
+	 * hooked to 'set_auth_cookie' action to track when WP sets the auth
+	 * cookie and piggyback our identity cookie at the same time.
+     *
+     * @param $user_id (WP User ID - note: not User object)
+     */
+    public function set_auth_cookie( $unused_auth_cookie, $unused_expire, $unused_expiration, $user_id, $unused_scheme )
+    {
+		$this->set_identity_cookie( $user_id );
+    }//end set_auth_cookie
+
+    public function set_identity_cookie( $user_id )
+	{
+		$expiration_time = time() + $this->options()->identity_cookie->duration;
+		$cookie = wp_generate_auth_cookie( $user_id, $expiration_time, $this->id_base );
+
+		setcookie(
+			$this->admin()->get_field_name( $this->options()->identity_cookie->name ),
+			$cookie,
+			$expiration_time,
+			$this->options()->session_cookie->path,
+			$this->options()->session_cookie->domain
+		);
+	}//END set_identity_cookie
 
 	public function wp_localize_script()
 	{
@@ -248,9 +291,9 @@ class bStat
 	public function get_session()
 	{
 		// get or start a session
-		if ( isset( $_COOKIE[ $this->id_base ]['session'] ) )
+		if ( isset( $_COOKIE[ $this->id_base ][ $this->options()->session_cookie->name ] ) )
 		{
-			$session = $_COOKIE[ $this->id_base ]['session'];
+			$session = $_COOKIE[ $this->id_base ][ $this->options()->session_cookie->name ];
 		}
 		else
 		{
@@ -259,7 +302,7 @@ class bStat
 
 		// set or update the cookie to expire in 30 minutes or so (configurable)
 		setcookie(
-			$this->admin()->get_field_name( 'session' ),
+			$this->admin()->get_field_name( $this->options()->session_cookie->name ),
 			$session,
 			time() + $this->options()->session_cookie->duration,
 			$this->options()->session_cookie->path,

@@ -18,7 +18,7 @@ class bStat
 
 	public function init()
 	{
-		wp_register_script( $this->id_base, plugins_url( plugin_basename( __DIR__ ) ) . '/js/bstat.js', array( 'jquery' ), $this->version, TRUE );
+		wp_register_script( $this->id_base, plugins_url( plugin_basename( __DIR__ ) ) . '/js/bstat.js', array( 'jquery', 'foundation-cookie' ), $this->version, TRUE );
 
 		if ( is_admin() )
 		{

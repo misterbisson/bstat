@@ -290,4 +290,161 @@
 			}
 		});
 	}
+
+	//
+	// a/b testing framework
+	//
+	// set up the event object that will hold bound functions
+	bstat.event = {};
+
+	// this will hold the user's variations. It should get populated by the cookie and/or bstat.select_variations.
+	bstat.variations = {};
+
+	/**
+	 * handle the bootstrapping of this object
+	 */
+	bstat.init = function() {
+		// initialize any commonly used dom elements as this.$something
+		this.$body = $( document.body );
+
+		// bind any events of note. Bound events should have their function declared as go_ab_testing.event.funcname.
+		// Ideally, event functions will simply e.preventDefault(); where appropriate and call go_ab_testing functions.
+
+		// call any setup functions
+
+		this.get_variations();
+		this.set_variations();
+		this.apply_variations();
+
+		// in addition to applying the variations to the page in the above call, we'll need to broadcast
+		// the variations out to various other sources. Let's do that with a this.variation_notifiy(); call
+		this.variation_notify();
+	};
+
+	/**
+	 * reads the testing cookie for variations
+	 */
+	bstat.get_variations = function() {
+		// read from cookie into this.variations
+		this.variations = JSON.parse( $.cookie('tests') ) || {};
+		// this should probably run this.clean_variations() regardless of whether or not if found
+		// variations in the cookie.
+		bstat.clean_variations( bstat.variations );
+	};
+
+	/**
+	 * sets the testing cookie
+	 *
+	 * @param object variations (optional) Variations the user will maintain on subsequent page loads
+	 */
+	bstat.set_variations = function( variations ) {
+		// this should set the cookie to whatever is passed in. If variations is NOT passed in, use what is
+		// stored in this.variations.  If there isn't anything of note in there, unset the cookie.
+		if ( ! variations ) {
+			if ( $.isEmptyObject( bstat.variations ) ) {
+				$.removeCookie('tests');
+			}
+			else {
+				$.cookie.json = true;
+				$.cookie( 'tests',  bstat.variations, { expires: 30 } );
+			}
+		}
+		else {
+			$.cookie.json = true;
+			$.cookie( 'tests',  variations, { expires: 30 } );
+		}
+	};
+
+	/**
+	 * ensures all the appropriate variations exist in this.variations
+	 */
+	bstat.clean_variations = function( variations ) {
+		if ( $.isEmptyObject( variations ) ) {
+			// nothing in cookies, so use tests obtained from server
+			for ( test in bstat.tests ) {
+				var selected_variation = bstat.select_variation( bstat.tests[ test ] );
+				var $test_name = 'bstat-' + test + '-' + selected_variation.key;
+				bstat.variations[$test_name] = { 'class' : selected_variation.variation,
+					'time' : new Date().getTime()
+				};
+			}
+		}
+		else {
+			// this should compare the contents of this.variations with the data that exists in
+			// this.test (which comes from wp_localize_script). Missing tests should be selected
+			// (via this.select_variation( test ) ), variations that don't exist in this.tests should be removed.
+		}
+
+		// the specs also talk about removing based on timestamp. Do that too.
+	};
+
+	/**
+	 * select a variation from a test
+	 */
+	bstat.select_variation = function( test ) {
+		// select a variation from the provided test and return the selected one.
+		var random_variation = getRandomPropertyWithKey( test.variations );
+		return random_variation;
+	};
+
+	/**
+	 * applies variations to the page
+	 */
+	bstat.apply_variations = function() {
+		// apply variations to the body class in some way
+		var values = '';
+		var keys = Object.keys( bstat.variations );
+		for ( key in keys ) {
+			values += ' ' + keys[key] + ' ' + bstat.variations[keys[key]]['class'];
+		}
+		this.$body.addClass( values );
+	};
+
+	/**
+	 * advertises the implementation of a variation on the page
+	 */
+	bstat.variation_notify = function() {
+		// trigger custom events with the the variation data is probably the right plan, here.
+
+		// For bstat, something like:
+		// $( document ).trigger( 'bstat/track', data_to_send_to_bstat );
+		//
+		// This will, of course, require bstat to do something to handle that data, whether it be to
+		// collect it into a bstat_t property and pass it along in the new bstat_t.step method that Casey
+		// has proposed or if it is to make individual calls.  Casey will know more about what should be
+		// done there.
+
+		// likewise, we'll need something along those lines for google analytics:
+		// $( document ).trigger( 'go-google-analytics/track', data_to_send_to_go_google_analytics );
+		// with an appropriate listener in that plugin as well
+	};
+
+	/**
+	 * get a random property, along with its key
+	 */
+	function getRandomPropertyWithKey( obj ) {
+		var keys = Object.keys( obj );
+		var random_key = keys[keys.length * Math.random() << 0];
+		return {
+			'variation' : obj[random_key],
+			'key'  : random_key
+		};
+	};
+
+	/**
+	 * same implementation as used in go-remote-identity-goidentity.read_cookie
+	 */
+	function readCookie( name ) {
+		var nameEQ = name + "=";
+		var ca = document.cookie.split(';');
+		for(var i=0;i < ca.length;i++) {
+			var c = ca[i];
+			while (c.charAt(0)==' ') c = c.substring(1,c.length);
+			if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length,c.length);
+		}
+		return null;
+	}
+
+	// install an a/b test variation, if any
+	bstat.init();
 })(jQuery);

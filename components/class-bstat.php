@@ -156,6 +156,21 @@ class bStat
 		);
 		$details['signature'] = $this->get_signature( $details );
 
+		// filter valid configured tests
+		$current_time = time();
+		foreach ( $this->options()->tests as $test_num => $test )
+		{
+			if ( $current_time < strtotime( $test->date_start ) || $current_time > strtotime( $test->date_end ))
+			{
+				continue;
+			}
+
+			$details['tests'][ $test_num ] = array( 'date_start' => strtotime( $test->date_start ) );
+			foreach ( $test->variations as $variation_name => $variation )
+			{
+				$details['tests'][ $test_num ]['variations'][ $variation_name ] = $variation->class;
+			}
+		}
 		return $details;
 	}
 

@@ -18,7 +18,7 @@ class bStat
 	{
 		wp_register_script( $this->id_base, plugins_url( plugin_basename( __DIR__ ) ) . '/js/bstat.js', array( 'jquery' ), $this->version, TRUE );
 
-		if( is_admin() )
+		if ( is_admin() )
 		{
 			$this->admin();
 			$this->report();
@@ -90,7 +90,7 @@ class bStat
 			if ( ! class_exists( $class ) )
 			{
 				// format the filesystem path to try to load this class file from
-				// we're trusting sanitize_title_with_dashes() here to strip out nasty characters, 
+				// we're trusting sanitize_title_with_dashes() here to strip out nasty characters,
 				// especially directory separators that might allow arbitrary code execution
 				$class_path = __DIR__ . '/class-' . str_replace( '_', '-', sanitize_title_with_dashes( $class ) ) . '.php';
 				if ( ! file_exists( $class_path ) )
@@ -110,7 +110,7 @@ class bStat
 
 			// instantiate the service
 			$this->db = new $class;
-		}
+		}//END if
 
 		return $this->db;
 	} // END db
@@ -136,7 +136,7 @@ class bStat
 					'session_cookie' => (object) array(
 						'domain' => COOKIE_DOMAIN, // a WP-provided constant
 						'path' => '/',
-						'duration'=> 1800, // 30 minutes in seconds
+						'duration' => 1800, // 30 minutes in seconds
 					),
 					'report' => (object) array(
 						'max_items' => 20, // count of posts or other items to show per section
@@ -146,7 +146,7 @@ class bStat
 				),
 				$this->id_base
 			);
-		}
+		}//END if
 
 		return $this->options;
 	} // END options
@@ -206,7 +206,7 @@ class bStat
 		// wp redirect ignores any query params which we have to assume are
 		// all meant for the redirect url. reconstruct them here
 		$redirect_url = empty( $_GET ) ? $query->query_vars['redirect'] : add_query_arg( $_GET, $query->query_vars['redirect'] );
-		
+
 		wp_safe_redirect( $redirect_url );
 		exit;
 	}// END parse_query
@@ -222,7 +222,7 @@ class bStat
 		$details['signature'] = $this->get_signature( $details );
 
 		return $details;
-	}
+	}//END wp_localize_script
 
 	public function get_signature( $details )
 	{
@@ -267,14 +267,13 @@ class bStat
 		);
 
 		return $session;
-	}
+	}//END get_session
 
 	public function initial_setup()
 	{
 		$this->db()->initial_setup();
-	}
-
-}
+	}//END initial_setup
+}//END class
 
 function bstat()
 {

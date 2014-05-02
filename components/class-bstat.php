@@ -28,6 +28,15 @@ class bStat
 			add_action( 'template_redirect', array( $this, 'template_redirect' ), 15 );
 			wp_enqueue_script( $this->id_base );
 		}
+
+		// set up a rewrite rule to cookie alert/newsletter users
+		$config = $this->options();
+		add_rewrite_rule( $config->cookie_url_base . '/([0-9]+)/(https?:\/\/.+)/?$', 'index.php?user=$matches[1]&redirect=$matches[2]', 'top' );
+
+		add_rewrite_tag( '%user%', '[0-9].+' );
+		add_rewrite_tag( '%redirect%', 'https?:.+' );
+
+		add_action( 'parse_query', array( $this, 'parse_query' ), 1 );
 	} // END init
 
 	// a object accessor for the admin object
@@ -133,6 +142,7 @@ class bStat
 						'max_items' => 20, // count of posts or other items to show per section
 						'quantize_time' => 20, // minutes
 					),
+					'cookie_url_base' => 'bs',
 				),
 				$this->id_base
 			);
@@ -141,10 +151,65 @@ class bStat
 		return $this->options;
 	} // END options
 
+	/**
+	 * @return int the current user id from either wordpress'
+	 *  get_current_user_id() call or from our 'theyme' cookie, or 0 if we
+	 *  cannot determine the user
+	 */
+	public function get_current_user_id()
+	{
+		if ( 0 < ( $id = get_current_user_id() ) )
+		{
+			return $id; // user is logged in
+		}
+
+		if ( ! isset( $_COOKIE[ $this->id_base ]['thyme'] ) )
+		{
+			return 0;
+		}
+
+		if ( FALSE === ( $id = wp_validate_auth_cookie( $_COOKIE[ $this->id_base ]['thyme'], 'bstat' ) ) )
+		{
+			return 0;
+		}
+
+		return $id;
+	}//END get_current_user_id
+
 	public function template_redirect()
 	{
 		wp_localize_script( $this->id_base, $this->id_base, $this->wp_localize_script() );
 	} // END template_redirect
+
+	/**
+	 * callback for the parse_query action, which we use to cookie users
+	 * who visit our URLs via links from our newsletters or alerts.
+	 *
+	 * @param WP_Query $query the WP_Query object
+	 */
+	public function parse_query( $query )
+	{
+		if ( ! isset( $query->query_vars['user'] ) || ! isset( $query->query_vars['redirect'] ) )
+		{
+			return;
+		}
+
+		if ( ! $user = get_user_by( 'id', absint( $query->query_vars['user'] ) ) )
+		{
+			return;
+		}
+
+		$expiration_time = time() + 60 * 60 * 24 * 30; // 30 days from now
+		$cookie = wp_generate_auth_cookie( $user->ID, $expiration_time, 'bstat' );
+		setcookie( $this->admin()->get_field_name( 'thyme' ), $cookie, $expiration_time, '/', COOKIE_DOMAIN );
+
+		// wp redirect ignores any query params which we have to assume are
+		// all meant for the redirect url. reconstruct them here
+		$redirect_url = empty( $_GET ) ? $query->query_vars['redirect'] : add_query_arg( $_GET, $query->query_vars['redirect'] );
+		
+		wp_safe_redirect( $redirect_url );
+		exit;
+	}// END parse_query
 
 	public function wp_localize_script()
 	{

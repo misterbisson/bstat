@@ -240,6 +240,13 @@ class bStat
 		$this->set_identity_cookie( $user_id );
 	}//end set_auth_cookie
 
+	/**
+	 * set the bStat identity cookie for a given user. we use WP's auth cookie
+	 * mechanism to generate the cookie so it can be validated when we read
+	 * it back later.
+	 *
+	 * @param $user_id (WP User ID - note: not User object)
+	 */
 	public function set_identity_cookie( $user_id )
 	{
 		$expiration_time = time() + $this->options()->identity_cookie->duration;

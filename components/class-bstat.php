@@ -34,9 +34,9 @@ class bStat
 		}
 
 		// set up a rewrite rule to cookie alert/newsletter users
-		add_rewrite_rule( $this->options()->identity_cookie->rewrite_base . '/([0-9]+)/(https?:\/\/.+)/?$', 'index.php?' . $this->qv_user . '=$matches[1]&' . $this->qv_redirect . '=$matches[2]', 'top' );
-		add_rewrite_tag( "%{$this->qv_user}%", '[0-9].+' );
-		add_rewrite_tag( "%{$this->qv_redirect}%", 'https?:.+' );
+		add_rewrite_rule( $this->options()->identity_cookie->rewrite_base . '/([0-9]+)/(https?:\/\/.+)/?$', 'index.php?' . $this->user_qv . '=$matches[1]&' . $this->redirect_qv . '=$matches[2]', 'top' );
+		add_rewrite_tag( "%{$this->user_qv}%", '[0-9].+' );
+		add_rewrite_tag( "%{$this->redirect_qv}%", 'https?:.+' );
 
 		// set the identity cookie when WP sets the auth cookie
 		add_action( 'set_auth_cookie', array( $this, 'set_auth_cookie' ), 10, 5 );
@@ -203,20 +203,20 @@ class bStat
 	{
 
 		// only continue if we have a user and redirect var
-		if ( ! isset( $query->query_vars[ $this->qv_user ] ) || ! isset( $query->query_vars[ $this->qv_redirect ] ) )
+		if ( ! isset( $query->query_vars[ $this->user_qv ] ) || ! isset( $query->query_vars[ $this->redirect_qv ] ) )
 		{
 			return;
 		}
 
 		// we have a user and redirect var, but is the user ID valid?
-		if ( ! $user = get_user_by( 'id', absint( $query->query_vars[ $this->qv_user ] ) ) )
+		if ( ! $user = get_user_by( 'id', absint( $query->query_vars[ $this->user_qv ] ) ) )
 		{
 			wp_redirect( home_url( '/' ) );
 			die;
 		}
 
 		// user is valid, go set the cookie and redirect
-		$this->cookie_and_redirect( $user->ID, $query->query_vars[ $this->qv_redirect ] );
+		$this->cookie_and_redirect( $user->ID, $query->query_vars[ $this->redirect_qv ] );
 	}//END parse_query
 
 	/**

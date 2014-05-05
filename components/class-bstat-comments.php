@@ -91,7 +91,7 @@ class bStat_Comments
 			'blog'      => bstat()->get_blog(),
 			'user'      => ( $user = get_user_by( 'email', $comment->comment_author_email ) ? $user->ID : NULL ),
 			'group'     => NULL,
-			'component' => 'bstat',
+			'component' => 'wpcore',
 			'action'    => 'comment',
 			'timestamp' => strtotime( $comment->comment_date_gmt ),
 			'session'   => ( get_comment_meta( $comment->comment_ID, $this->meta_name, TRUE ) ?: md5( $comment->comment_author_email ) ),

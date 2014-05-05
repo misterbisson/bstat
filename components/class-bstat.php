@@ -22,25 +22,28 @@ class bStat
 
 		if ( is_admin() )
 		{
+			// admin-only hooks
 			$this->admin();
 			$this->report();
 		}
 		else
 		{
+			// non-admin hooks
 			add_action( 'template_redirect', array( $this, 'template_redirect' ), 15 );
 			wp_enqueue_script( $this->id_base );
 		}
 
 		// set up a rewrite rule to cookie alert/newsletter users
 		add_rewrite_rule( $this->options()->identity_cookie->rewrite_base . '/([0-9]+)/(https?:\/\/.+)/?$', 'index.php?' . $this->qv_user . '=$matches[1]&' . $this->qv_redirect . '=$matches[2]', 'top' );
-
 		add_rewrite_tag( "%{$this->qv_user}%", '[0-9].+' );
 		add_rewrite_tag( "%{$this->qv_redirect}%", 'https?:.+' );
 
 		// set the identity cookie when WP sets the auth cookie
 		add_action( 'set_auth_cookie', array( $this, 'set_auth_cookie' ), 10, 5 );
+
 		//  and also when we intercept a request with our rewrite_base
 		add_action( 'parse_query', array( $this, 'parse_query' ), 1 );
+
 	} // END init
 
 	// a object accessor for the admin object
@@ -198,16 +201,21 @@ class bStat
 	 */
 	public function parse_query( $query )
 	{
-		if ( ! isset( $query->query_vars[ $this->qv_user] ) || ! isset( $query->query_vars[ $this->qv_redirect] ) )
+
+		// only continue if we have a user and redirect var
+		if ( ! isset( $query->query_vars[ $this->qv_user ] ) || ! isset( $query->query_vars[ $this->qv_redirect ] ) )
 		{
 			return;
 		}
 
+		// we have a user and redirect var, but is the user ID valid?
 		if ( ! $user = get_user_by( 'id', absint( $query->query_vars[ $this->qv_user ] ) ) )
 		{
-			return;
+			wp_redirect( home_url( '/' ) );
+			die;
 		}
 
+		// user is valid, go set the cookie and redirect
 		$this->cookie_and_redirect( $user->ID, $query->query_vars[ $this->qv_redirect ] );
 	}//END parse_query
 
@@ -271,21 +279,25 @@ class bStat
 		);
 		$details['signature'] = $this->get_signature( $details );
 
-		// filter valid configured tests
-		$current_time = time();
-		foreach ( $this->options()->tests as $test_num => $test )
+		if ( is_object( $this->options()->tests ) )
 		{
-			if ( $current_time < strtotime( $test->date_start ) || $current_time > strtotime( $test->date_end ))
+			// filter valid configured tests
+			$current_time = time();
+			foreach ( (array) $this->options()->tests as $test_num => $test )
 			{
-				continue;
-			}
+				if ( $current_time < strtotime( $test->date_start ) || $current_time > strtotime( $test->date_end ))
+				{
+					continue;
+				}
 
-			$details['tests'][ $test_num ] = array( 'date_start' => strtotime( $test->date_start ) );
-			foreach ( $test->variations as $variation_name => $variation )
-			{
-				$details['tests'][ $test_num ]['variations'][ $variation_name ] = $variation->class;
+				$details['tests'][ $test_num ] = array( 'date_start' => strtotime( $test->date_start ) );
+				foreach ( $test->variations as $variation_name => $variation )
+				{
+					$details['tests'][ $test_num ]['variations'][ $variation_name ] = $variation->class;
+				}
 			}
 		}
+
 		return $details;
 	}//END wp_localize_script
 

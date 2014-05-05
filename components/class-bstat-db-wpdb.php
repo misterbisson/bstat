@@ -90,6 +90,8 @@ class bStat_Db_Wpdb extends bStat_Db
 				}
 				break;
 
+/*
+@TODO: this will need to be refactored to support the new A/B test definition
 			case 'group':
 			case 'groups':
 				$ids = array_filter( array_map( 'absint', $ids ) );
@@ -99,6 +101,7 @@ class bStat_Db_Wpdb extends bStat_Db
 					$return = 'posts';
 				}
 				break;
+*/
 
 			case 'component':
 			case 'components':

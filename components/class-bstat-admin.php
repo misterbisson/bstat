@@ -52,7 +52,7 @@ class bStat_Admin
 		bstat()->db()->insert( array(
 			'post'      => $footstep['post'],
 			'blog'      => $footstep['blog'],
-			'user'      => get_current_user_id(),
+			'user'      => bstat()->get_current_user_id(),
 			'group'     => $footstep['group'],
 			'component' => $footstep['component'],
 			'action'    => $footstep['action'],

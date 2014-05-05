@@ -193,12 +193,15 @@ class bStat_Db_Wpdb extends bStat_Db
 				);
 				break;
 
+/*
+@TODO: this will need to be refactored to support the new A/B test definition
 			case 'group':
 			case 'groups':
 				$select = 'SELECT `group`, COUNT(1) AS hits';
 				$group = 'GROUP BY `group`';
 				$order = 'ORDER BY hits DESC, date DESC, time DESC';
 				break;
+*/
 
 			case 'component':
 			case 'components':

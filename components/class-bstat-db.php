@@ -187,7 +187,6 @@ abstract class bStat_Db
 		$filter->post = ( $filter->post ? absint( $filter->post ) : FALSE );
 		$filter->blog = ( $filter->blog ? absint( $filter->blog ) : FALSE );
 		$filter->user = ( $filter->user ? absint( $filter->user ) : FALSE );
-		$filter->group = ( $filter->group ? absint( $filter->group ) : FALSE );
 		$filter->x1 = ( $filter->x1 ? preg_replace( '/[a-z]/i', '', $filter->x1{0} ) : FALSE );
 		$filter->x2 = ( $filter->x2 ? preg_replace( '/[a-z]/i', '', $filter->x2{0} ) : FALSE );
 		$filter->x3 = ( $filter->x3 ? preg_replace( '/[a-z]/i', '', $filter->x3{0} ) : FALSE );

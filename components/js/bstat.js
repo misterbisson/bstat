@@ -363,7 +363,9 @@
 		if ( $.isEmptyObject( variations ) ) {
 			// nothing in cookies, so use tests obtained from server
 			for ( test in bstat.tests ) {
+				// select one of the test variants
 				var selected_variation = bstat.select_variation( bstat.tests[ test ] );
+				// create test name; note: using specified naming convention
 				var $test_name = 'bstat-' + test + '-' + selected_variation.key;
 				bstat.variations[$test_name] = { 'class' : selected_variation.variation,
 					'time' : new Date().getTime()
@@ -374,9 +376,22 @@
 			// this should compare the contents of this.variations with the data that exists in
 			// this.test (which comes from wp_localize_script). Missing tests should be selected
 			// (via this.select_variation( test ) ), variations that don't exist in this.tests should be removed.
+			for ( test in variations ) {
+				// get the test; note: this assumes use of specified naming convention
+				var selected_test = test.split('-')[1];
+				if ( bstat.tests[selected_test] ) {
+					// The timestamp for each variation must be checked against the date_start for each test.
+					// If the cookie's variation date is before the date_start, the selected variation is expired and must be ignored.
+					if ( bstat.tests[selected_test].date_start > variations[test]['time'] ) {
+						delete bstat.variations[test];
+						bstat.set_variations( bstat.variations );
+					}
+				}
+				else {
+					bstat.select_variation( bstat.tests[selected_test] );
+				}
+			}
 		}
-
-		// the specs also talk about removing based on timestamp. Do that too.
 	};
 
 	/**

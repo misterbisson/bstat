@@ -165,7 +165,7 @@ class bStat
 
 	/**
 	 * @return int the current user id from either wordpress'
-	 *  get_current_user_id() call or from our 'theyme' cookie, or 0 if we
+	 *  get_current_user_id() call or from our 'thyme' cookie, or 0 if we
 	 *  cannot determine the user
 	 */
 	public function get_current_user_id()

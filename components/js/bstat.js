@@ -294,17 +294,21 @@
 	//
 	// a/b testing framework
 	//
+	bstat.testing = {};
 
 	// set up the event object that will hold bound functions
-	bstat.event = {};
+	bstat.testing.event = {};
 
 	// this will hold the user's variations. It should get populated by the cookie and/or bstat.select_variations.
-	bstat.variations = {};
+	bstat.testing.variations = {};
+
+	// specified expiration for the testing cookie - denotes 'days from now'
+	bstat.testing.expiration = 30;
 
 	/**
 	 * handle the bootstrapping of this object
 	 */
-	bstat.init = function() {
+	bstat.testing.init = function() {
 		// initialize any commonly used dom elements as this.$something
 		this.$body = $( document.body );
 
@@ -325,12 +329,12 @@
 	/**
 	 * reads the testing cookie for variations
 	 */
-	bstat.get_variations = function() {
+	bstat.testing.get_variations = function() {
 		// read from cookie into this.variations
 		this.variations = JSON.parse( $.cookie('tests') ) || {};
 		// this should probably run this.clean_variations() regardless of whether or not if found
 		// variations in the cookie.
-		bstat.clean_variations( bstat.variations );
+		this.clean_variations( this.variations );
 	};
 
 	/**
@@ -338,58 +342,65 @@
 	 *
 	 * @param object variations (optional) Variations the user will maintain on subsequent page loads
 	 */
-	bstat.set_variations = function( variations ) {
+	bstat.testing.set_variations = function( variations ) {
 		// this should set the cookie to whatever is passed in. If variations is NOT passed in, use what is
 		// stored in this.variations.  If there isn't anything of note in there, unset the cookie.
-		if ( ! variations ) {
-			if ( $.isEmptyObject( bstat.variations ) ) {
-				$.removeCookie('tests');
+
+		// store original state of $.cookie.json, in case other plugins are using it
+		var original_cookie_json = $.cookie.json;
+		if ( variations ) {
+			$.cookie.json = true;
+			$.cookie( 'tests',  variations, { expires: this.expiration } );
+		}
+		else {
+			if ( $.isEmptyObject( this.variations ) ) {
+				$.removeCookie( 'tests' );
 			}
 			else {
 				$.cookie.json = true;
-				$.cookie( 'tests',  bstat.variations, { expires: 30 } );
+				$.cookie( 'tests', this.variations, { expires: this.expiration } );
 			}
 		}
-		else {
-			$.cookie.json = true;
-			$.cookie( 'tests',  variations, { expires: 30 } );
-		}
+
+		// reset it back to its original state
+		$.cookie.json = original_cookie_json;
 	};
 
 	/**
 	 * ensures all the appropriate variations exist in this.variations
 	 */
-	bstat.clean_variations = function( variations ) {
+	bstat.testing.clean_variations = function( variations ) {
 		if ( $.isEmptyObject( variations ) ) {
-			// nothing in cookies, so use tests obtained from server
+			// nothing in cookies, so use tests obtained from server, which are stored in 'bstat.tests'
 			for ( test in bstat.tests ) {
 				// select one of the test variants
-				var selected_variation = bstat.select_variation( bstat.tests[ test ] );
+				var selected_variation = this.select_variation( bstat.tests[ test ] );
 				// create test name; note: using specified naming convention
-				var $test_name = 'bstat-' + test + '-' + selected_variation.key;
-				bstat.variations[$test_name] = { 'class' : selected_variation.variation,
+				var test_name = 'bstat-' + test + '-' + selected_variation.key;
+				this.variations[ test_name ] = {
+					'class' : selected_variation.variation,
 					'time' : new Date().getTime()
 				};
 			}
+			return;
 		}
-		else {
-			// this should compare the contents of this.variations with the data that exists in
-			// this.test (which comes from wp_localize_script). Missing tests should be selected
-			// (via this.select_variation( test ) ), variations that don't exist in this.tests should be removed.
-			for ( test in variations ) {
-				// get the test; note: this assumes use of specified naming convention
-				var selected_test = test.split('-')[1];
-				if ( bstat.tests[selected_test] ) {
-					// The timestamp for each variation must be checked against the date_start for each test.
-					// If the cookie's variation date is before the date_start, the selected variation is expired and must be ignored.
-					if ( bstat.tests[selected_test].date_start > variations[test]['time'] ) {
-						delete bstat.variations[test];
-						bstat.set_variations( bstat.variations );
-					}
+
+		// this should compare the contents of this.variations with the data that exists in
+		// this.test (which comes from wp_localize_script). Missing tests should be selected
+		// (via this.select_variation( test ) ), variations that don't exist in this.tests should be removed.
+		for ( test in variations ) {
+			// get the test; note: this assumes use of specified naming convention
+			var selected_test = test.split('-')[1];
+			if ( bstat.tests[selected_test] ) {
+				// The timestamp for each variation must be checked against the date_start for each test.
+				// If the cookie's variation date is before the date_start, the selected variation is expired and must be ignored.
+				if ( bstat.tests[ selected_test ].date_start > variations[ test ]['time'] ) {
+					delete bstat.variations[ test ];
+					this.set_variations( bstat.variations );
 				}
-				else {
-					bstat.select_variation( bstat.tests[selected_test] );
-				}
+			}
+			else {
+				this.select_variation( bstat.tests[ selected_test ] );
 			}
 		}
 	};
@@ -397,21 +408,21 @@
 	/**
 	 * select a variation from a test
 	 */
-	bstat.select_variation = function( test ) {
+	bstat.testing.select_variation = function( test ) {
 		// select a variation from the provided test and return the selected one.
-		var random_variation = getRandomPropertyWithKey( test.variations );
+		var random_variation = this.getRandomPropertyWithKey( test.variations );
 		return random_variation;
 	};
 
 	/**
 	 * applies variations to the page
 	 */
-	bstat.apply_variations = function() {
+	bstat.testing.apply_variations = function() {
 		// apply variations to the body class in some way
 		var values = '';
-		var keys = Object.keys( bstat.variations );
+		var keys = Object.keys( this.variations );
 		for ( key in keys ) {
-			values += ' ' + keys[key] + ' ' + bstat.variations[keys[key]]['class'];
+			values += ' ' + keys[ key ] + ' ' + this.variations[ keys[ key ] ]['class'];
 		}
 		this.$body.addClass( values );
 	};
@@ -419,7 +430,7 @@
 	/**
 	 * advertises the implementation of a variation on the page
 	 */
-	bstat.variation_notify = function() {
+	bstat.testing.variation_notify = function() {
 		// trigger custom events with the the variation data is probably the right plan, here.
 
 		// For bstat, something like:
@@ -438,15 +449,15 @@
 	/**
 	 * get a random property, along with its key
 	 */
-	function getRandomPropertyWithKey( obj ) {
+	bstat.testing.getRandomPropertyWithKey = function( obj ) {
 		var keys = Object.keys( obj );
-		var random_key = keys[keys.length * Math.random() << 0];
+		var random_key = keys[ keys.length * Math.random() << 0 ];
 		return {
-			'variation' : obj[random_key],
+			'variation' : obj[ random_key ],
 			'key'  : random_key
 		};
 	};
 
 	// install an a/b test variation, if any
-	bstat.init();
+	bstat.testing.init();
 })(jQuery);

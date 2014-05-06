@@ -5,7 +5,7 @@
 		return;
 	}
 
-	var bstat_t = {};
+	bstat.track = {};
 
 	// track the page view
 	// @TODO: should I make a wrapper for the ajax call?
@@ -23,7 +23,7 @@
 	});
 
 	// Track normal link click events a
-	bstat_t.link_click = function( event ) {
+	bstat.track.link_click = function( event ) {
 
 		// info is: nearest ID of the element that link is in, nearest ID of the widget that link is in, the link text
 		var the_info = $(event.target).closest( '[id]' ).attr('id') + "|" + $(event.target).closest( '.widget' ).attr( 'id' ) + "|" + ( $(event.target).text() || $(event.target).children( 'img:first' ).attr( 'alt' ) );
@@ -44,7 +44,7 @@
 		});
 	}
 
-	$( document ).on( 'click', 'a', bstat_t.link_click );
+	$( document ).on( 'click', 'a', bstat.track.link_click );
 
 	// @TODO: add tracking for clicks within forms
 	// ...also maybe track progress through the form
@@ -55,8 +55,8 @@
 	// MIT License
 	// stolen from http://blog.stevenlevithan.com/archives/parseuri
 	// fun and easy to test at http://stevenlevithan.com/demo/parseuri/js/
-	bstat_t.parse_uri = function (str) {
-		var	o	  = bstat_t.parse_uri.options,
+	bstat.track.parse_uri = function (str) {
+		var	o	  = bstat.track.parse_uri.options,
 			m   = o.parser[o.strictMode ? "strict" : "loose"].exec(str),
 			uri = {},
 			i   = 14;
@@ -70,7 +70,7 @@
 
 		return uri;
 	};
-	bstat_t.parse_uri.options = {
+	bstat.track.parse_uri.options = {
 		strictMode: false,
 		key: ["source","protocol","authority","userInfo","user","password","host","port","relative","path","directory","file","query","anchor"],
 		q:   {
@@ -84,7 +84,7 @@
 	};
 
 	// stolen from http://phpjs.org/functions/urldecode/
-	bstat_t.urldecode = function (str) {
+	bstat.track.urldecode = function (str) {
 		// From: http://phpjs.org/functions
 		// +	 original by: Philip Peterson
 		// +	 improved by: Kevin van Zonneveld (http://kevin.vanzonneveld.net)
@@ -121,13 +121,13 @@
 	}
 
 	// parse the referrer URL
-	var referrer_url = bstat_t.parse_uri( document.referrer );
+	var referrer_url = bstat.track.parse_uri( document.referrer );
 
 	// capture the referring domain (unless it was an internal referral)
 	if (
 		undefined != referrer_url.host && // not an empty referrer
 		'' != referrer_url.host && // not an empty referrer
-		undefined == bstat_t.get_search_engine( parsed_url.host ) && // don't bother with search engines, they're logged elsewhere
+		undefined == bstat.track.get_search_engine( parsed_url.host ) && // don't bother with search engines, they're logged elsewhere
 		document.location.domain != referrer_url.host // ignore self-referrers
 	)
 	{
@@ -141,12 +141,12 @@
 				"bstat[signature]" : bstat.signature,
 				"bstat[component]" : "bstat",
 				"bstat[action]" : "r_host",
-				"bstat[info]" : referrer_url.host,
+				"bstat[info]" : referrer_url.host
 			}
 		});
 	}
 
-	bstat_t.get_search_engine = function ( domain ) {
+	bstat.track.get_search_engine = function ( domain ) {
 
 		if ( domain.match( /^(www)?\.?google.*/i ) )
 		{
@@ -170,9 +170,9 @@
 
 	}
 
-	bstat_t.get_search_string = function ( parsed_url ) {
+	bstat.track.get_search_string = function ( parsed_url ) {
 
-		var engine = bstat_t.get_search_engine( parsed_url.host );
+		var engine = bstat.track.get_search_engine( parsed_url.host );
 		var search_string;
 
 		if( undefined == engine )
@@ -209,14 +209,14 @@
 				break;
 		}
 
-		return bstat_t.urldecode( search_string );
+		return bstat.track.urldecode( search_string );
 	}
 
 	// capture the search query from recognized search engines
-	bstat_t.search_string = bstat_t.get_search_string( referrer_url );
+	bstat.track.search_string = bstat.track.get_search_string( referrer_url );
 	if(
-		undefined != bstat_t.search_string &&
-		'' != bstat_t.search_string
+		undefined != bstat.track.search_string &&
+		'' != bstat.track.search_string
 	)
 	{
 		$.ajax({
@@ -229,13 +229,13 @@
 				"bstat[signature]" : bstat.signature,
 				"bstat[component]" : "bstat",
 				"bstat[action]" : "r_search",
-				"bstat[info]" : bstat_t.search_string,
+				"bstat[info]" : bstat.track.search_string
 			}
 		});
 	}
 
 	// parse this URL, then look for UTM codes in it
-	var this_url = bstat_t.parse_uri( document.location );
+	var this_url = bstat.track.parse_uri( document.location );
 
 	// capture the UTM campaign code
 	if ( undefined != this_url.queryKey.utm_campaign )
@@ -250,7 +250,7 @@
 				"bstat[signature]" : bstat.signature,
 				"bstat[component]" : "bstat",
 				"bstat[action]" : "u_campgn",
-				"bstat[info]" : this_url.queryKey.utm_campaign,
+				"bstat[info]" : this_url.queryKey.utm_campaign
 			}
 		});
 	}
@@ -268,7 +268,7 @@
 				"bstat[signature]" : bstat.signature,
 				"bstat[component]" : "bstat",
 				"bstat[action]" : "u_medium",
-				"bstat[info]" : this_url.queryKey.utm_medium,
+				"bstat[info]" : this_url.queryKey.utm_medium
 			}
 		});
 	}
@@ -286,7 +286,7 @@
 				"bstat[signature]" : bstat.signature,
 				"bstat[component]" : "bstat",
 				"bstat[action]" : "u_source",
-				"bstat[info]" : this_url.queryKey.utm_source,
+				"bstat[info]" : this_url.queryKey.utm_source
 			}
 		});
 	}
@@ -437,7 +437,7 @@
 		// $( document ).trigger( 'bstat/track', data_to_send_to_bstat );
 		//
 		// This will, of course, require bstat to do something to handle that data, whether it be to
-		// collect it into a bstat_t property and pass it along in the new bstat_t.step method that Casey
+		// collect it into a bstat.track property and pass it along in the new bstat.track.step method that Casey
 		// has proposed or if it is to make individual calls.  Casey will know more about what should be
 		// done there.
 

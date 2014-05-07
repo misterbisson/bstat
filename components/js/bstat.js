@@ -331,9 +331,9 @@
 	 */
 	bstat.testing.get_variations = function() {
 		// read from cookie into this.variations
-		this.variations = JSON.parse( $.cookie('tests') ) || {};
-		// this should probably run this.clean_variations() regardless of whether or not if found
-		// variations in the cookie.
+		this.variations = $.cookie('tests') ? JSON.parse( $.cookie('tests') ) : {};
+
+		// we run this.clean_variations() regardless of whether or not if found variations in the cookie
 		this.clean_variations( this.variations );
 	};
 

@@ -378,7 +378,6 @@ class bStat_Db_Wpdb extends bStat_Db
 				`x5` char(1) DEFAULT NULL,
 				`x6` char(1) DEFAULT NULL,
 				`x7` char(1) DEFAULT NULL,
-				`x8` char(1) DEFAULT NULL,
 				`component` char(8) NOT NULL default '',
 				`action` char(8) NOT NULL default '',
 				`date` date NOT NULL default '1970-01-01',

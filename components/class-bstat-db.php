@@ -13,7 +13,6 @@ abstract class bStat_Db
 		'x5'        => NULL, // string (1 char), optional, used for A/B testing
 		'x6'        => NULL, // string (1 char), optional, used for A/B testing
 		'x7'        => NULL, // string (1 char), optional, used for A/B testing
-		'x8'        => NULL, // string (1 char), optional, used for A/B testing
 		'component' => FALSE, // string (8 chars), required, the component inserting the footstep
 		'action'    => FALSE, // string (8 chars),required, the action taken by the user
 		'timestamp' => FALSE, // int, required, the seconds from epoch, GMT
@@ -130,7 +129,6 @@ abstract class bStat_Db
 		$footstep->x5 = preg_replace( '/[a-z]/i', '', $footstep->x5{0} );
 		$footstep->x6 = preg_replace( '/[a-z]/i', '', $footstep->x6{0} );
 		$footstep->x7 = preg_replace( '/[a-z]/i', '', $footstep->x7{0} );
-		$footstep->x8 = preg_replace( '/[a-z]/i', '', $footstep->x8{0} );
 		$footstep->component = sanitize_title_with_dashes( $footstep->component );
 		$footstep->action = sanitize_title_with_dashes( $footstep->action );
 		$footstep->timestamp = absint( $footstep->timestamp );
@@ -173,7 +171,6 @@ abstract class bStat_Db
 					'x5'        => FALSE,
 					'x6'        => FALSE,
 					'x7'        => FALSE,
-					'x8'        => FALSE,
 					'component' => FALSE,
 					'action'    => FALSE,
 					'timestamp' => FALSE,
@@ -194,7 +191,6 @@ abstract class bStat_Db
 		$filter->x5 = ( $filter->x5 ? preg_replace( '/[a-z]/i', '', $filter->x5{0} ) : FALSE );
 		$filter->x6 = ( $filter->x6 ? preg_replace( '/[a-z]/i', '', $filter->x6{0} ) : FALSE );
 		$filter->x7 = ( $filter->x7 ? preg_replace( '/[a-z]/i', '', $filter->x7{0} ) : FALSE );
-		$filter->x8 = ( $filter->x8 ? preg_replace( '/[a-z]/i', '', $filter->x8{0} ) : FALSE );
 		$filter->component = ( $filter->component ? sanitize_title_with_dashes( $filter->component ) : FALSE );
 		$filter->action = ( $filter->action ? sanitize_title_with_dashes( $filter->action ) : FALSE );
 		$filter->session = ( $filter->session ? sanitize_title_with_dashes( $filter->session ) : FALSE );

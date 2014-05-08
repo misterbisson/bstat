@@ -18,7 +18,14 @@ class bStat
 
 	public function init()
 	{
-		wp_register_script( $this->id_base, plugins_url( plugin_basename( __DIR__ ) ) . '/js/bstat.js', array( 'jquery', 'foundation-cookie' ), $this->version, TRUE );
+		// register our own version of the plugin if no other version is already registered
+		if ( ! wp_script_is( 'jquery-cookie' ) )
+		{
+			wp_register_script( 'jquery-cookie', plugins_url( plugin_basename( __DIR__ ) ) . '/js/external/jquery-cookie/jquery.cookie.js', array( 'jquery' ), $this->version, TRUE );
+			wp_enqueue_script( 'jquery-cookie' );
+		}
+
+		wp_register_script( $this->id_base, plugins_url( plugin_basename( __DIR__ ) ) . '/js/bstat.js', array( 'jquery', 'jquery-cookie' ), $this->version, TRUE );
 
 		if ( is_admin() )
 		{

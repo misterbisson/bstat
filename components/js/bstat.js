@@ -120,32 +120,6 @@
 		}).replace(/\+/g, '%20'));
 	}
 
-	// parse the referrer URL
-	var referrer_url = bstat_t.parse_uri( document.referrer );
-
-	// capture the referring domain (unless it was an internal referral)
-	if (
-		undefined != referrer_url.host && // not an empty referrer
-		'' != referrer_url.host && // not an empty referrer
-		undefined == bstat_t.get_search_engine( parsed_url.host ) && // don't bother with search engines, they're logged elsewhere
-		document.location.domain != referrer_url.host // ignore self-referrers
-	)
-	{
-		$.ajax({
-			type : "POST",
-			url : bstat.endpoint,
-			dataType : 'jsonp',
-			data : {
-				"bstat[post]" : bstat.post,
-				"bstat[blog]" : bstat.blog,
-				"bstat[signature]" : bstat.signature,
-				"bstat[component]" : "bstat",
-				"bstat[action]" : "r_host",
-				"bstat[info]" : referrer_url.host,
-			}
-		});
-	}
-
 	bstat_t.get_search_engine = function ( domain ) {
 
 		if ( domain.match( /^(www)?\.?google.*/i ) )
@@ -168,6 +142,32 @@
 			return 'internal';
 		}
 
+	}
+
+	// parse the referrer URL
+	var referrer_url = bstat_t.parse_uri( document.referrer );
+
+	// capture the referring domain (unless it was an internal referral)
+	if (
+		undefined != referrer_url.host && // not an empty referrer
+		'' != referrer_url.host && // not an empty referrer
+		undefined == bstat_t.get_search_engine( referrer_url.host ) && // don't bother with search engines, they're logged elsewhere
+		document.location.domain != referrer_url.host // ignore self-referrers
+	)
+	{
+		$.ajax({
+			type : "POST",
+			url : bstat.endpoint,
+			dataType : 'jsonp',
+			data : {
+				"bstat[post]" : bstat.post,
+				"bstat[blog]" : bstat.blog,
+				"bstat[signature]" : bstat.signature,
+				"bstat[component]" : "bstat",
+				"bstat[action]" : "r_host",
+				"bstat[info]" : referrer_url.host,
+			}
+		});
 	}
 
 	bstat_t.get_search_string = function ( parsed_url ) {

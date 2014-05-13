@@ -1,3 +1,6 @@
 [submodule "components/external/rickshaw"]
 	path = components/external/rickshaw
 	url = git@github.com:shutterstock/rickshaw.git
+[submodule "components/js/external/jquery-cookie"]
+	path = components/js/external/jquery-cookie
+	url = git@github.com:carhartl/jquery-cookie.git

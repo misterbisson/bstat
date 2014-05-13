@@ -33,7 +33,7 @@ class bStat
 			wp_enqueue_script( $this->id_base );
 		}
 
-		// set up a rewrite rule to cookie alert/newsletter users
+		// set up a rewrite rule to cookie users
 		add_rewrite_rule( $this->options()->identity_cookie->rewrite_base . '/([0-9]+)/(https?:\/\/.+)/?$', 'index.php?' . $this->user_qv . '=$matches[1]&' . $this->redirect_qv . '=$matches[2]', 'top' );
 		// and a rewrite rule to redirect alert/newsletter users without an id
 		add_rewrite_rule( $this->options()->identity_cookie->rewrite_base . '//(https?:\/\/.+)/?$', 'index.php?' . $this->redirect_qv . '=$matches[1]', 'top' );

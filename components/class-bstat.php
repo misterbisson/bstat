@@ -162,6 +162,10 @@ class bStat
 						'max_items' => 20, // count of posts or other items to show per section
 						'quantize_time' => 20, // minutes
 					),
+					'test_cookie' => (object) array(
+						'name' => 'test',
+						'duration' => 2592000, // 30 days in seconds
+					),
 				),
 				$this->id_base
 			);
@@ -295,15 +299,21 @@ class bStat
 				if ( $current_time < strtotime( $test->date_start ) || $current_time > strtotime( $test->date_end ))
 				{
 					continue;
-				}
+				}// end if
 
 				$details['tests'][ $test_num ] = array( 'date_start' => strtotime( $test->date_start ) );
 				foreach ( $test->variations as $variation_name => $variation )
 				{
 					$details['tests'][ $test_num ]['variations'][ $variation_name ] = $variation->class;
-				}
-			}
-		}
+				}// end foreach
+			}// end foreach
+		}// end if
+
+		if ( is_object( $this->options()->test_cookie ) )
+		{
+			$details['test_cookie'][ 'name' ]     = $this->options()->test_cookie->name;
+			$details['test_cookie'][ 'duration' ] = $this->options()->test_cookie->duration;
+		}// end if
 
 		return $details;
 	}//END wp_localize_script

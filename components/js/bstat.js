@@ -302,8 +302,11 @@
 	// this will hold the user's variations. It should get populated by the cookie and/or bstat.select_variations.
 	bstat.testing.variations = {};
 
+	// the configured name
+	bstat.testing.name = bstat.test_cookie.name;
+
 	// specified expiration for the testing cookie - denotes 'days from now'
-	bstat.testing.expiration = 30;
+	bstat.testing.expiration = bstat.test_cookie.duration / 86400;
 
 	/**
 	 * handle the bootstrapping of this object
@@ -331,7 +334,7 @@
 	 */
 	bstat.testing.get_variations = function() {
 		// read from cookie into this.variations
-		this.variations = $.cookie('tests') ? JSON.parse( $.cookie('tests') ) : {};
+		this.variations = $.cookie( this.name ) ? JSON.parse( $.cookie( this.name ) ) : {};
 
 		// we run this.clean_variations() regardless of whether or not if found variations in the cookie
 		this.clean_variations( this.variations );
@@ -350,15 +353,15 @@
 		var original_cookie_json = $.cookie.json;
 		if ( variations ) {
 			$.cookie.json = true;
-			$.cookie( 'tests',  variations, { expires: this.expiration } );
+			$.cookie( this.name,  variations, { expires: this.expiration } );
 		}
 		else {
 			if ( $.isEmptyObject( this.variations ) ) {
-				$.removeCookie( 'tests' );
+				$.removeCookie( this.name );
 			}
 			else {
 				$.cookie.json = true;
-				$.cookie( 'tests', this.variations, { expires: this.expiration } );
+				$.cookie( this.name, this.variations, { expires: this.expiration } );
 			}
 		}
 

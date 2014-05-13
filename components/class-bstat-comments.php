@@ -90,6 +90,7 @@ class bStat_Comments
 			'post'      => $comment->comment_post_ID,
 			'blog'      => bstat()->get_blog(),
 			'user'      => ( $user = get_user_by( 'email', $comment->comment_author_email ) ? $user->ID : NULL ),
+			// @TODO: refactor `group` to use the new a/b tests
 			'group'     => NULL,
 			'component' => 'wpcore',
 			'action'    => 'comment',

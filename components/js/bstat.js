@@ -303,7 +303,7 @@
 	bstat.testing.variations = {};
 
 	// the configured name
-	bstat.testing.name = bstat.test_cookie.name;
+	bstat.testing.cookie_name = bstat.test_cookie.name;
 
 	// specified expiration for the testing cookie - denotes 'days from now'
 	bstat.testing.expiration = bstat.test_cookie.duration / 86400;
@@ -334,7 +334,7 @@
 	 */
 	bstat.testing.get_variations = function() {
 		// read from cookie into this.variations
-		this.variations = $.cookie( this.name ) ? JSON.parse( $.cookie( this.name ) ) : {};
+		this.variations = $.cookie( this.cookie_name ) ? JSON.parse( $.cookie( this.cookie_name ) ) : {};
 
 		// we run this.clean_variations() regardless of whether or not if found variations in the cookie
 		this.clean_variations( this.variations );
@@ -353,15 +353,15 @@
 		var original_cookie_json = $.cookie.json;
 		if ( variations ) {
 			$.cookie.json = true;
-			$.cookie( this.name,  variations, { expires: this.expiration } );
+			$.cookie( this.cookie_name,  variations, { expires: this.expiration } );
 		}
 		else {
 			if ( $.isEmptyObject( this.variations ) ) {
-				$.removeCookie( this.name );
+				$.removeCookie( this.cookie_name );
 			}
 			else {
 				$.cookie.json = true;
-				$.cookie( this.name, this.variations, { expires: this.expiration } );
+				$.cookie( this.cookie_name, this.variations, { expires: this.expiration } );
 			}
 		}
 

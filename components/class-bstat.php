@@ -40,9 +40,11 @@ class bStat
 			wp_enqueue_script( $this->id_base );
 		}
 
-		// set up a rewrite rule to cookie alert/newsletter users
+		// set up a rewrite rule to cookie users
 		add_rewrite_rule( $this->options()->identity_cookie->rewrite_base . '/([0-9]+)/(https?:\/\/.+)/?$', 'index.php?' . $this->user_qv . '=$matches[1]&' . $this->redirect_qv . '=$matches[2]', 'top' );
-		add_rewrite_tag( "%{$this->user_qv}%", '[0-9].+' );
+		// and a rewrite rule to redirect alert/newsletter users without an id
+		add_rewrite_rule( $this->options()->identity_cookie->rewrite_base . '//(https?:\/\/.+)/?$', 'index.php?' . $this->redirect_qv . '=$matches[1]', 'top' );
+		add_rewrite_tag( "%{$this->user_qv}%", '[0-9]+' );
 		add_rewrite_tag( "%{$this->redirect_qv}%", 'https?:.+' );
 
 		// set the identity cookie when WP sets the auth cookie
@@ -212,33 +214,42 @@ class bStat
 	 */
 	public function parse_query( $query )
 	{
-
-		// only continue if we have a user and redirect var
-		if ( ! isset( $query->query_vars[ $this->user_qv ] ) || ! isset( $query->query_vars[ $this->redirect_qv ] ) )
+		// only continue if we at least have a redirect var
+		if ( ! isset( $query->query_vars[ $this->redirect_qv ] ) )
 		{
 			return;
 		}
 
-		// we have a user and redirect var, but is the user ID valid?
-		if ( ! $user = get_user_by( 'id', absint( $query->query_vars[ $this->user_qv ] ) ) )
+		// if we have a user id then make sure it's valid
+		if ( isset( $query->query_vars[ $this->user_qv ] ) )
 		{
-			wp_redirect( home_url( '/' ) );
-			die;
+			if ( ! $user = get_user_by( 'id', absint( $query->query_vars[ $this->user_qv ] ) ) )
+			{
+				wp_redirect( home_url( '/' ) );
+				die;
+			}
+		}
+		else
+		{
+			$user = NULL;
 		}
 
 		// user is valid, go set the cookie and redirect
-		$this->cookie_and_redirect( $user->ID, $query->query_vars[ $this->redirect_qv ] );
+		$this->cookie_and_redirect( $user, $query->query_vars[ $this->redirect_qv ] );
 	}//END parse_query
 
 	/**
 	 * cookie the user and then redirect
 	 *
-	 * @param int $user_id id of the user to generate a cookie for
+	 * @param WP_User $user a user object. this may be NULL.
 	 * @param string $redirect_url where to redirect after we're done
 	 */
-	public function cookie_and_redirect( $user_id, $redirect_url )
+	public function cookie_and_redirect( $user, $redirect_url )
 	{
-		$this->set_identity_cookie( $user_id );
+		if ( NULL != $user )
+		{
+			$this->set_identity_cookie( $user->ID );
+		}
 
 		// wp redirect ignores any query params which we have to assume are
 		// all meant for the redirect url. reconstruct them here

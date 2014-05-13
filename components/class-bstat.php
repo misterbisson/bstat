@@ -9,6 +9,8 @@ class bStat
 	private $rickshaw    = FALSE;
 	private $user_qv     = 'bstat_user';  // query var for the user id
 	private $redirect_qv = 'bstat_redirect'; // query var for the redirect url
+	private $valid_t     = array( 'x1', 'x2', 'x3', 'x4', 'x5', 'x6', 'x7', );
+	private $valid_v     = array( 'a', 'b', 'c', 'd', 'e', 'f', );
 	public  $version     = 6;
 
 	public function __construct()
@@ -345,6 +347,22 @@ class bStat
 
 		return $session;
 	}//END get_session
+
+	public function get_variation( $test )
+	{
+
+		if ( ! in_array( $test, $this->valid_t ) )
+		{
+			return NULL;
+		}
+
+		if ( ! isset( $_COOKIE[ $this->id_base ]['tests'][ $test ] ) )
+		{
+			return NULL;
+		}
+
+		return in_array( $_COOKIE[ $this->id_base ]['tests'][ $test ]{0}, $this->valid_v ) ? $_COOKIE[ $this->id_base ]['tests'][ $test ]{0} : NULL;
+	}//END get_variation
 
 	public function initial_setup()
 	{

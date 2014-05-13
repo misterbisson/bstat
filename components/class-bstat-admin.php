@@ -53,31 +53,13 @@ class bStat_Admin
 			'post'      => $footstep['post'],
 			'blog'      => $footstep['blog'],
 			'user'      => bstat()->get_current_user_id(),
-/*
-
-@TODO: something with this:
-
-$valid_chars = array(
-	'a',
-	'b',
-	'c',
-	'd',
-	'e',
-	'f',
-);
-
-$result_chars[] = in_array( $test_char{0}, $valid_chars ) ? $test_char{0} : '';
-
-
-
-			'x1'        => NULL, // string (1 char), optional, used for A/B testing
-			'x2'        => NULL, // string (1 char), optional, used for A/B testing
-			'x3'        => NULL, // string (1 char), optional, used for A/B testing
-			'x4'        => NULL, // string (1 char), optional, used for A/B testing
-			'x5'        => NULL, // string (1 char), optional, used for A/B testing
-			'x6'        => NULL, // string (1 char), optional, used for A/B testing
-			'x7'        => NULL, // string (1 char), optional, used for A/B testing
-*/
+			'x1'        => $this->get_variation( 'x1' ),
+			'x2'        => $this->get_variation( 'x2' ),
+			'x3'        => $this->get_variation( 'x3' ),
+			'x4'        => $this->get_variation( 'x4' ),
+			'x5'        => $this->get_variation( 'x5' ),
+			'x6'        => $this->get_variation( 'x6' ),
+			'x7'        => $this->get_variation( 'x7' ),
 			'component' => $footstep['component'],
 			'action'    => $footstep['action'],
 			'timestamp' => time(),

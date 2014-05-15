@@ -361,7 +361,8 @@ class bStat
 		}
 		else
 		{
-			$session = md5( microtime() . $this->options()->secret );
+			// assigning into $_COOKIE so subsequent calls will get the same session ID
+			$session = $_COOKIE[ $this->id_base ][ $this->options()->session_cookie->name ] = md5( microtime() . $this->options()->secret );
 		}
 
 		// set or update the cookie to expire in 30 minutes or so (configurable)

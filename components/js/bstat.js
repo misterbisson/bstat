@@ -302,7 +302,10 @@
 	bstat.testing.variations = {};
 
 	// the configured name
-	bstat.testing.cookie_name = bstat.test_cookie.name;
+	bstat.testing.cookie_name = 'bstat[' + bstat.test_cookie.name + ']';
+
+	// the configured domain
+	bstat.testing.domain = bstat.test_cookie.domain;
 
 	// specified expiration for the testing cookie - denotes 'days from now'
 	bstat.testing.expiration = bstat.test_cookie.duration / 86400;
@@ -360,7 +363,7 @@
 			}
 			else {
 				$.cookie.json = true;
-				$.cookie( this.cookie_name, this.variations, { expires: this.expiration } );
+				$.cookie( this.cookie_name, this.variations, { expires: this.expiration, domain: this.domain  } );
 			}
 		}
 

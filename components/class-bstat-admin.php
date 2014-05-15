@@ -29,6 +29,7 @@ class bStat_Admin
 
 	public function bstat_ajax()
 	{
+wlog( array('cookie', $_COOKIE ) );
 		// send headers
 		header( 'Content-Type: text/javascript; charset='. get_option('blog_charset') );
 		nocache_headers();

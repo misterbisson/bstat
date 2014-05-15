@@ -11,6 +11,7 @@ class bStat
 	private $redirect_qv = 'bstat_redirect'; // query var for the redirect url
 	public  $valid_t     = array( 'x1', 'x2', 'x3', 'x4', 'x5', 'x6', 'x7', );
 	public  $valid_v     = array( 'a', 'b', 'c', 'd', 'e', 'f', );
+	private $parsed_tests= FALSE;
 	public  $version     = 6;
 
 	public function __construct()
@@ -168,6 +169,7 @@ class bStat
 					),
 					'test_cookie' => (object) array(
 						'name' => 'test',
+						'domain' => COOKIE_DOMAIN,
 						'duration' => 2592000, // 30 days in seconds
 					),
 				),
@@ -325,6 +327,7 @@ class bStat
 		if ( is_object( $this->options()->test_cookie ) )
 		{
 			$details['test_cookie'][ 'name' ]     = $this->options()->test_cookie->name;
+			$details['test_cookie'][ 'domain' ]   = $this->options()->test_cookie->domain;
 			$details['test_cookie'][ 'duration' ] = $this->options()->test_cookie->duration;
 		}// end if
 
@@ -377,20 +380,25 @@ class bStat
 		return $session;
 	}//END get_session
 
-	public function get_variation( $test )
+	public function get_variation( $test_name )
 	{
+		if ( ! $this->parsed_tests )
+		{
+			$this->parsed_tests = json_decode( stripslashes( $_COOKIE[ $this->id_base ][ $this->options()->test_cookie->name ] ) );
+		} //end if
 
-		if ( ! in_array( $test, $this->valid_t ) )
+		if ( ! in_array( $test_name, $this->valid_t ) )
 		{
 			return NULL;
-		}
+		}//end if
 
-		if ( ! isset( $_COOKIE[ $this->id_base ]['tests'][ $test ] ) )
+		if ( ! isset( $this->parsed_tests->$test_name ) )
 		{
 			return NULL;
-		}
+		}//end if
 
-		return in_array( $_COOKIE[ $this->id_base ]['tests'][ $test ]{0}, $this->valid_v ) ? $_COOKIE[ $this->id_base ]['tests'][ $test ]{0} : NULL;
+		return in_array( $this->parsed_tests->$test_name->variant, $this->valid_v ) ? $this->parsed_tests->$test_name->variant : NULL;
+
 	}//END get_variation
 
 	public function initial_setup()

@@ -359,11 +359,15 @@
 		}
 		else {
 			if ( $.isEmptyObject( this.variations ) ) {
-				$.removeCookie( this.cookie_name );
+				$.removeCookie( this.cookie_name, { path: '/' } );
 			}
 			else {
 				$.cookie.json = true;
-				$.cookie( this.cookie_name, this.variations, { expires: this.expiration, domain: this.cookie_domain  } );
+				$.cookie( this.cookie_name, this.variations, {
+					expires: this.expiration,
+					domain: this.cookie_domain,
+					path: '/'
+				} );
 			}
 		}
 

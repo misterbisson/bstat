@@ -11,7 +11,7 @@ class bStat
 	private $redirect_qv = 'bstat_redirect'; // query var for the redirect url
 	public  $valid_t     = array( 'x1', 'x2', 'x3', 'x4', 'x5', 'x6', 'x7', );
 	public  $valid_v     = array( 'a', 'b', 'c', 'd', 'e', 'f', );
-	private $parsed_tests= FALSE;
+	private $test_cookie_parsed= FALSE;
 	public  $version     = 6;
 
 	public function __construct()
@@ -169,7 +169,6 @@ class bStat
 					),
 					'test_cookie' => (object) array(
 						'name' => 'test',
-						'domain' => COOKIE_DOMAIN,
 						'duration' => 2592000, // 30 days in seconds
 					),
 				),
@@ -326,8 +325,8 @@ class bStat
 
 		if ( is_object( $this->options()->test_cookie ) )
 		{
-			$details['test_cookie'][ 'name' ]     = $this->options()->test_cookie->name;
-			$details['test_cookie'][ 'domain' ]   = $this->options()->test_cookie->domain;
+			$details['test_cookie'][ 'name' ]     = $this->id_base . '[' . $this->options()->test_cookie->name . ']';
+			$details['test_cookie'][ 'domain' ]   = $this->options()->session_cookie->domain;
 			$details['test_cookie'][ 'duration' ] = $this->options()->test_cookie->duration;
 		}// end if
 
@@ -382,9 +381,9 @@ class bStat
 
 	public function get_variation( $test_name )
 	{
-		if ( ! $this->parsed_tests )
+		if ( ! $this->test_cookie_parsed )
 		{
-			$this->parsed_tests = json_decode( stripslashes( $_COOKIE[ $this->id_base ][ $this->options()->test_cookie->name ] ) );
+			$this->test_cookie_parsed = json_decode( stripslashes( $_COOKIE[ $this->id_base ][ $this->options()->test_cookie->name ] ) );
 		} //end if
 
 		if ( ! in_array( $test_name, $this->valid_t ) )
@@ -392,12 +391,12 @@ class bStat
 			return NULL;
 		}//end if
 
-		if ( ! isset( $this->parsed_tests->$test_name ) )
+		if ( ! isset( $this->test_cookie_parsed->$test_name ) )
 		{
 			return NULL;
 		}//end if
 
-		return in_array( $this->parsed_tests->$test_name->variant, $this->valid_v ) ? $this->parsed_tests->$test_name->variant : NULL;
+		return in_array( $this->test_cookie_parsed->$test_name->variant, $this->valid_v ) ? $this->test_cookie_parsed->$test_name->variant : NULL;
 
 	}//END get_variation
 

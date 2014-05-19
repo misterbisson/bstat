@@ -1,17 +1,18 @@
 <?php
 class bStat
 {
-	private $admin       = FALSE;
-	private $db          = FALSE;
-	public  $id_base     = 'bstat';
-	private $options     = FALSE;
-	private $report      = FALSE;
-	private $rickshaw    = FALSE;
-	private $user_qv     = 'bstat_user';  // query var for the user id
-	private $redirect_qv = 'bstat_redirect'; // query var for the redirect url
-	public  $valid_t     = array( 'x1', 'x2', 'x3', 'x4', 'x5', 'x6', 'x7', );
-	public  $valid_v     = array( 'a', 'b', 'c', 'd', 'e', 'f', );
-	public  $version     = 6;
+	private $admin              = FALSE;
+	private $db                 = FALSE;
+	public  $id_base            = 'bstat';
+	private $options            = FALSE;
+	private $report             = FALSE;
+	private $rickshaw           = FALSE;
+	private $user_qv            = 'bstat_user';  // query var for the user id
+	private $redirect_qv        = 'bstat_redirect'; // query var for the redirect url
+	public  $valid_t            = array( 'x1', 'x2', 'x3', 'x4', 'x5', 'x6', 'x7', );
+	public  $valid_v            = array( 'a', 'b', 'c', 'd', 'e', 'f', );
+	private $test_cookie_parsed = FALSE;
+	public  $version            = 6;
 
 	public function __construct()
 	{
@@ -324,8 +325,9 @@ class bStat
 
 		if ( is_object( $this->options()->test_cookie ) )
 		{
-			$details['test_cookie'][ 'name' ]     = $this->options()->test_cookie->name;
-			$details['test_cookie'][ 'duration' ] = $this->options()->test_cookie->duration;
+			$details['test_cookie']['name']     = $this->admin()->get_field_name( $this->options()->test_cookie->name );
+			$details['test_cookie']['domain']   = $this->options()->session_cookie->domain;
+			$details['test_cookie']['duration'] = $this->options()->test_cookie->duration;
 		}// end if
 
 		return $details;
@@ -377,20 +379,24 @@ class bStat
 		return $session;
 	}//END get_session
 
-	public function get_variation( $test )
+	public function get_variation( $test_name )
 	{
+		if ( ! $this->test_cookie_parsed )
+		{
+			$this->test_cookie_parsed = json_decode( stripslashes( $_COOKIE[ $this->id_base ][ $this->options()->test_cookie->name ] ) );
+		} //end if
 
-		if ( ! in_array( $test, $this->valid_t ) )
+		if ( ! in_array( $test_name, $this->valid_t ) )
 		{
 			return NULL;
-		}
+		}//end if
 
-		if ( ! isset( $_COOKIE[ $this->id_base ]['tests'][ $test ] ) )
+		if ( ! isset( $this->test_cookie_parsed->$test_name ) )
 		{
 			return NULL;
-		}
+		}//end if
 
-		return in_array( $_COOKIE[ $this->id_base ]['tests'][ $test ]{0}, $this->valid_v ) ? $_COOKIE[ $this->id_base ]['tests'][ $test ]{0} : NULL;
+		return in_array( $this->test_cookie_parsed->$test_name->variant{0}, $this->valid_v ) ? $this->test_cookie_parsed->$test_name->variant{0} : NULL;
 	}//END get_variation
 
 	public function initial_setup()

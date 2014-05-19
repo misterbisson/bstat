@@ -304,6 +304,9 @@
 	// the configured name
 	bstat.testing.cookie_name = bstat.test_cookie.name;
 
+	// the configured domain
+	bstat.testing.cookie_domain = bstat.test_cookie.domain;
+
 	// specified expiration for the testing cookie - denotes 'days from now'
 	bstat.testing.expiration = bstat.test_cookie.duration / 86400;
 
@@ -356,11 +359,15 @@
 		}
 		else {
 			if ( $.isEmptyObject( this.variations ) ) {
-				$.removeCookie( this.cookie_name );
+				$.removeCookie( this.cookie_name, { path: '/' } );
 			}
 			else {
 				$.cookie.json = true;
-				$.cookie( this.cookie_name, this.variations, { expires: this.expiration } );
+				$.cookie( this.cookie_name, this.variations, {
+					expires: this.expiration,
+					domain: this.cookie_domain,
+					path: '/'
+				} );
 			}
 		}
 
@@ -373,7 +380,7 @@
 	 */
 	bstat.testing.clean_variations = function( variations ) {
 		if ( $.isEmptyObject( variations ) ) {
-			// nothing in cookies, so use tests obtained from server, which are stored in 'bstat.tests'
+			// nothing in cookies, so use tests obtained from server, which are localized to 'bstat.tests'
 			for ( test in bstat.tests ) {
 				// select one of the test variants
 				var selected_variation = this.select_variation( bstat.tests[ test ] );

@@ -3,6 +3,7 @@ class bStat_Comments
 {
 
 	public $meta_name = 'bstat_session';
+	private $comment_meta_test_key = 'tests';
 
 	public function __construct()
 	{
@@ -21,7 +22,22 @@ class bStat_Comments
 
 	public function wp_insert_comment( $comment_id )
 	{
-		update_comment_meta( $comment_id, $this->meta_name, bstat()->get_session() );
+		update_comment_meta(
+			$comment_id,
+			$this->meta_name,
+			array(
+				'session' => bstat()->get_session(),
+				$this->comment_meta_test_key => array(
+					'x1' => bstat()->get_variation( 'x1' ),
+					'x2' => bstat()->get_variation( 'x2' ),
+					'x3' => bstat()->get_variation( 'x3' ),
+					'x4' => bstat()->get_variation( 'x4' ),
+					'x5' => bstat()->get_variation( 'x5' ),
+					'x6' => bstat()->get_variation( 'x6' ),
+					'x7' => bstat()->get_variation( 'x7' ),
+				)
+			)
+		);
 	}//end wp_insert_comment
 
 	public function insert( $comment_id )
@@ -80,6 +96,7 @@ class bStat_Comments
 
 	public function footstep( $comment )
 	{
+		$comment_meta = get_comment_meta( $comment->comment_ID, $this->meta_name, TRUE );
 
 		// set the timezone to UTC for the later strtotime() call,
 		// preserve the old timezone so we can set it back when done
@@ -90,12 +107,17 @@ class bStat_Comments
 			'post'      => $comment->comment_post_ID,
 			'blog'      => bstat()->get_blog(),
 			'user'      => ( $user = get_user_by( 'email', $comment->comment_author_email ) ? $user->ID : NULL ),
-			// @TODO: refactor `group` to use the new a/b tests
-			'group'     => NULL,
+			'x1'        => $comment_meta[ $this->comment_meta_test_key ]['x1'],
+			'x2'        => $comment_meta[ $this->comment_meta_test_key ]['x2'],
+			'x3'        => $comment_meta[ $this->comment_meta_test_key ]['x3'],
+			'x4'        => $comment_meta[ $this->comment_meta_test_key ]['x4'],
+			'x5'        => $comment_meta[ $this->comment_meta_test_key ]['x5'],
+			'x6'        => $comment_meta[ $this->comment_meta_test_key ]['x6'],
+			'x7'        => $comment_meta[ $this->comment_meta_test_key ]['x7'],
 			'component' => 'wpcore',
 			'action'    => 'comment',
 			'timestamp' => strtotime( $comment->comment_date_gmt ),
-			'session'   => ( get_comment_meta( $comment->comment_ID, $this->meta_name, TRUE ) ?: md5( $comment->comment_author_email ) ),
+			'session'   => ( $comment_meta['session'] ?: md5( $comment->comment_author_email ) ),
 			'info'      => $comment->comment_ID . '|' . $comment->comment_author_email,
 		);
 

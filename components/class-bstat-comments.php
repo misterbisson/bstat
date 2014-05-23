@@ -96,10 +96,6 @@ class bStat_Comments
 	public function footstep( $comment )
 	{
 		$comment_meta = get_comment_meta( $comment->comment_ID, $this->meta_name, TRUE );
-		if ( ! isset( $comment_meta['session'] ) )
-		{
-			$comment_meta['session'] = NULL;
-		}//end if
 
 		// set the timezone to UTC for the later strtotime() call,
 		// preserve the old timezone so we can set it back when done
@@ -120,7 +116,7 @@ class bStat_Comments
 			'component' => 'wpcore',
 			'action'    => 'comment',
 			'timestamp' => strtotime( $comment->comment_date_gmt ),
-			'session'   => ( $comment_meta['session'] ?: md5( $comment->comment_author_email ) ),
+			'session'   => ( isset( $comment_meta['session'] ) && $comment_meta['session'] ? $comment_meta['session'] : md5( $comment->comment_author_email ) ),
 			'info'      => $comment->comment_ID . '|' . $comment->comment_author_email,
 		);
 

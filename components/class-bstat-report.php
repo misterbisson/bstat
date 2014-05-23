@@ -226,7 +226,7 @@ class bStat_Report
 			$filter = $this->filter;
 		}
 
-		if ( ! $top_sessions = wp_cache_get( $this->cache_key( 'top_sessionss', $filter ), bstat()->id_base ) )
+		if ( ! $top_sessions = wp_cache_get( $this->cache_key( 'top_sessions', $filter ), bstat()->id_base ) )
 		{
 			$top_sessions = bstat()->db()->select( FALSE, FALSE, 'sessions,hits', 1000, $filter );
 			wp_cache_set( $this->cache_key( 'top_sessions', $filter ), $top_sessions, bstat()->id_base, $this->cache_ttl() );

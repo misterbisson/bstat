@@ -304,6 +304,9 @@
 	// the configured name
 	bstat.testing.cookie_name = bstat.test_cookie.name;
 
+	// the configured domain
+	bstat.testing.cookie_domain = bstat.test_cookie.domain;
+
 	// specified expiration for the testing cookie - denotes 'days from now'
 	bstat.testing.expiration = bstat.test_cookie.duration / 86400;
 
@@ -356,11 +359,15 @@
 		}
 		else {
 			if ( $.isEmptyObject( this.variations ) ) {
-				$.removeCookie( this.cookie_name );
+				$.removeCookie( this.cookie_name, { path: '/' } );
 			}
 			else {
 				$.cookie.json = true;
-				$.cookie( this.cookie_name, this.variations, { expires: this.expiration } );
+				$.cookie( this.cookie_name, this.variations, {
+					expires: this.expiration,
+					domain: this.cookie_domain,
+					path: '/'
+				} );
 			}
 		}
 
@@ -373,14 +380,12 @@
 	 */
 	bstat.testing.clean_variations = function( variations ) {
 		if ( $.isEmptyObject( variations ) ) {
-			// nothing in cookies, so use tests obtained from server, which are stored in 'bstat.tests'
+			// nothing in cookies, so use tests obtained from server, which are localized to 'bstat.tests'
 			for ( test in bstat.tests ) {
 				// select one of the test variants
 				var selected_variation = this.select_variation( bstat.tests[ test ] );
-				// create test name; note: using specified naming convention
-				var test_name = 'bstat-' + test + '-' + selected_variation.key;
-				this.variations[ test_name ] = {
-					'class' : selected_variation.variation,
+				this.variations[ test ] = {
+					'variant' : selected_variation.key,
 					'time' : new Date().getTime()
 				};
 			}
@@ -391,18 +396,16 @@
 		// this.test (which comes from wp_localize_script). Missing tests should be selected
 		// (via this.select_variation( test ) ), variations that don't exist in this.tests should be removed.
 		for ( test in variations ) {
-			// get the test; note: this assumes use of specified naming convention
-			var selected_test = test.split('-')[1];
-			if ( bstat.tests[selected_test] ) {
+			if ( bstat.tests[ test ] ) {
 				// The timestamp for each variation must be checked against the date_start for each test.
 				// If the cookie's variation date is before the date_start, the selected variation is expired and must be ignored.
-				if ( bstat.tests[ selected_test ].date_start > variations[ test ]['time'] ) {
+				if ( bstat.tests[ test ].date_start > variations[ test ]['time'] ) {
 					delete bstat.variations[ test ];
 					this.set_variations( bstat.variations );
 				}
 			}
 			else {
-				this.select_variation( bstat.tests[ selected_test ] );
+				this.select_variation( bstat.tests[ test ] );
 			}
 		}
 	};
@@ -423,8 +426,10 @@
 		// apply variations to the body class in some way
 		var values = '';
 		var keys = Object.keys( this.variations );
+
 		for ( key in keys ) {
-			values += ' ' + keys[ key ] + ' ' + this.variations[ keys[ key ] ]['class'];
+			var variant = this.variations[ keys[ key ] ]['variant'];
+			values += ' ' + 'bstat-' + keys[ key ] + '-' + variant + ' ' + bstat.tests[ keys[ key ] ][ 'variations' ][ variant ];
 		}
 		this.$body.addClass( values );
 	};

@@ -6,7 +6,13 @@ abstract class bStat_Db
 		'post'      => FALSE, // int, required, the post_id
 		'blog'      => FALSE, // int, required, the blog_id
 		'user'      => NULL, // int, optional, the user_id
-		'group'     => NULL, // int, optional, used for A/B testing
+		'x1'        => NULL, // string (1 char), optional, used for A/B testing
+		'x2'        => NULL, // string (1 char), optional, used for A/B testing
+		'x3'        => NULL, // string (1 char), optional, used for A/B testing
+		'x4'        => NULL, // string (1 char), optional, used for A/B testing
+		'x5'        => NULL, // string (1 char), optional, used for A/B testing
+		'x6'        => NULL, // string (1 char), optional, used for A/B testing
+		'x7'        => NULL, // string (1 char), optional, used for A/B testing
 		'component' => FALSE, // string (8 chars), required, the component inserting the footstep
 		'action'    => FALSE, // string (8 chars),required, the action taken by the user
 		'timestamp' => FALSE, // int, required, the seconds from epoch, GMT
@@ -92,8 +98,8 @@ abstract class bStat_Db
 			return FALSE;
 		}
 
-		// group and info cannot be used in the selection criteria for deletes, so unset them
-		unset( $footstep->group, $footstep->info );
+		// info cannot be used in the selection criteria for deletes, so unset them
+		unset( $footstep->info );
 
 		return $this->_delete( $footstep );
 	}
@@ -116,7 +122,13 @@ abstract class bStat_Db
 		$footstep->post = absint( $footstep->post );
 		$footstep->blog = absint( $footstep->blog );
 		$footstep->user = absint( $footstep->user );
-		$footstep->group = absint( $footstep->group );
+		$footstep->x1 = in_array( $footstep->x1{0}, bstat()->valid_v ) ? $footstep->x1{0} : NULL;
+		$footstep->x2 = in_array( $footstep->x2{0}, bstat()->valid_v ) ? $footstep->x2{0} : NULL;
+		$footstep->x3 = in_array( $footstep->x3{0}, bstat()->valid_v ) ? $footstep->x3{0} : NULL;
+		$footstep->x4 = in_array( $footstep->x4{0}, bstat()->valid_v ) ? $footstep->x4{0} : NULL;
+		$footstep->x5 = in_array( $footstep->x5{0}, bstat()->valid_v ) ? $footstep->x5{0} : NULL;
+		$footstep->x6 = in_array( $footstep->x6{0}, bstat()->valid_v ) ? $footstep->x6{0} : NULL;
+		$footstep->x7 = in_array( $footstep->x7{0}, bstat()->valid_v ) ? $footstep->x7{0} : NULL;
 		$footstep->component = sanitize_title_with_dashes( $footstep->component );
 		$footstep->action = sanitize_title_with_dashes( $footstep->action );
 		$footstep->timestamp = absint( $footstep->timestamp );
@@ -152,7 +164,13 @@ abstract class bStat_Db
 					'post'      => FALSE,
 					'blog'      => bstat()->get_blog(),
 					'user'      => FALSE,
-					'group'     => FALSE,
+					'x1'        => FALSE,
+					'x2'        => FALSE,
+					'x3'        => FALSE,
+					'x4'        => FALSE,
+					'x5'        => FALSE,
+					'x6'        => FALSE,
+					'x7'        => FALSE,
 					'component' => FALSE,
 					'action'    => FALSE,
 					'timestamp' => FALSE,
@@ -166,7 +184,13 @@ abstract class bStat_Db
 		$filter->post = ( $filter->post ? absint( $filter->post ) : FALSE );
 		$filter->blog = ( $filter->blog ? absint( $filter->blog ) : FALSE );
 		$filter->user = ( $filter->user ? absint( $filter->user ) : FALSE );
-		$filter->group = ( $filter->group ? absint( $filter->group ) : FALSE );
+		$filter->x1 = in_array( $filter->x1{0}, bstat()->valid_v ) ? $filter->x1{0} : FALSE;
+		$filter->x2 = in_array( $filter->x2{0}, bstat()->valid_v ) ? $filter->x2{0} : FALSE;
+		$filter->x3 = in_array( $filter->x3{0}, bstat()->valid_v ) ? $filter->x3{0} : FALSE;
+		$filter->x4 = in_array( $filter->x4{0}, bstat()->valid_v ) ? $filter->x4{0} : FALSE;
+		$filter->x5 = in_array( $filter->x5{0}, bstat()->valid_v ) ? $filter->x5{0} : FALSE;
+		$filter->x6 = in_array( $filter->x6{0}, bstat()->valid_v ) ? $filter->x6{0} : FALSE;
+		$filter->x7 = in_array( $filter->x7{0}, bstat()->valid_v ) ? $filter->x7{0} : FALSE;
 		$filter->component = ( $filter->component ? sanitize_title_with_dashes( $filter->component ) : FALSE );
 		$filter->action = ( $filter->action ? sanitize_title_with_dashes( $filter->action ) : FALSE );
 		$filter->session = ( $filter->session ? sanitize_title_with_dashes( $filter->session ) : FALSE );

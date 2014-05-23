@@ -90,6 +90,8 @@ class bStat_Db_Wpdb extends bStat_Db
 				}
 				break;
 
+/*
+@TODO: this will need to be refactored to support the new A/B test definition
 			case 'group':
 			case 'groups':
 				$ids = array_filter( array_map( 'absint', $ids ) );
@@ -99,6 +101,7 @@ class bStat_Db_Wpdb extends bStat_Db
 					$return = 'posts';
 				}
 				break;
+*/
 
 			case 'component':
 			case 'components':
@@ -190,10 +193,39 @@ class bStat_Db_Wpdb extends bStat_Db
 				);
 				break;
 
-			case 'group':
-			case 'groups':
-				$select = 'SELECT `group`, COUNT(1) AS hits';
-				$group = 'GROUP BY `group`';
+			case 'x1':
+				$select = 'SELECT `x1`, COUNT(1) AS hits';
+				$group = 'GROUP BY `x1`';
+				$order = 'ORDER BY hits DESC, date DESC, time DESC';
+				break;
+			case 'x2':
+				$select = 'SELECT `x2`, COUNT(1) AS hits';
+				$group = 'GROUP BY `x2`';
+				$order = 'ORDER BY hits DESC, date DESC, time DESC';
+				break;
+			case 'x3':
+				$select = 'SELECT `x3`, COUNT(1) AS hits';
+				$group = 'GROUP BY `x3`';
+				$order = 'ORDER BY hits DESC, date DESC, time DESC';
+				break;
+			case 'x4':
+				$select = 'SELECT `x4`, COUNT(1) AS hits';
+				$group = 'GROUP BY `x4`';
+				$order = 'ORDER BY hits DESC, date DESC, time DESC';
+				break;
+			case 'x5':
+				$select = 'SELECT `x5`, COUNT(1) AS hits';
+				$group = 'GROUP BY `x5`';
+				$order = 'ORDER BY hits DESC, date DESC, time DESC';
+				break;
+			case 'x6':
+				$select = 'SELECT `x6`, COUNT(1) AS hits';
+				$group = 'GROUP BY `x6`';
+				$order = 'ORDER BY hits DESC, date DESC, time DESC';
+				break;
+			case 'x7':
+				$select = 'SELECT `x7`, COUNT(1) AS hits';
+				$group = 'GROUP BY `x7`';
 				$order = 'ORDER BY hits DESC, date DESC, time DESC';
 				break;
 
@@ -365,7 +397,13 @@ class bStat_Db_Wpdb extends bStat_Db
 				`post` int unsigned NOT NULL default '0',
 				`blog` int unsigned NOT NULL default '0',
 				`user` int unsigned NOT NULL default '0',
-				`group` tinyint unsigned DEFAULT NULL,
+				`x1` char(1) DEFAULT NULL,
+				`x2` char(1) DEFAULT NULL,
+				`x3` char(1) DEFAULT NULL,
+				`x4` char(1) DEFAULT NULL,
+				`x5` char(1) DEFAULT NULL,
+				`x6` char(1) DEFAULT NULL,
+				`x7` char(1) DEFAULT NULL,
 				`component` char(8) NOT NULL default '',
 				`action` char(8) NOT NULL default '',
 				`date` date NOT NULL default '1970-01-01',

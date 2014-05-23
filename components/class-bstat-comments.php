@@ -21,7 +21,22 @@ class bStat_Comments
 
 	public function wp_insert_comment( $comment_id )
 	{
-		update_comment_meta( $comment_id, $this->meta_name, bstat()->get_session() );
+		update_comment_meta(
+			$comment_id,
+			$this->meta_name,
+			array(
+				'session' => bstat()->get_session(),
+				'tests' => array(
+					'x1' => bstat()->get_variation( 'x1' ),
+					'x2' => bstat()->get_variation( 'x2' ),
+					'x3' => bstat()->get_variation( 'x3' ),
+					'x4' => bstat()->get_variation( 'x4' ),
+					'x5' => bstat()->get_variation( 'x5' ),
+					'x6' => bstat()->get_variation( 'x6' ),
+					'x7' => bstat()->get_variation( 'x7' ),
+				)
+			)
+		);
 	}//end wp_insert_comment
 
 	public function insert( $comment_id )
@@ -80,6 +95,7 @@ class bStat_Comments
 
 	public function footstep( $comment )
 	{
+		$comment_meta = get_comment_meta( $comment->comment_ID, $this->meta_name, TRUE );
 
 		// set the timezone to UTC for the later strtotime() call,
 		// preserve the old timezone so we can set it back when done
@@ -90,13 +106,38 @@ class bStat_Comments
 			'post'      => $comment->comment_post_ID,
 			'blog'      => bstat()->get_blog(),
 			'user'      => ( $user = get_user_by( 'email', $comment->comment_author_email ) ? $user->ID : NULL ),
-			'group'     => NULL,
+			'x1'        => NULL,
+			'x2'        => NULL,
+			'x3'        => NULL,
+			'x4'        => NULL,
+			'x5'        => NULL,
+			'x6'        => NULL,
+			'x7'        => NULL,
 			'component' => 'wpcore',
 			'action'    => 'comment',
 			'timestamp' => strtotime( $comment->comment_date_gmt ),
-			'session'   => ( get_comment_meta( $comment->comment_ID, $this->meta_name, TRUE ) ?: md5( $comment->comment_author_email ) ),
+			'session'   => ( isset( $comment_meta['session'] ) && $comment_meta['session'] ? $comment_meta['session'] : md5( $comment->comment_author_email ) ),
 			'info'      => $comment->comment_ID . '|' . $comment->comment_author_email,
 		);
+
+		if ( is_array( $comment_meta['tests'] ) )
+		{
+			$footstep = (object) array_replace(
+				(array) $footstep,
+				array_intersect_key(
+					$comment_meta['tests'],
+					array(
+						'x1' => NULL,
+						'x2' => NULL,
+						'x3' => NULL,
+						'x4' => NULL,
+						'x5' => NULL,
+						'x6' => NULL,
+						'x7' => NULL,
+					)
+				)
+			);
+		} //end if
 
 		date_default_timezone_set( $old_tz );
 

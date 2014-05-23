@@ -203,22 +203,6 @@ class bStat_Report
 		return $filters;
 	}
 
-	public function all_sessions( $filter = FALSE )
-	{
-		if ( ! $filter )
-		{
-			$filter = $this->filter;
-		}
-
-		if ( ! $top_sessions = wp_cache_get( $this->cache_key( 'all_sessions', $filter ), bstat()->id_base ) )
-		{
-			$top_sessions = bstat()->db()->select( FALSE, FALSE, 'sessions', 5000, $filter );
-			wp_cache_set( $this->cache_key( 'all_sessions', $filter ), $top_sessions, bstat()->id_base, $this->cache_ttl() );
-		}
-
-		return $top_sessions;
-	}
-
 	public function top_posts( $filter = FALSE )
 	{
 		if ( ! $filter )

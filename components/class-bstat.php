@@ -9,7 +9,9 @@ class bStat
 	private $rickshaw           = FALSE;
 	private $user_qv            = 'bstat_user';  // query var for the user id
 	private $redirect_qv        = 'bstat_redirect'; // query var for the redirect url
+	// these are the valid test keys. All tests are named x1 through x7.
 	public  $valid_t            = array( 'x1', 'x2', 'x3', 'x4', 'x5', 'x6', 'x7', );
+	// these are the valid variation keys. All variations are named a through f.
 	public  $valid_v            = array( 'a', 'b', 'c', 'd', 'e', 'f', );
 	private $test_cookie_parsed = FALSE;
 	public  $version            = 6;

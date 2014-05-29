@@ -43,7 +43,7 @@ class bStat_Db_Wpdb extends bStat_Db
 			case 'post':
 			case 'posts':
 				$ids = array_filter( array_map( 'absint', $ids ) );
-				$where = 'WHERE post IN ("' . implode( ",", $ids ) . '")';
+				$where = 'WHERE post IN ("' . implode( '","', $ids ) . '")';
 				if ( ! $return )
 				{
 					$return = 'sessions';
@@ -53,7 +53,7 @@ class bStat_Db_Wpdb extends bStat_Db
 			case 'blog':
 			case 'blogs':
 				$ids = array_filter( array_map( 'absint', $ids ) );
-				$where = 'WHERE blog IN ("' . implode( ",", $ids ) . '")';
+				$where = 'WHERE blog IN ("' . implode( '","', $ids ) . '")';
 				if ( ! $return )
 				{
 					$return = 'sessions';
@@ -63,7 +63,7 @@ class bStat_Db_Wpdb extends bStat_Db
 			case 'user':
 			case 'users':
 				$ids = array_filter( array_map( 'absint', $ids ) );
-				$where = 'WHERE user IN ("' . implode( ",", $ids ) . '")';
+				$where = 'WHERE user IN ("' . implode( '","', $ids ) . '")';
 				if ( ! $return )
 				{
 					$return = 'posts';
@@ -73,7 +73,7 @@ class bStat_Db_Wpdb extends bStat_Db
 			case 'session':
 			case 'sessions':
 				$ids = array_filter( array_map( 'sanitize_title_with_dashes', $ids ) );
-				$where = 'WHERE session IN ("' . implode( ",", $ids ) . '")';
+				$where = 'WHERE session IN ("' . implode( '","', $ids ) . '")';
 				if ( ! $return )
 				{
 					$return = 'posts';
@@ -83,7 +83,7 @@ class bStat_Db_Wpdb extends bStat_Db
 			case 'mixedusers':
 				$users = array_filter( array_map( 'absint', array_filter( $ids, 'is_numeric' ) ) );
 				$sessions = array_filter( array_map( 'sanitize_title_with_dashes', array_filter( $ids, 'is_string' ) ) );
-				$where = 'WHERE 1=1 AND ( user IN ("' . implode( ",", $users ) . '") OR session IN ("' . implode( ",", $sessions ) . '") )';
+				$where = 'WHERE 1=1 AND ( user IN ("' . implode( '","', $users ) . '") OR session IN ("' . implode( '","', $sessions ) . '") )';
 				if ( ! $return )
 				{
 					$return = 'posts';
@@ -95,7 +95,7 @@ class bStat_Db_Wpdb extends bStat_Db
 			case 'group':
 			case 'groups':
 				$ids = array_filter( array_map( 'absint', $ids ) );
-				$where = 'WHERE group IN ("' . implode( ",", $ids ) . '")';
+				$where = 'WHERE group IN ("' . implode( '","', $ids ) . '")';
 				if ( ! $return )
 				{
 					$return = 'posts';
@@ -106,7 +106,7 @@ class bStat_Db_Wpdb extends bStat_Db
 			case 'component':
 			case 'components':
 				$ids = array_filter( array_map( 'sanitize_title_with_dashes', $ids ) );
-				$where = 'WHERE component IN ("' . implode( ",", $ids ) . '")';
+				$where = 'WHERE component IN ("' . implode( '","', $ids ) . '")';
 				if ( ! $return )
 				{
 					$return = 'posts';
@@ -116,7 +116,7 @@ class bStat_Db_Wpdb extends bStat_Db
 			case 'action':
 			case 'actions':
 				$ids = array_filter( array_map( 'sanitize_title_with_dashes', $ids ) );
-				$where = 'WHERE action IN ("' . implode( ",", $ids ) . '")';
+				$where = 'WHERE action IN ("' . implode( '","', $ids ) . '")';
 				if ( ! $return )
 				{
 					$return = 'posts';
@@ -128,7 +128,7 @@ class bStat_Db_Wpdb extends bStat_Db
 			case 'components_and_actions':
 			case 'actions_and_components':
 				$ids = array_filter( array_map( 'sanitize_title_with_dashes', $ids ) );
-				$where = 'WHERE action IN ("' . implode( ",", $ids ) . '")';
+				$where = 'WHERE action IN ("' . implode( '","', $ids ) . '")';
 				if ( ! $return )
 				{
 					$return = 'posts';

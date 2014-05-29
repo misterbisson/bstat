@@ -23,6 +23,31 @@ class bStat_Report
 		add_submenu_page( 'index.php', 'bStat Viewer', 'bStat Viewer', 'edit_posts', bstat()->id_base . '-report', array( $this, 'admin_menu' ) );
 	} // END admin_menu_init
 
+	public function parse_goal( $goal )
+	{
+		$temp = array_map( 'trim', (array) explode( ':', $goal ) );
+
+		if ( ! isset( $temp[0], $temp[1], $temp[2] ) )
+		{
+			return FALSE;
+		}
+
+		$goal = array( 
+			'component' => sanitize_title_with_dashes( $temp[0] ),
+			'action' => sanitize_title_with_dashes( $temp[1] ),
+			'frequency' => (int) $temp[2],
+		);
+
+		return $goal;
+	}
+
+	public function goal_url( $goal )
+	{
+		$url = admin_url( '/index.php?page=' . bstat()->id_base . '-report' );
+
+		return add_query_arg( array( 'goal' => $goal['component'] . ':' . $goal['action'] . ':' . $goal['frequency'] ), $url );
+	}
+
 	public function report_url( $filter = array(), $additive = TRUE )
 	{
 		$url = admin_url( '/index.php?page=' . bstat()->id_base . '-report' );
@@ -72,6 +97,43 @@ class bStat_Report
 		}
 
 		$this->filter = (array) $filter;
+	}
+
+	public function goal_sessions( $goal )
+	{
+
+		$goal = $this->parse_goal( $_GET['goal'] );
+
+		if ( ! $result_sessions = wp_cache_get( $this->cache_key( 'goal_sessions', $goal ), bstat()->id_base ) )
+		{
+			$all_sessions = $this->top_sessions( $goal );
+			$result_sessions = array();
+			$frequency = absint( $goal['frequency'] );
+			foreach ( $all_sessions as $session )
+			{
+				if ( $goal['frequency'] > 0 && $session->hits >= $frequency )
+				{
+					$result_sessions[] = $session->session;
+				}
+				elseif ( $goal['frequency'] < 0 && $session->hits <= $frequency )
+				{
+					$result_sessions[] = $session->session;
+				}
+			}
+
+			wp_cache_set( $this->cache_key( 'goal_sessions', $goal ), $result_sessions, bstat()->id_base, $this->cache_ttl() );
+		}
+
+		$blah = bstat()->db()->select( 'sessions', $result_sessions, 'all', 1000 );
+
+
+echo '<pre>';
+print_r( $goal );
+print_r( $result_sessions );
+print_r( $blah );
+die;
+
+		return $result_sessions;
 	}
 
 	public function cache_key( $part, $filter = FALSE )
@@ -544,6 +606,12 @@ class bStat_Report
 		wp_enqueue_script( bstat()->id_base . '-report' );
 
 		echo '<h2>bStat Viewer</h2>';
+
+		// goal controls
+		include __DIR__ . '/templates/report-goal.php';
+
+		$this->goal_sessions( 1 );
+
 
 		// a timeseries graph of all activity, broken out by component:action
 		include __DIR__ . '/templates/report-timeseries.php';

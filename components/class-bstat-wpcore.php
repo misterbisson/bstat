@@ -13,7 +13,34 @@ class GO_bStat_WPCore
 		// log user sign-ins
 		add_action( 'set_auth_cookie', array( $this, 'user_sign_in' ), 10, 5 );
 
+		// log plugin activations and deactivations
+		add_action( 'activated_plugin', array( $this, 'plugin' ) );
+		add_action( 'deactivated_plugin', array( $this, 'plugin' ) );
+
+		// log widget updates
+		// note that this does not track widget deletes
+		add_action( 'widget_update_callback', array( $this, 'widget_update_callback' ), 10, 4 );
+
 	} // END __construct
+
+	/**
+	 * track plugin activations and deactivations
+	 *
+	 * @param $plugin (plugin slug)
+	 */
+	public function plugin( $plugin )
+	{
+		$data = array(
+			'action'      => 'plugin',
+			'user_id'     => get_current_user_id(),
+			'info'        => array(
+				str_replace( '_plugin', '', current_filter() ),
+				$plugin,
+			),
+		);
+
+		bstat()->db()->insert( $this->footstep( $data ) );
+	}//end plugin
 
 	/**
 	 * track new user create actions; specific data to the action being tracked is added here
@@ -55,6 +82,32 @@ class GO_bStat_WPCore
 
 		bstat()->db()->insert( $this->footstep( $data ) );
 	}//end user_sign_in
+
+	/**
+	 * track widget changes
+	 *
+	 * @param $instance (must be returned, or the widget will be deleted)
+	 * @param $unused_new_instance
+	 * @param $unused_old_instance
+	 * @param $widget_obect (contains the data we care about)
+	 */
+	public function widget_update_callback( $instance, $unused_new_instance, $unused_old_instance, $widget_obect )
+	{
+		$data = array(
+			'action'      => 'widget',
+			'user_id'     => get_current_user_id(),
+			'info'        => array(
+				'update',
+				$widget_obect->id_base,
+				$widget_obect->number,
+			),
+		);
+
+		bstat()->db()->insert( $this->footstep( $data ) );
+
+		// this is firing on a filter, it must return the input value
+		return $instance;
+	}//end widget_update_callback
 
 	/**
 	 * prepare all required data for writing to bStat

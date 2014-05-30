@@ -99,12 +99,12 @@ class bStat_Report
 		$this->filter = (array) $filter;
 	}
 
-	public function goal_sessions( $goal )
+	public function sessions_on_goal( $goal )
 	{
 
 		$goal = $this->parse_goal( $_GET['goal'] );
 
-		if ( ! $result_sessions = wp_cache_get( $this->cache_key( 'goal_sessions', $goal ), bstat()->id_base ) )
+		if ( ! $result_sessions = wp_cache_get( $this->cache_key( 'sessions_on_goal', $goal ), bstat()->id_base ) )
 		{
 			$all_sessions = $this->top_sessions( $goal );
 			$result_sessions = array();
@@ -121,17 +121,36 @@ class bStat_Report
 				}
 			}
 
-			wp_cache_set( $this->cache_key( 'goal_sessions', $goal ), $result_sessions, bstat()->id_base, $this->cache_ttl() );
+			wp_cache_set( $this->cache_key( 'sessions_on_goal', $goal ), $result_sessions, bstat()->id_base, $this->cache_ttl() );
 		}
 
-		$blah = bstat()->db()->select( 'sessions', $result_sessions, 'all', 1000 );
+		return $result_sessions;
+	}
 
+	public function sessions_missed_goal( $goal )
+	{
 
-echo '<pre>';
-print_r( $goal );
-print_r( $result_sessions );
-print_r( $blah );
-die;
+		$goal = $this->parse_goal( $_GET['goal'] );
+
+		if ( ! $result_sessions = wp_cache_get( $this->cache_key( 'sessions_missed_goal', $goal ), bstat()->id_base ) )
+		{
+			$all_sessions = $this->top_sessions( $goal );
+			$result_sessions = array();
+			$frequency = absint( $goal['frequency'] );
+			foreach ( $all_sessions as $session )
+			{
+				if ( $goal['frequency'] > 0 && $session->hits >= $frequency )
+				{
+					$result_sessions[] = $session->session;
+				}
+				elseif ( $goal['frequency'] < 0 && $session->hits <= $frequency )
+				{
+					$result_sessions[] = $session->session;
+				}
+			}
+
+			wp_cache_set( $this->cache_key( 'sessions_missed_goal', $goal ), $result_sessions, bstat()->id_base, $this->cache_ttl() );
+		}
 
 		return $result_sessions;
 	}
@@ -329,54 +348,6 @@ die;
 		return $posts_for_user;
 	}
 
-	public function top_tentpole_posts( $filter = FALSE )
-	{
-		if ( ! $filter )
-		{
-			$filter = $this->filter;
-		}
-
-		if ( ! $top_tentpole_posts = wp_cache_get( $this->cache_key( 'top_tentpole_posts', $filter ), bstat()->id_base ) )
-		{
-			$top_tentpole_posts = $posts_raw = $sessions = array();
-
-			$sessions_raw = wp_list_pluck( $this->top_sessions( $filter ), 'session' );
-			foreach ( $sessions_raw as $session )
-			{
-				$sessions[ $session ] = wp_list_pluck( $this->posts_for_session( $session, $filter ), 'post' );
-
-				if ( 1 >= count( $sessions[ $session ] ) )
-				{
-					continue;
-				}
-
-				$post = end( $sessions[ $session ] );
-				if ( isset( $posts_raw[ $post ] ) )
-				{
-					$posts_raw[ $post ] ++;
-				}
-				else
-				{
-					$posts_raw[ $post ] = 0;
-				}
-			}
-			arsort( $posts_raw );
-			$posts_raw = array_filter( $posts_raw );
-			foreach ( $posts_raw as $k => $v )
-			{
-				$top_tentpole_posts[] = (object) array(
-					'post' => $k,
-					'hits' => $v + 1,
-				);
-			}
-
-			wp_cache_set( $this->cache_key( 'top_tentpole_posts', $filter ), $top_tentpole_posts, bstat()->id_base, $this->cache_ttl() );
-		}
-
-		// this method often returns empty on sites with low activity
-		return $top_tentpole_posts;
-	}
-
 	public function top_authors( $filter = FALSE )
 	{
 		if ( ! $filter )
@@ -564,22 +535,6 @@ die;
 		return $top_users;
 	}
 
-	public function top_groups( $filter = FALSE )
-	{
-		if ( ! $filter )
-		{
-			$filter = $this->filter;
-		}
-
-		if ( ! $top_groups = wp_cache_get( $this->cache_key( 'top_groups', $filter ), bstat()->id_base ) )
-		{
-			$top_groups = bstat()->db()->select( FALSE, FALSE, 'group,hits', 1000, $filter );
-			wp_cache_set( $this->cache_key( 'top_groups', $filter ), $top_groups, bstat()->id_base, $this->cache_ttl() );
-		}
-
-		return $top_groups;
-	}
-
 	public function top_blogs( $filter = FALSE )
 	{
 		if ( ! $filter )
@@ -610,8 +565,7 @@ die;
 		// goal controls
 		include __DIR__ . '/templates/report-goal.php';
 
-		$this->goal_sessions( 1 );
-
+		$this->sessions_on_goal( 1 );
 
 		// a timeseries graph of all activity, broken out by component:action
 		include __DIR__ . '/templates/report-timeseries.php';
@@ -627,9 +581,6 @@ die;
 
 		// top posts
 		include __DIR__ . '/templates/report-top-posts.php';
-
-		// tentpole posts -- the posts that led to the most follow-on pageviews
-		include __DIR__ . '/templates/report-top-tentpole-posts.php';
 
 		// top authors by activity on their posts
 		include __DIR__ . '/templates/report-top-authors.php';

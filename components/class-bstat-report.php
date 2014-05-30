@@ -132,7 +132,7 @@ class bStat_Report
 
 		$goal = $this->parse_goal( $_GET['goal'] );
 
-		if ( ! $sessions_missed_goal = wp_cache_get( $this->cache_key( 'sessions_missed_goal_', $goal ), bstat()->id_base ) )
+		if ( ! $sessions_missed_goal = wp_cache_get( $this->cache_key( 'sessions_missed_goal', $goal ), bstat()->id_base ) )
 		{
 			$sessions_missed_goal = bstat()->db()->select( '-sessions', $this->sessions_on_goal( $goal ), 'sessions', 1000, $this->filter );
 			wp_cache_set( $this->cache_key( 'sessions_missed_goal', $goal ), $sessions_missed_goal, bstat()->id_base, $this->cache_ttl() );

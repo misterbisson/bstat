@@ -104,27 +104,27 @@ class bStat_Report
 
 		$goal = $this->parse_goal( $_GET['goal'] );
 
-		if ( ! $result_sessions = wp_cache_get( $this->cache_key( 'sessions_on_goal', $goal ), bstat()->id_base ) )
+		if ( ! $sessions_on_goal = wp_cache_get( $this->cache_key( 'sessions_on_goal', $goal ), bstat()->id_base ) )
 		{
-			$all_sessions = $this->top_sessions( $goal );
-			$result_sessions = array();
+			$sessions = $this->top_sessions( $goal );
+			$sessions_on_goal = array();
 			$frequency = absint( $goal['frequency'] );
-			foreach ( $all_sessions as $session )
+			foreach ( $sessions as $session )
 			{
 				if ( $goal['frequency'] > 0 && $session->hits >= $frequency )
 				{
-					$result_sessions[] = $session->session;
+					$sessions_on_goal[] = $session->session;
 				}
 				elseif ( $goal['frequency'] < 0 && $session->hits <= $frequency )
 				{
-					$result_sessions[] = $session->session;
+					$sessions_on_goal[] = $session->session;
 				}
 			}
 
-			wp_cache_set( $this->cache_key( 'sessions_on_goal', $goal ), $result_sessions, bstat()->id_base, $this->cache_ttl() );
+			wp_cache_set( $this->cache_key( 'sessions_on_goal', $goal ), $sessions_on_goal, bstat()->id_base, $this->cache_ttl() );
 		}
 
-		return $result_sessions;
+		return $sessions_on_goal;
 	}
 
 	public function sessions_missed_goal( $goal )
@@ -132,27 +132,13 @@ class bStat_Report
 
 		$goal = $this->parse_goal( $_GET['goal'] );
 
-		if ( ! $result_sessions = wp_cache_get( $this->cache_key( 'sessions_missed_goal', $goal ), bstat()->id_base ) )
+		if ( ! $sessions_missed_goal = wp_cache_get( $this->cache_key( 'sessions_missed_goal_', $goal ), bstat()->id_base ) )
 		{
-			$all_sessions = $this->top_sessions( $goal );
-			$result_sessions = array();
-			$frequency = absint( $goal['frequency'] );
-			foreach ( $all_sessions as $session )
-			{
-				if ( $goal['frequency'] > 0 && $session->hits >= $frequency )
-				{
-					$result_sessions[] = $session->session;
-				}
-				elseif ( $goal['frequency'] < 0 && $session->hits <= $frequency )
-				{
-					$result_sessions[] = $session->session;
-				}
-			}
-
-			wp_cache_set( $this->cache_key( 'sessions_missed_goal', $goal ), $result_sessions, bstat()->id_base, $this->cache_ttl() );
+			$sessions_missed_goal = bstat()->db()->select( '-sessions', $this->sessions_on_goal( $goal ), 'sessions', 1000, $this->filter );
+			wp_cache_set( $this->cache_key( 'sessions_missed_goal', $goal ), $sessions_missed_goal, bstat()->id_base, $this->cache_ttl() );
 		}
 
-		return $result_sessions;
+		return $sessions_missed_goal;
 	}
 
 	public function cache_key( $part, $filter = FALSE )
@@ -565,7 +551,10 @@ class bStat_Report
 		// goal controls
 		include __DIR__ . '/templates/report-goal.php';
 
-		$this->sessions_on_goal( 1 );
+		echo '<pre>';
+		print_r( $this->sessions_on_goal( 1 ) );
+		print_r( $this->sessions_missed_goal( 1 ) );
+		echo '</pre>';
 
 		// a timeseries graph of all activity, broken out by component:action
 		include __DIR__ . '/templates/report-timeseries.php';

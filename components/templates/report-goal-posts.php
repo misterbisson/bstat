@@ -24,8 +24,8 @@ foreach ( $posts as $post )
 	);
 }
 
-$sum_sessions = array_sum( wp_list_pluck( $post, 'sessions' ) );
-$sum_all = $sum_sessions + ( $sum_sessions * count( $post ) );
+$sum_sessions = array_sum( wp_list_pluck( $posts, 'sessions' ) );
+$sum_all = $sum_sessions + ( $sum_sessions * count( $posts ) );
 
 echo '<h2>Posts contributing to goal</h2>';
 echo '<p>Showing ' . count( $posts ) . ' top posts contributing to ' . count( bstat()->report()->sessions_on_goal() ) . ' goal completions.</p>';
@@ -50,6 +50,4 @@ foreach ( $posts as $post )
 	);
 }
 echo '</table>';
-stats_cdf_binomial();
-
 die;

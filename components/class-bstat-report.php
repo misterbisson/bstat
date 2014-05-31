@@ -127,20 +127,6 @@ class bStat_Report
 		return $sessions_on_goal;
 	}
 
-	public function sessions_missed_goal( $goal )
-	{
-
-		$goal = $this->parse_goal( $_GET['goal'] );
-
-		if ( ! $sessions_missed_goal = wp_cache_get( $this->cache_key( 'sessions_missed_goal', $goal ), bstat()->id_base ) )
-		{
-			$sessions_missed_goal = bstat()->db()->select( '-sessions', $this->sessions_on_goal( $goal ), 'sessions', 1000, $this->filter );
-			wp_cache_set( $this->cache_key( 'sessions_missed_goal', $goal ), $sessions_missed_goal, bstat()->id_base, $this->cache_ttl() );
-		}
-
-		return $sessions_missed_goal;
-	}
-
 	public function cache_key( $part, $filter = FALSE )
 	{
 		if ( ! $filter )
@@ -553,7 +539,6 @@ class bStat_Report
 
 		echo '<pre>';
 		print_r( $this->sessions_on_goal( 1 ) );
-		print_r( $this->sessions_missed_goal( 1 ) );
 		echo '</pre>';
 
 		// a timeseries graph of all activity, broken out by component:action

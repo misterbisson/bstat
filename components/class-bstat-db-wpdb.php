@@ -29,14 +29,6 @@ class bStat_Db_Wpdb extends bStat_Db
 	public function _select( $for, $ids, $return, $return_format, $limit, $filter )
 	{
 
-		// searches default to IN or =, but prepending the $for with a - will make them do a NOT IN or !=
-		$not = ' ';
-		if ( '-' === $for{0} )
-		{
-			$not = ' NOT ';
-			$for = trim( $for, '-' );
-		}
-
 		// starting WHERE clauses
 		switch ( $for )
 		{
@@ -51,7 +43,7 @@ class bStat_Db_Wpdb extends bStat_Db
 			case 'post':
 			case 'posts':
 				$ids = array_filter( array_map( 'absint', $ids ) );
-				$where = 'WHERE post' . $not . 'IN ("' . implode( '","', $ids ) . '")';
+				$where = 'WHERE post IN ("' . implode( '","', $ids ) . '")';
 				if ( ! $return )
 				{
 					$return = 'sessions';
@@ -61,7 +53,7 @@ class bStat_Db_Wpdb extends bStat_Db
 			case 'blog':
 			case 'blogs':
 				$ids = array_filter( array_map( 'absint', $ids ) );
-				$where = 'WHERE blog' . $not . 'IN ("' . implode( '","', $ids ) . '")';
+				$where = 'WHERE blog IN ("' . implode( '","', $ids ) . '")';
 				if ( ! $return )
 				{
 					$return = 'sessions';
@@ -71,7 +63,7 @@ class bStat_Db_Wpdb extends bStat_Db
 			case 'user':
 			case 'users':
 				$ids = array_filter( array_map( 'absint', $ids ) );
-				$where = 'WHERE user' . $not . 'IN ("' . implode( '","', $ids ) . '")';
+				$where = 'WHERE user IN ("' . implode( '","', $ids ) . '")';
 				if ( ! $return )
 				{
 					$return = 'posts';
@@ -81,7 +73,7 @@ class bStat_Db_Wpdb extends bStat_Db
 			case 'session':
 			case 'sessions':
 				$ids = array_filter( array_map( 'sanitize_title_with_dashes', $ids ) );
-				$where = 'WHERE session' . $not . 'IN ("' . implode( '","', $ids ) . '")';
+				$where = 'WHERE session IN ("' . implode( '","', $ids ) . '")';
 				if ( ! $return )
 				{
 					$return = 'posts';
@@ -91,8 +83,7 @@ class bStat_Db_Wpdb extends bStat_Db
 			case 'mixedusers':
 				$users = array_filter( array_map( 'absint', array_filter( $ids, 'is_numeric' ) ) );
 				$sessions = array_filter( array_map( 'sanitize_title_with_dashes', array_filter( $ids, 'is_string' ) ) );
-				// @TODO the NOT version of this query is not logically correct as written here. THe OR should become an AND, I think
-				$where = 'WHERE 1=1 AND ( user' . $not . 'IN ("' . implode( '","', $users ) . '") OR session' . $not . 'IN ("' . implode( '","', $sessions ) . '") )';
+				$where = 'WHERE 1=1 AND ( user IN ("' . implode( '","', $users ) . '") OR session IN ("' . implode( '","', $sessions ) . '") )';
 				if ( ! $return )
 				{
 					$return = 'posts';
@@ -115,7 +106,7 @@ class bStat_Db_Wpdb extends bStat_Db
 			case 'component':
 			case 'components':
 				$ids = array_filter( array_map( 'sanitize_title_with_dashes', $ids ) );
-				$where = 'WHERE component' . $not . 'IN ("' . implode( '","', $ids ) . '")';
+				$where = 'WHERE component IN ("' . implode( '","', $ids ) . '")';
 				if ( ! $return )
 				{
 					$return = 'posts';
@@ -125,7 +116,7 @@ class bStat_Db_Wpdb extends bStat_Db
 			case 'action':
 			case 'actions':
 				$ids = array_filter( array_map( 'sanitize_title_with_dashes', $ids ) );
-				$where = 'WHERE action' . $not . 'IN ("' . implode( '","', $ids ) . '")';
+				$where = 'WHERE action IN ("' . implode( '","', $ids ) . '")';
 				if ( ! $return )
 				{
 					$return = 'posts';
@@ -138,7 +129,7 @@ class bStat_Db_Wpdb extends bStat_Db
 			case 'actions_and_components':
 				$ids = array_filter( array_map( 'sanitize_title_with_dashes', $ids ) );
 				// @TODO: this query totally won't work, note the field name. It'll need a new sanitization plan and new query
-				$where = 'WHERE action' . $not . 'IN ("' . implode( '","', $ids ) . '")';
+				$where = 'WHERE action IN ("' . implode( '","', $ids ) . '")';
 				if ( ! $return )
 				{
 					$return = 'posts';

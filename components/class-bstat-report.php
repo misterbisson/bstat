@@ -274,18 +274,23 @@ class bStat_Report
 
 	public function top_sessions( $filter = FALSE )
 	{
+		return $this->sessions_for( FALSE, FALSE, $filter );
+	}
+
+	public function sessions_for( $for, $ids, $filter = FALSE )
+	{
 		if ( ! $filter )
 		{
 			$filter = $this->filter;
 		}
 
-		if ( ! $top_sessions = wp_cache_get( $this->cache_key( 'top_sessions', $filter ), bstat()->id_base ) )
+		if ( ! $sessions_for = wp_cache_get( $this->cache_key( 'sessions_for' . $for . md5( serialize( $ids ) ), $filter ), bstat()->id_base ) )
 		{
-			$top_sessions = bstat()->db()->select( FALSE, FALSE, 'sessions,hits', 1000, $filter );
-			wp_cache_set( $this->cache_key( 'top_sessions', $filter ), $top_sessions, bstat()->id_base, $this->cache_ttl() );
+			$sessions_for = bstat()->db()->select( $for, $ids, 'sessions,hits', 2000, $filter );
+			wp_cache_set( $this->cache_key( 'sessions_for' . $for . md5( serialize( $ids ) ), $filter ), $sessions_for, bstat()->id_base, $this->cache_ttl() );
 		}
 
-		return $top_sessions;
+		return $sessions_for;
 	}
 
 	public function posts_for_session( $session, $filter = FALSE )

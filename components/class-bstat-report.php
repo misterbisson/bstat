@@ -99,34 +99,6 @@ class bStat_Report
 		$this->filter = (array) $filter;
 	}
 
-	public function sessions_on_goal( $goal )
-	{
-
-		$goal = $this->parse_goal( $_GET['goal'] );
-
-		if ( ! $sessions_on_goal = wp_cache_get( $this->cache_key( 'sessions_on_goal', $goal ), bstat()->id_base ) )
-		{
-			$sessions = $this->top_sessions( $goal );
-			$sessions_on_goal = array();
-			$frequency = absint( $goal['frequency'] );
-			foreach ( $sessions as $session )
-			{
-				if ( $goal['frequency'] > 0 && $session->hits >= $frequency )
-				{
-					$sessions_on_goal[] = $session->session;
-				}
-				elseif ( $goal['frequency'] < 0 && $session->hits <= $frequency )
-				{
-					$sessions_on_goal[] = $session->session;
-				}
-			}
-
-			wp_cache_set( $this->cache_key( 'sessions_on_goal', $goal ), $sessions_on_goal, bstat()->id_base, $this->cache_ttl() );
-		}
-
-		return $sessions_on_goal;
-	}
-
 	public function cache_key( $part, $filter = FALSE )
 	{
 		if ( ! $filter )
@@ -149,35 +121,6 @@ class bStat_Report
 			return 0;
 		}
 		return ( $a->hits < $b->hits ) ? 1 : -1;
-	}
-
-	public function get_posts( $top_posts_list, $query_args = array() )
-	{
-		if ( ! $get_posts = wp_cache_get( $this->cache_key( 'get_posts ' . md5( serialize( $top_posts_list ) . serialize( $query_args ) ) ), bstat()->id_base ) )
-		{
-			$get_posts = get_posts( array_merge(
-				array(
-					'post__in' => array_map( 'absint', wp_list_pluck( $top_posts_list, 'post' ) ),
-					'orderby' => 'post__in',
-				),
-				$query_args
-			) );
-
-			$post_hits = array();
-			foreach ( $top_posts_list as $line )
-			{
-				$post_hits[ $line->post ] = $line->hits;
-			}
-
-			foreach ( $get_posts as $k => $v )
-			{
-				$get_posts[ $k ]->hits = $post_hits[ $v->ID ];
-			}
-
-			wp_cache_set( $this->cache_key( 'get_posts ' . md5( serialize( $top_posts_list ) . serialize( $query_args ) ) ), $get_posts, bstat()->id_base, $this->cache_ttl() );
-		}
-
-		return $get_posts;
 	}
 
 	public function timeseries( $quantize_minutes = 1, $filter = FALSE )
@@ -256,6 +199,35 @@ class bStat_Report
 		return $filters;
 	}
 
+	public function get_posts( $top_posts_list, $query_args = array() )
+	{
+		if ( ! $get_posts = wp_cache_get( $this->cache_key( 'get_posts ' . md5( serialize( $top_posts_list ) . serialize( $query_args ) ) ), bstat()->id_base ) )
+		{
+			$get_posts = get_posts( array_merge(
+				array(
+					'post__in' => array_map( 'absint', wp_list_pluck( $top_posts_list, 'post' ) ),
+					'orderby' => 'post__in',
+				),
+				$query_args
+			) );
+
+			$post_hits = array();
+			foreach ( $top_posts_list as $line )
+			{
+				$post_hits[ $line->post ] = $line->hits;
+			}
+
+			foreach ( $get_posts as $k => $v )
+			{
+				$get_posts[ $k ]->hits = $post_hits[ $v->ID ];
+			}
+
+			wp_cache_set( $this->cache_key( 'get_posts ' . md5( serialize( $top_posts_list ) . serialize( $query_args ) ) ), $get_posts, bstat()->id_base, $this->cache_ttl() );
+		}
+
+		return $get_posts;
+	}
+
 	public function top_posts( $filter = FALSE )
 	{
 		if ( ! $filter )
@@ -270,6 +242,34 @@ class bStat_Report
 		}
 
 		return $top_posts;
+	}
+
+	public function sessions_on_goal( $goal )
+	{
+
+		$goal = $this->parse_goal( $_GET['goal'] );
+
+		if ( ! $sessions_on_goal = wp_cache_get( $this->cache_key( 'sessions_on_goal', $goal ), bstat()->id_base ) )
+		{
+			$sessions = $this->top_sessions( $goal );
+			$sessions_on_goal = array();
+			$frequency = absint( $goal['frequency'] );
+			foreach ( $sessions as $session )
+			{
+				if ( $goal['frequency'] > 0 && $session->hits >= $frequency )
+				{
+					$sessions_on_goal[] = $session->session;
+				}
+				elseif ( $goal['frequency'] < 0 && $session->hits <= $frequency )
+				{
+					$sessions_on_goal[] = $session->session;
+				}
+			}
+
+			wp_cache_set( $this->cache_key( 'sessions_on_goal', $goal ), $sessions_on_goal, bstat()->id_base, $this->cache_ttl() );
+		}
+
+		return $sessions_on_goal;
 	}
 
 	public function top_sessions( $filter = FALSE )

@@ -41,6 +41,16 @@ class bStat_Report
 		return $goal;
 	}
 
+	public function get_goal()
+	{
+		if ( empty( $_GET['goal'] ) )
+		{
+			return array();
+		}
+
+		return $this->parse_goal( $_GET['goal'] );
+	}
+
 	public function goal_url( $goal )
 	{
 		$url = admin_url( '/index.php?page=' . bstat()->id_base . '-report' );
@@ -244,10 +254,17 @@ class bStat_Report
 		return $top_posts;
 	}
 
-	public function sessions_on_goal( $goal )
+	public function sessions_on_goal( $goal = NULL )
 	{
 
-		$goal = $this->parse_goal( $_GET['goal'] );
+		// inherit the goal if none is provided
+		$goal = empty( $goal ) ? $this->get_goal() : NULL;
+
+		// do not continue without a goal
+		if ( ! $goal )
+		{
+			return array();
+		}
 
 		if ( ! $sessions_on_goal = wp_cache_get( $this->cache_key( 'sessions_on_goal', $goal ), bstat()->id_base ) )
 		{
@@ -300,7 +317,7 @@ class bStat_Report
 			$filter = $this->filter;
 		}
 
-		if ( ! $posts_for_session = wp_cache_get( $this->cache_key( 'posts_for_session ' . md5( serialize( $session ) ), $filter ), bstat()->id_base ) )
+		if ( ! $posts_for_session = wp_cache_get( $this->cache_key( 'AAposts_for_session ' . md5( serialize( $session ) ), $filter ), bstat()->id_base ) )
 		{
 			$posts_for_session = bstat()->db()->select( 'session', $session, 'post,hits', 250, $filter );
 			wp_cache_set( $this->cache_key( 'posts_for_session ' . md5( serialize( $session ) ), $filter ), $posts_for_session, bstat()->id_base, $this->cache_ttl() );
@@ -542,9 +559,12 @@ class bStat_Report
 		// goal controls
 		include __DIR__ . '/templates/report-goal.php';
 
+		// goal posts
+		include __DIR__ . '/templates/report-goal-posts.php';
+
 		echo '<pre>';
-		print_r( $this->sessions_on_goal( 1 ) );
-		print_r( $this->posts_for_session( $this->sessions_on_goal( 1 ) ) );
+		print_r( $this->sessions_on_goal() );
+		print_r( $this->posts_for_session( $this->sessions_on_goal() ) );
 		echo '</pre>';
 
 		// a timeseries graph of all activity, broken out by component:action

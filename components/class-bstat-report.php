@@ -295,10 +295,10 @@ class bStat_Report
 			$filter = $this->filter;
 		}
 
-		if ( ! $posts_for_session = wp_cache_get( $this->cache_key( 'posts_for_session ' . $session, $filter ), bstat()->id_base ) )
+		if ( ! $posts_for_session = wp_cache_get( $this->cache_key( 'posts_for_session ' . md5( serialize( $session ) ), $filter ), bstat()->id_base ) )
 		{
 			$posts_for_session = bstat()->db()->select( 'session', $session, 'post,hits', 250, $filter );
-			wp_cache_set( $this->cache_key( 'posts_for_session ' . $session, $filter ), $posts_for_session, bstat()->id_base, $this->cache_ttl() );
+			wp_cache_set( $this->cache_key( 'posts_for_session ' . md5( serialize( $session ) ), $filter ), $posts_for_session, bstat()->id_base, $this->cache_ttl() );
 		}
 
 		return $posts_for_session;
@@ -539,6 +539,7 @@ class bStat_Report
 
 		echo '<pre>';
 		print_r( $this->sessions_on_goal( 1 ) );
+		print_r( $this->posts_for_session( $this->sessions_on_goal( 1 ) ) );
 		echo '</pre>';
 
 		// a timeseries graph of all activity, broken out by component:action

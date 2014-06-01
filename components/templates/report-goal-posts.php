@@ -1,7 +1,7 @@
 <?php
 
 // don't show this panel if there'r no matching sessions
-if ( 1 > count( bstat()->report()->sessions_on_goal() ) )
+if ( ! count( bstat()->report()->sessions_on_goal() ) )
 {
 	return;
 }

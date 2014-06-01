@@ -656,6 +656,41 @@ class bStat_Report
 		return $component_and_action_info;
 	}
 
+	public function users_for_session( $session, $filter = FALSE )
+	{
+		if ( ! $filter )
+		{
+			$filter = $this->filter;
+		}
+
+		$cachekey = $this->cache_key( 'users_for_session' . md5( serialize( $session ) ), $filter );
+
+		if ( ! $users_for_session = wp_cache_get( $cachekey, bstat()->id_base ) )
+		{
+			$users_for_session = bstat()->db()->select( FALSE, FALSE, 'user,hits', 1000, $filter );
+
+			foreach ( $users_for_session as $k => $user )
+			{
+				$user->sessions = count( bstat()->report()->sessions_for( 'user', $user->user ) );
+				$user->sessions_on_goal = count(
+					bstat()->report()->sessions_for(
+						'sessions',bstat()->report()->sessions_on_goal(),
+						array_merge(
+							bstat()->report()->filter,
+							array( 'user' => $user->user )
+						)
+					)
+				);
+			}
+
+			usort( $users_for_session, array( $this, 'sort_by_sessions_on_goal_desc' ) );
+
+			wp_cache_set( $cachekey, $users_for_session, bstat()->id_base, $this->cache_ttl() );
+		}
+
+		return $users_for_session;
+	}
+
 	public function top_users( $filter = FALSE )
 	{
 		if ( ! $filter )
@@ -712,17 +747,9 @@ class bStat_Report
 
 			// top taxonomy terms
 			include __DIR__ . '/templates/report-goal-terms.php';
-/*
-			echo '<pre>';
-			print_r( bstat()->report()->terms_for_session( bstat()->report()->sessions_on_goal() ) );
-			echo '</pre>';
-*/
 
 			// top users
 			include __DIR__ . '/templates/report-goal-users.php';
-
-			// active sessions
-			include __DIR__ . '/templates/report-goal-sessions.php';
 		}
 		else
 		{

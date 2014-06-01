@@ -410,7 +410,7 @@ class bStat_Report
 				}
 				else
 				{
-					$authors_for_session[ $post->post_author ] = (object) array_intersect_key( (array) $post, array( 
+					$authors_for_session[ $post->post_author ] = (object) array_intersect_key( (array) $post, array(
 						'hits' => FALSE,
 						'sessions' => FALSE,
 						'sessions_on_goal' => FALSE,
@@ -699,49 +699,49 @@ class bStat_Report
 
 		echo '<h2>bStat Viewer</h2>';
 
-		// a timeseries graph of all activity, broken out by component:action
-		include __DIR__ . '/templates/report-timeseries.php';
-
 		// goal controls
 		include __DIR__ . '/templates/report-goal.php';
 
-		// goal posts
-		include __DIR__ . '/templates/report-goal-posts.php';
+		if ( $this->get_goal() )
+		{
+			// goal posts
+			include __DIR__ . '/templates/report-goal-posts.php';
 
-		// top authors by activity on their posts
-		include __DIR__ . '/templates/report-goal-authors.php';
+			// top authors by activity on their posts
+			include __DIR__ . '/templates/report-goal-authors.php';
 
-		// top taxonomy terms
-		include __DIR__ . '/templates/report-goal-terms.php';
-
+			// top taxonomy terms
+			include __DIR__ . '/templates/report-goal-terms.php';
 /*
-		echo '<pre>';
-		print_r( bstat()->report()->terms_for_session( bstat()->report()->sessions_on_goal() ) );
-		echo '</pre>';
+			echo '<pre>';
+			print_r( bstat()->report()->terms_for_session( bstat()->report()->sessions_on_goal() ) );
+			echo '</pre>';
 */
-		// filter controls
-//		include __DIR__ . '/templates/report-filter.php';
 
-		// top components and actions
-//		include __DIR__ . '/templates/report-top-components-and-actions.php';
+			// top users
+			include __DIR__ . '/templates/report-goal-users.php';
 
-		// information for single component:action pairs
-//		include __DIR__ . '/templates/report-action-info.php';
+			// active sessions
+			include __DIR__ . '/templates/report-goal-sessions.php';
+		}
+		else
+		{
+			// a timeseries graph of all activity, broken out by component:action
+			include __DIR__ . '/templates/report-timeseries.php';
 
-		// top posts
-//		include __DIR__ . '/templates/report-top-posts.php';
+			// filter controls
+			include __DIR__ . '/templates/report-filter.php';
 
-		// top authors by activity on their posts
-//		include __DIR__ . '/templates/report-top-authors.php';
+			// information for single component:action pairs
+			include __DIR__ . '/templates/report-action-info.php';
 
-		// top taxonomy terms
-//		include __DIR__ . '/templates/report-top-terms.php';
+			// top users
+			include __DIR__ . '/templates/report-top-users.php';
 
-		// top users
-//		include __DIR__ . '/templates/report-top-users.php';
+			// active sessions
+			include __DIR__ . '/templates/report-top-sessions.php';
+		}
 
-		// active sessions
-//		include __DIR__ . '/templates/report-top-sessions.php';
 	}
 
 }

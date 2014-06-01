@@ -83,7 +83,7 @@ class bStat_Report
 		// the newest part is filled in with the current time when the query is executed
 		$filter = array(
 			'timestamp' => array(
-				'min' => strtotime( 'midnight yesterday' ),
+				'min' => strtotime( 'midnight last week' ),
 			),
 		);
 
@@ -390,7 +390,7 @@ class bStat_Report
 
 		$cachekey = $this->cache_key( 'authors_for_session' . md5( serialize( $session ) ), $filter );
 
-		if ( ! $authors_for_session = wp_cache_get( $cachekey . 'asdf', bstat()->id_base ) )
+		if ( ! $authors_for_session = wp_cache_get( $cachekey, bstat()->id_base ) )
 		{
 			$posts = $this->get_posts( $this->posts_for_session( $session, $filter ), array( 'posts_per_page' => -1, 'post_type' => 'any' ) );
 
@@ -475,7 +475,7 @@ class bStat_Report
 
 		$cachekey = $this->cache_key( 'terms_for_session' . md5( serialize( $session ) ), $filter );
 
-		if ( ! $terms_for_session = wp_cache_get( $cachekey . 'asdasd', bstat()->id_base ) )
+		if ( ! $terms_for_session = wp_cache_get( $cachekey, bstat()->id_base ) )
 		{
 			global $wpdb;
 			$sql = "SELECT b.term_id, c.term_taxonomy_id, b.slug, b.name, a.taxonomy, a.description, a.count, COUNT(c.term_taxonomy_id) AS `count_in_set`

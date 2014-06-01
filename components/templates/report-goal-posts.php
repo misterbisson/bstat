@@ -1,5 +1,11 @@
 <?php
 
+// don't show this panel if there'r no matching sessions
+if ( 1 > count( bstat()->report()->sessions_on_goal() ) )
+{
+	return;
+}
+
 // don't show this panel if there are no posts for the sessions on goal
 $posts = bstat()->report()->posts_for_session( bstat()->report()->sessions_on_goal() );
 if ( ! count( $posts ) )
@@ -9,20 +15,6 @@ if ( ! count( $posts ) )
 
 // for sanity, limit this to just the top few posts
 $posts = array_slice( $posts, 0, bstat()->options()->report->max_items * 10 );
-
-foreach ( $posts as $post )
-{
-	$post->sessions = count( bstat()->report()->sessions_for( 'post', $post->post ) );
-	$post->sessions_on_goal = count(
-		bstat()->report()->sessions_for(
-			'sessions',bstat()->report()->sessions_on_goal(),
-			array_merge(
-				bstat()->report()->filter,
-				array( 'post' => $post->post )
-			)
-		)
-	);
-}
 
 $sum_sessions = array_sum( wp_list_pluck( $posts, 'sessions' ) );
 $sum_sessions_on_goal = array_sum( wp_list_pluck( $posts, 'sessions_on_goal' ) );
@@ -58,7 +50,7 @@ foreach ( $posts as $post )
 			<td>%8$s</td>
 		</tr>',
 		bstat()->report()->report_url( array( 'post' => $post->post, ) ),
-		$post->post,
+		get_the_title( $post->post ),
 		(int) $post->sessions,
 		(int) $post->sessions_on_goal,
 		number_format( ( $post->sessions_on_goal / $post->sessions ) * 100 , 2 ) . '%',

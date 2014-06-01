@@ -329,7 +329,8 @@ class bStat_Report
 
 		$cachekey = $this->cache_key( 'posts_for_session' . md5( serialize( $session ) ), $filter );
 
-		if ( ! $posts_for_session = wp_cache_get( $cachekey, bstat()->id_base ) )
+		// @TODO: this breaks when fetching from cache, returns data with no post keys
+		if ( ! $posts_for_session = wp_cache_get( $cachekey . 'asdfasdf', bstat()->id_base ) )
 		{
 			$posts_for_session = bstat()->db()->select( 'session', $session, 'post,hits', 250, $filter );
 
@@ -378,7 +379,7 @@ class bStat_Report
 
 		$cachekey = $this->cache_key( 'authors_for_session' . md5( serialize( $session ) ), $filter );
 
-		if ( ! $authors_for_session = wp_cache_get( $cachekey . 'asdasd', bstat()->id_base ) )
+		if ( ! $authors_for_session = wp_cache_get( $cachekey . 'asdf', bstat()->id_base ) )
 		{
 			$posts = $this->get_posts( $this->posts_for_session( $session, $filter ), array( 'posts_per_page' => -1, 'post_type' => 'any' ) );
 
@@ -391,7 +392,7 @@ class bStat_Report
 			foreach ( $posts as $post )
 			{
 
-				if ( isset( $authors[ $post->post_author ] ) )
+				if ( isset( $authors_for_session[ $post->post_author ] ) )
 				{
 					$authors_for_session[ $post->post_author ]->hits += $post->hits;
 					$authors_for_session[ $post->post_author ]->sessions += $post->sessions;
@@ -454,6 +455,48 @@ class bStat_Report
 		return $top_authors;
 	}
 
+	public function terms_for_session( $session, $filter = FALSE )
+	{
+		if ( ! $filter )
+		{
+			$filter = $this->filter;
+		}
+
+		$cachekey = $this->cache_key( 'terms_for_session' . md5( serialize( $session ) ), $filter );
+
+		if ( ! $terms_for_session = wp_cache_get( $cachekey . 'asdasd', bstat()->id_base ) )
+		{
+			global $wpdb;
+			$sql = "SELECT b.term_id, c.term_taxonomy_id, b.slug, b.name, a.taxonomy, a.description, a.count, COUNT(c.term_taxonomy_id) AS `count_in_set`
+				FROM $wpdb->term_relationships c
+				INNER JOIN $wpdb->term_taxonomy a ON a.term_taxonomy_id = c.term_taxonomy_id
+				INNER JOIN $wpdb->terms b ON a.term_id = b.term_id
+				WHERE c.object_id IN (" . implode( ',', array_map( 'absint', wp_list_pluck( $this->posts_for_session( $session, $filter ), 'post' ) ) ) . ")
+				GROUP BY c.term_taxonomy_id ORDER BY count DESC LIMIT 2000
+				/* generated in bStat_Report::top_terms() */";
+
+			$terms_for_session = $wpdb->get_results( $sql );
+
+			// reiterate to insert hits from recent activity
+			foreach ( $terms_for_session as $k => $v )
+			{
+				$posts = $this->top_posts_for_term_and_session( $v, $session, array( 'posts_per_page' => -1, 'post_type' => 'any' ) );
+
+				$terms_for_session[ $k ]->hits = array_sum( wp_list_pluck( $posts, 'hits' ) );
+				$terms_for_session[ $k ]->hits_per_post_score = $terms_for_session[ $k ]->hits + (int) ( 100 * $terms_for_session[ $k ]->hits / $terms_for_session[ $k ]->count_in_set );
+				$terms_for_session[ $k ]->depth_of_coverage_score = (int) ( 100 * $terms_for_session[ $k ]->count_in_set / $terms_for_session[ $k ]->count );
+				$terms_for_session[ $k ]->sessions = array_sum( wp_list_pluck( $posts, 'sessions' ) );
+				$terms_for_session[ $k ]->sessions_on_goal = array_sum( wp_list_pluck( $posts, 'sessions_on_goal' ) );
+				$terms_for_session[ $k ]->sessions_per_post_score = (int) ( 100 * $terms_for_session[ $k ]->sessions / $terms_for_session[ $k ]->count_in_set );
+				$terms_for_session[ $k ]->sessions_on_goal_per_post_score = (int) ( 100 * $terms_for_session[ $k ]->sessions_on_goal / $terms_for_session[ $k ]->count_in_set );
+			}
+
+			wp_cache_set( $cachekey, $terms_for_session, bstat()->id_base, 10 * $this->cache_ttl() );
+		}
+
+		return $terms_for_session;
+	}
+
 	public function top_terms( $filter = FALSE )
 	{
 		if ( ! $filter )
@@ -486,6 +529,27 @@ class bStat_Report
 		}
 
 		return $top_terms;
+	}
+
+	public function top_posts_for_term_and_session( $term, $session, $query_args = array(), $filter = FALSE )
+	{
+		if ( ! $filter )
+		{
+			$filter = $this->filter;
+		}
+
+		return $this->get_posts( $this->posts_for_session( $session, $filter ), array_merge(
+			array(
+				'tax_query' => array(
+					array(
+						'taxonomy' => $term->taxonomy,
+						'field' => 'id',
+						'terms' => $term->term_id,
+					),
+				),
+			),
+			$query_args
+		) );
 	}
 
 	public function top_posts_for_term( $term, $query_args = array(), $filter = FALSE )
@@ -631,8 +695,14 @@ class bStat_Report
 		// goal posts
 		include __DIR__ . '/templates/report-goal-posts.php';
 
+		// top authors by activity on their posts
+		include __DIR__ . '/templates/report-goal-authors.php';
+
+		// top taxonomy terms
+		include __DIR__ . '/templates/report-goal-terms.php';
+
 		echo '<pre>';
-		print_r( bstat()->report()->authors_for_session( bstat()->report()->sessions_on_goal() ) );
+		print_r( bstat()->report()->terms_for_session( bstat()->report()->sessions_on_goal() ) );
 		echo '</pre>';
 
 		// filter controls

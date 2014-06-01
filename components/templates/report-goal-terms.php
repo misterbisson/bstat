@@ -1,5 +1,11 @@
 <?php
 
+// don't show this panel if there'r no matching sessions
+if ( 1 > count( bstat()->report()->sessions_on_goal() ) )
+{
+	return;
+}
+
 // don't show this panel if there's only one term
 $terms = bstat()->report()->top_terms();
 if ( ! count( $terms ) )

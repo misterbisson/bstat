@@ -1,6 +1,6 @@
 <?php
 
-// for sanity, limit this to just the top 100 component:action pairs
+// for sanity, limit this to just the top component:action pairs
 $components_and_actions = bstat()->report()->top_components_and_actions();
 $components_and_actions = array_slice( $components_and_actions, 0, bstat()->options()->report->max_items );
 

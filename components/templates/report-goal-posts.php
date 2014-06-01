@@ -72,8 +72,8 @@ printf(
 		<td>%7$s</td>
 	</tr>',
 	'Totals:',
-	(int) $sum_sessions,
-	(int) $sum_sessions_on_goal,
+	number_format( $sum_sessions ),
+	number_format( $sum_sessions_on_goal ),
 	number_format( ( $sum_sessions_on_goal / $sum_sessions ) * 100 , 2 ) . '%',
 	'&nbsp;',
 	'&nbsp;',

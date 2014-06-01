@@ -166,7 +166,7 @@ class bStat
 						'duration' => 7776000, // 90 days in seconds
 					),
 					'report' => (object) array(
-						'max_items' => 20, // count of posts or other items to show per section
+						'max_items' => 35, // count of posts or other items to show per section
 						'quantize_time' => 60, // minutes
 					),
 					'test_cookie' => (object) array(

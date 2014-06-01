@@ -237,7 +237,7 @@ class bStat_Report
 			$post_hits = array();
 			foreach ( $top_posts_list as $line )
 			{
-				$post_hits[ $line->post ] = $line;
+				$post_hits[ $line->post ] = clone $line;
 				unset( $post_hits[ $line->post ]->post );
 			}
 
@@ -338,12 +338,11 @@ class bStat_Report
 
 		$cachekey = $this->cache_key( 'posts_for_session' . md5( serialize( $session ) ), $filter );
 
-		// @TODO: this breaks when fetching from cache, returns data with no post keys
-		if ( ! $posts_for_session = wp_cache_get( $cachekey . 'asdfasdf', bstat()->id_base ) )
+		if ( ! $posts_for_session = wp_cache_get( $cachekey, bstat()->id_base ) )
 		{
 			$posts_for_session = bstat()->db()->select( 'session', $session, 'post,hits', 250, $filter );
 
-			foreach ( $posts_for_session as $post )
+			foreach ( $posts_for_session as $k => $post )
 			{
 				$post->sessions = count( bstat()->report()->sessions_for( 'post', $post->post ) );
 				$post->sessions_on_goal = count(
@@ -546,6 +545,7 @@ class bStat_Report
 
 	public function top_posts_for_term_and_session( $term, $session, $query_args = array(), $filter = FALSE )
 	{
+
 		if ( ! $filter )
 		{
 			$filter = $this->filter;

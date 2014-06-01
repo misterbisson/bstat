@@ -212,7 +212,10 @@ class bStat_Report
 
 	public function get_posts( $top_posts_list, $query_args = array() )
 	{
-		if ( ! $get_posts = wp_cache_get( $this->cache_key( 'get_posts ' . md5( serialize( $top_posts_list ) . serialize( $query_args ) ) ), bstat()->id_base ) )
+
+		$cachekey = $this->cache_key( 'get_posts ' . md5( serialize( $top_posts_list ) . serialize( $query_args ) ) );
+
+		if ( ! $get_posts = wp_cache_get( $cachekey, bstat()->id_base ) )
 		{
 			$get_posts = get_posts( array_merge(
 				array(
@@ -225,15 +228,16 @@ class bStat_Report
 			$post_hits = array();
 			foreach ( $top_posts_list as $line )
 			{
-				$post_hits[ $line->post ] = $line->hits;
+				$post_hits[ $line->post ] = $line;
+				unset( $post_hits[ $line->post ]->post );
 			}
 
 			foreach ( $get_posts as $k => $v )
 			{
-				$get_posts[ $k ]->hits = $post_hits[ $v->ID ];
+				$get_posts[ $k ] = (object) array_replace( (array) $get_posts[ $k ], (array) $post_hits[ $v->ID ] );
 			}
 
-			wp_cache_set( $this->cache_key( 'get_posts ' . md5( serialize( $top_posts_list ) . serialize( $query_args ) ) ), $get_posts, bstat()->id_base, $this->cache_ttl() );
+			wp_cache_set( $cachekey, $get_posts, bstat()->id_base, $this->cache_ttl() );
 		}
 
 		return $get_posts;
@@ -323,10 +327,27 @@ class bStat_Report
 			$filter = $this->filter;
 		}
 
-		if ( ! $posts_for_session = wp_cache_get( $this->cache_key( 'AAposts_for_session ' . md5( serialize( $session ) ), $filter ), bstat()->id_base ) )
+		$cachekey = $this->cache_key( 'posts_for_session' . md5( serialize( $session ) ), $filter );
+
+		if ( ! $posts_for_session = wp_cache_get( $cachekey, bstat()->id_base ) )
 		{
 			$posts_for_session = bstat()->db()->select( 'session', $session, 'post,hits', 250, $filter );
-			wp_cache_set( $this->cache_key( 'posts_for_session ' . md5( serialize( $session ) ), $filter ), $posts_for_session, bstat()->id_base, $this->cache_ttl() );
+
+			foreach ( $posts_for_session as $post )
+			{
+				$post->sessions = count( bstat()->report()->sessions_for( 'post', $post->post ) );
+				$post->sessions_on_goal = count(
+					bstat()->report()->sessions_for(
+						'sessions',bstat()->report()->sessions_on_goal(),
+						array_merge(
+							bstat()->report()->filter,
+							array( 'post' => $post->post )
+						)
+					)
+				);
+			}
+
+			wp_cache_set( $cachekey, $posts_for_session, bstat()->id_base, $this->cache_ttl() );
 		}
 
 		return $posts_for_session;
@@ -346,6 +367,53 @@ class bStat_Report
 		}
 
 		return $posts_for_user;
+	}
+
+	public function authors_for_session( $session, $filter = FALSE )
+	{
+		if ( ! $filter )
+		{
+			$filter = $this->filter;
+		}
+
+		$cachekey = $this->cache_key( 'authors_for_session' . md5( serialize( $session ) ), $filter );
+
+		if ( ! $authors_for_session = wp_cache_get( $cachekey . 'asdasd', bstat()->id_base ) )
+		{
+			$posts = $this->get_posts( $this->posts_for_session( $session, $filter ), array( 'posts_per_page' => -1, 'post_type' => 'any' ) );
+
+			if ( ! count( $posts ) )
+			{
+				return FALSE;
+			}
+
+			$authors_for_session = array();
+			foreach ( $posts as $post )
+			{
+
+				if ( isset( $authors[ $post->post_author ] ) )
+				{
+					$authors_for_session[ $post->post_author ]->hits += $post->hits;
+					$authors_for_session[ $post->post_author ]->sessions += $post->sessions;
+					$authors_for_session[ $post->post_author ]->sessions_on_goal += $post->sessions_on_goal;
+				}
+				else
+				{
+					$authors_for_session[ $post->post_author ] = (object) array_intersect_key( (array) $post, array( 
+						'hits' => FALSE,
+						'sessions' => FALSE,
+						'sessions_on_goal' => FALSE,
+						'post_author' => FALSE,
+					) );
+				}
+			}
+
+			usort( $authors_for_session, array( $this, 'sort_by_hits_desc' ) );
+
+			wp_cache_set( $cachekey, $authors_for_session, bstat()->id_base, $this->cache_ttl() );
+		}
+
+		return $authors_for_session;
 	}
 
 	public function top_authors( $filter = FALSE )
@@ -370,23 +438,15 @@ class bStat_Report
 
 				if ( isset( $authors[ $post->post_author ] ) )
 				{
-					$authors[ $post->post_author ] += $post->hits;
+					$top_authors[ $post->post_author ]->hits += $post->hits;
 				}
 				else
 				{
-					$authors[ $post->post_author ] = $post->hits;
+					$top_authors[ $post->post_author ] = (object) array_intersect_key( (array) $post, array( 'hits' => FALSE, 'post_author' => FALSE ) );
 				}
 			}
 
-			arsort( $authors );
-
-			foreach ( $authors as $k => $v )
-			{
-				$top_authors[] = (object) array(
-					'post_author' => $k,
-					'hits' => $v,
-				);
-			}
+			usort( $top_authors, array( $this, 'sort_by_hits_desc' ) );
 
 			wp_cache_set( $this->cache_key( 'top_authors', $filter ), $top_authors, bstat()->id_base, $this->cache_ttl() );
 		}
@@ -562,38 +622,42 @@ class bStat_Report
 
 		echo '<h2>bStat Viewer</h2>';
 
+		// a timeseries graph of all activity, broken out by component:action
+		include __DIR__ . '/templates/report-timeseries.php';
+
 		// goal controls
 		include __DIR__ . '/templates/report-goal.php';
 
 		// goal posts
 		include __DIR__ . '/templates/report-goal-posts.php';
 
-		// a timeseries graph of all activity, broken out by component:action
-		include __DIR__ . '/templates/report-timeseries.php';
+		echo '<pre>';
+		print_r( bstat()->report()->authors_for_session( bstat()->report()->sessions_on_goal() ) );
+		echo '</pre>';
 
 		// filter controls
-		include __DIR__ . '/templates/report-filter.php';
+//		include __DIR__ . '/templates/report-filter.php';
 
 		// top components and actions
-		include __DIR__ . '/templates/report-top-components-and-actions.php';
+//		include __DIR__ . '/templates/report-top-components-and-actions.php';
 
 		// information for single component:action pairs
-		include __DIR__ . '/templates/report-action-info.php';
+//		include __DIR__ . '/templates/report-action-info.php';
 
 		// top posts
-		include __DIR__ . '/templates/report-top-posts.php';
+//		include __DIR__ . '/templates/report-top-posts.php';
 
 		// top authors by activity on their posts
-		include __DIR__ . '/templates/report-top-authors.php';
+//		include __DIR__ . '/templates/report-top-authors.php';
 
 		// top taxonomy terms
-		include __DIR__ . '/templates/report-top-terms.php';
+//		include __DIR__ . '/templates/report-top-terms.php';
 
 		// top users
-		include __DIR__ . '/templates/report-top-users.php';
+//		include __DIR__ . '/templates/report-top-users.php';
 
 		// active sessions
-		include __DIR__ . '/templates/report-top-sessions.php';
+//		include __DIR__ . '/templates/report-top-sessions.php';
 	}
 
 }

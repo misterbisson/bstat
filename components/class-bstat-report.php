@@ -27,15 +27,16 @@ class bStat_Report
 	{
 		$temp = array_map( 'trim', (array) explode( ':', $goal ) );
 
-		if ( ! isset( $temp[0], $temp[1], $temp[2] ) )
+		if ( ! isset( $temp[0], $temp[1], $temp[2], $temp[3] ) )
 		{
 			return FALSE;
 		}
 
-		$goal = array( 
-			'component' => sanitize_title_with_dashes( $temp[0] ),
-			'action' => sanitize_title_with_dashes( $temp[1] ),
-			'frequency' => (int) $temp[2],
+		$goal = array(
+			'blog' => sanitize_title_with_dashes( $temp[0] ),
+			'component' => sanitize_title_with_dashes( $temp[1] ),
+			'action' => sanitize_title_with_dashes( $temp[2] ),
+			'frequency' => (int) $temp[3],
 		);
 
 		return $goal;
@@ -55,7 +56,7 @@ class bStat_Report
 	{
 		$url = admin_url( '/index.php?page=' . bstat()->id_base . '-report' );
 
-		return add_query_arg( array( 'goal' => $goal['component'] . ':' . $goal['action'] . ':' . $goal['frequency'] ), $url );
+		return add_query_arg( array( 'goal' => $goal['blog'] . ':' . $goal['component'] . ':' . $goal['action'] . ':' . $goal['frequency'] ), $url );
 	}
 
 	public function report_url( $filter = array(), $additive = TRUE )
@@ -266,9 +267,14 @@ class bStat_Report
 			return array();
 		}
 
-		if ( ! $sessions_on_goal = wp_cache_get( $this->cache_key( 'sessions_on_goal', $goal ), bstat()->id_base ) )
+		// merge the goal and environmental filters
+		$filter = array_replace( $this->filter, $goal );
+
+		if ( ! $sessions_on_goal = wp_cache_get( $this->cache_key( 'sessions_on_goal', $filter ), bstat()->id_base ) )
 		{
-			$sessions = $this->top_sessions( $goal );
+			// get lots of sessions
+			$sessions = bstat()->db()->select( $for, $ids, 'sessions,hits', 10000, $filter );
+
 			$sessions_on_goal = array();
 			$frequency = absint( $goal['frequency'] );
 			foreach ( $sessions as $session )
@@ -283,7 +289,7 @@ class bStat_Report
 				}
 			}
 
-			wp_cache_set( $this->cache_key( 'sessions_on_goal', $goal ), $sessions_on_goal, bstat()->id_base, $this->cache_ttl() );
+			wp_cache_set( $this->cache_key( 'sessions_on_goal', $filter ), $sessions_on_goal, bstat()->id_base, $this->cache_ttl() );
 		}
 
 		return $sessions_on_goal;
@@ -303,7 +309,7 @@ class bStat_Report
 
 		if ( ! $sessions_for = wp_cache_get( $this->cache_key( 'sessions_for' . $for . md5( serialize( $ids ) ), $filter ), bstat()->id_base ) )
 		{
-			$sessions_for = bstat()->db()->select( $for, $ids, 'sessions,hits', 2000, $filter );
+			$sessions_for = bstat()->db()->select( $for, $ids, 'sessions,hits', 5000, $filter );
 			wp_cache_set( $this->cache_key( 'sessions_for' . $for . md5( serialize( $ids ) ), $filter ), $sessions_for, bstat()->id_base, $this->cache_ttl() );
 		}
 

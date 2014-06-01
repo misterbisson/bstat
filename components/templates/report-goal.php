@@ -10,9 +10,19 @@ foreach ( $components_and_actions as $component_and_action )
 {
 	printf(
 		'<li><a href="%1$s">%2$s</a>:<a href="%3$s">%4$s</a></li>',
-		bstat()->report()->goal_url( array( 'component' => $component_and_action->component, 'action' => $component_and_action->action, 'frequency' => 1 ) ),
+		bstat()->report()->goal_url( array(
+			'blog' => bstat()->get_blog(),
+			'component' => $component_and_action->component,
+			'action' => $component_and_action->action,
+			'frequency' => 1,
+		) ),
 		$component_and_action->component,
-		bstat()->report()->goal_url( array( 'component' => $component_and_action->component, 'action' => $component_and_action->action, 'frequency' => 1 ) ),
+		bstat()->report()->goal_url( array(
+			'blog' => bstat()->get_blog(),
+			'component' => $component_and_action->component,
+			'action' => $component_and_action->action,
+			'frequency' => 1,
+		) ),
 		$component_and_action->action
 	);
 }

@@ -13,23 +13,14 @@ if ( ! count( $terms ) )
 	return;
 }
 
-function bstat_sort_emergent_terms( $a, $b )
-{
-	if ( $a->hits_per_post_score == $b->hits_per_post_score )
-	{
-		return 0;
-	}
-	return ( $a->hits_per_post_score < $b->hits_per_post_score ) ? 1 : -1;
-}
-
-//usort( $terms, 'bstat_sort_emergent_terms' );
-
-// for sanity, limit this to just the top few terms
-$terms = array_slice( $terms, 0, bstat()->options()->report->max_items );
-
 $sum_sessions = array_sum( wp_list_pluck( $terms, 'sessions' ) );
 $sum_sessions_on_goal = array_sum( wp_list_pluck( $terms, 'sessions_on_goal' ) );
 $avg_cvr = $sum_sessions_on_goal / $sum_sessions;
+$sum_matching_posts = array_sum( wp_list_pluck( $terms, 'count_in_set' ) );
+$sum_posts_in_session = count( bstat()->report()->posts_for_session( bstat()->report()->sessions_on_goal() ) );
+
+// for sanity, limit this to just the top few terms
+$terms = array_slice( $terms, 0, bstat()->options()->report->max_items );
 
 echo '<h2>Terms contributing to goal</h2>';
 echo '<p>Showing ' . count( $terms ) . ' top terms contributing to ' . number_format( count( bstat()->report()->sessions_on_goal() ) ) . ' goal completions.</p>';
@@ -48,6 +39,10 @@ echo '<table>
 foreach ( $terms as $term )
 {
 
+	// adjust the numbers to reflect the contribution an individual term has among many on each post
+	$term->sessions = $term->sessions / $term->count_in_set;
+	$term->sessions_on_goal = $term->sessions_on_goal / $term->count_in_set;
+
 	$term->sessions_on_goal_expected = $avg_cvr * $term->sessions;
 
 	printf(
@@ -61,8 +56,8 @@ foreach ( $terms as $term )
 			<td>%7$s</td>
 		</tr>',
 		$term->taxonomy . ':' . $term->slug,
-		(int) $term->sessions,
-		(int) $term->sessions_on_goal,
+		number_format(  $term->sessions, 2 ),
+		number_format(  $term->sessions_on_goal, 2 ),
 		number_format( ( $term->sessions_on_goal / $term->sessions ) * 100 , 2 ) . '%',
 		number_format( $term->sessions_on_goal_expected, 2 ),
 		number_format( $term->sessions_on_goal - $term->sessions_on_goal_expected, 2 ),

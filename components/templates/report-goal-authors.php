@@ -13,12 +13,12 @@ if ( ! count( $authors ) )
 	return;
 }
 
-// for sanity, limit this to just the top few authors
-$authors = array_slice( $authors, 0, bstat()->options()->report->max_items );
-
 $sum_sessions = array_sum( wp_list_pluck( $authors, 'sessions' ) );
 $sum_sessions_on_goal = array_sum( wp_list_pluck( $authors, 'sessions_on_goal' ) );
 $avg_cvr = $sum_sessions_on_goal / $sum_sessions;
+
+// for sanity, limit this to just the top few authors
+$authors = array_slice( $authors, 0, bstat()->options()->report->max_items );
 
 echo '<h2>Authors contributing to goal</h2>';
 echo '<p>Showing ' . count( $authors ) . ' top authors contributing to ' . number_format( count( bstat()->report()->sessions_on_goal() ) ) . ' goal completions.</p>';

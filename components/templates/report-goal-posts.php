@@ -13,12 +13,12 @@ if ( ! count( $posts ) )
 	return;
 }
 
-// for sanity, limit this to just the top few posts
-$posts = array_slice( $posts, 0, bstat()->options()->report->max_items * 10 );
-
 $sum_sessions = array_sum( wp_list_pluck( $posts, 'sessions' ) );
 $sum_sessions_on_goal = array_sum( wp_list_pluck( $posts, 'sessions_on_goal' ) );
 $avg_cvr = $sum_sessions_on_goal / $sum_sessions;
+
+// for sanity, limit this to just the top few posts
+$posts = array_slice( $posts, 0, bstat()->options()->report->max_items );
 
 echo '<h2>Posts contributing to goal</h2>';
 echo '<p>Showing ' . count( $posts ) . ' top posts contributing to ' . number_format( count( bstat()->report()->sessions_on_goal() ) ) . ' goal completions.</p>';
@@ -41,16 +41,17 @@ foreach ( $posts as $post )
 
 	printf(
 		'<tr>
-			<td><a href="%1$s">%2$s</a></td>
-			<td>%3$s</td>
+			<td><a href="%1$s">%2$s</a> <a href="%3$s">#</a></td>
 			<td>%4$s</td>
 			<td>%5$s</td>
 			<td>%6$s</td>
 			<td>%7$s</td>
 			<td>%8$s</td>
+			<td>%9$s</td>
 		</tr>',
 		bstat()->report()->report_url( array( 'post' => $post->post, ) ),
 		get_the_title( $post->post ),
+		get_permalink( $post->post ),
 		(int) $post->sessions,
 		(int) $post->sessions_on_goal,
 		number_format( ( $post->sessions_on_goal / $post->sessions ) * 100 , 2 ) . '%',

@@ -134,6 +134,15 @@ class bStat_Report
 		return ( $a->hits < $b->hits ) ? 1 : -1;
 	}
 
+	function sort_by_sessions_on_goal_desc( $a, $b )
+	{
+		if ( $a->sessions_on_goal == $b->sessions_on_goal )
+		{
+			return 0;
+		}
+		return ( $a->sessions_on_goal < $b->sessions_on_goal ) ? 1 : -1;
+	}
+
 	public function timeseries( $quantize_minutes = 1, $filter = FALSE )
 	{
 		// minutes are a positive integer, equal to or larger than 1
@@ -348,6 +357,8 @@ class bStat_Report
 				);
 			}
 
+			usort( $posts_for_session, array( $this, 'sort_by_sessions_on_goal_desc' ) );
+
 			wp_cache_set( $cachekey, $posts_for_session, bstat()->id_base, $this->cache_ttl() );
 		}
 
@@ -409,7 +420,7 @@ class bStat_Report
 				}
 			}
 
-			usort( $authors_for_session, array( $this, 'sort_by_hits_desc' ) );
+			usort( $authors_for_session, array( $this, 'sort_by_sessions_on_goal_desc' ) );
 
 			wp_cache_set( $cachekey, $authors_for_session, bstat()->id_base, $this->cache_ttl() );
 		}
@@ -490,6 +501,8 @@ class bStat_Report
 				$terms_for_session[ $k ]->sessions_per_post_score = (int) ( 100 * $terms_for_session[ $k ]->sessions / $terms_for_session[ $k ]->count_in_set );
 				$terms_for_session[ $k ]->sessions_on_goal_per_post_score = (int) ( 100 * $terms_for_session[ $k ]->sessions_on_goal / $terms_for_session[ $k ]->count_in_set );
 			}
+
+			usort( $terms_for_session, array( $this, 'sort_by_sessions_on_goal_desc' ) );
 
 			wp_cache_set( $cachekey, $terms_for_session, bstat()->id_base, 10 * $this->cache_ttl() );
 		}

@@ -568,11 +568,6 @@ class bStat_Report
 		// goal posts
 		include __DIR__ . '/templates/report-goal-posts.php';
 
-		echo '<pre>';
-		print_r( $this->sessions_on_goal() );
-		print_r( $this->posts_for_session( $this->sessions_on_goal() ) );
-		echo '</pre>';
-
 		// a timeseries graph of all activity, broken out by component:action
 		include __DIR__ . '/templates/report-timeseries.php';
 
@@ -599,10 +594,6 @@ class bStat_Report
 
 		// active sessions
 		include __DIR__ . '/templates/report-top-sessions.php';
-
-		// top a/b test groups
-		include __DIR__ . '/templates/report-top-groups.php';
-
 	}
 
 }

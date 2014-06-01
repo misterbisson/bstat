@@ -701,10 +701,11 @@ class bStat_Report
 		// top taxonomy terms
 		include __DIR__ . '/templates/report-goal-terms.php';
 
+/*
 		echo '<pre>';
 		print_r( bstat()->report()->terms_for_session( bstat()->report()->sessions_on_goal() ) );
 		echo '</pre>';
-
+*/
 		// filter controls
 //		include __DIR__ . '/templates/report-filter.php';
 

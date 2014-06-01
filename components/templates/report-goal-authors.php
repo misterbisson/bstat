@@ -1,14 +1,14 @@
 <?php
 
 // don't show this panel if there'r no matching sessions
-if ( 1 > count( bstat()->report()->sessions_on_goal() ) )
+if ( ! count( bstat()->report()->sessions_on_goal() ) )
 {
 	return;
 }
 
 // don't show this panel if there's only one author
 $authors = bstat()->report()->authors_for_session( bstat()->report()->sessions_on_goal() );
-if ( 1 > count( $authors ) )
+if ( ! count( $authors ) )
 {
 	return;
 }
@@ -43,7 +43,7 @@ foreach ( $authors as $author )
 		continue;
 	}
 
-	$author->sessions_on_goal_expected = $avg_cvr * $post->sessions;
+	$author->sessions_on_goal_expected = $avg_cvr * $author->sessions;
 
 	printf(
 		'<tr>

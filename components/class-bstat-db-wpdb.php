@@ -304,8 +304,6 @@ class bStat_Db_Wpdb extends bStat_Db
 		// all the SQL together in one place
 		$this->queries[] = $sql = $select . "\nFROM " . $this->activity_table . "\n" . $where . $filter_where . $date_where . "\n" . $group . "\n" . $order . "\nLIMIT " . $limit ."\n";
 
-//echo '<h2>' . $sql . '</h2>';
-
 		if ( 'col' == $return_format )
 		{
 			return $this->wpdb()->get_col( $sql );

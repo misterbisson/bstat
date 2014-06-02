@@ -143,7 +143,7 @@ class bStat_Report
 		return ( $a->sessions_on_goal < $b->sessions_on_goal ) ? 1 : -1;
 	}
 
-	public function timeseries( $quantize_minutes = 1, $filter = FALSE )
+	public function timeseries( $quantize_minutes = 1, $for = FALSE, $ids = FALSE, $filter = FALSE )
 	{
 		// minutes are a positive integer, equal to or larger than 1
 		$quantize_minutes = absint( $quantize_minutes );
@@ -155,7 +155,9 @@ class bStat_Report
 			$filter = $this->filter;
 		}
 
-		if ( ! $timeseries = wp_cache_get( $this->cache_key( 'timeseries ' . $seconds, $filter ), bstat()->id_base ) )
+		$cachekey = $this->cache_key( 'timeseries' . $seconds . $for . md5( serialize( $ids ) ), $filter );
+
+		if ( ! $timeseries = wp_cache_get( $cachekey, bstat()->id_base ) )
 		{
 			$timeseries_raw = bstat()->db()->select( FALSE, FALSE, 'all', 10000, $filter );
 
@@ -183,7 +185,7 @@ class bStat_Report
 
 			$timeseries = array_replace( $keys, $timeseries );
 
-			wp_cache_set( $this->cache_key( 'timeseries ' . $seconds, $filter ), $timeseries, bstat()->id_base, $this->cache_ttl() );
+			wp_cache_set( $cachekey, $timeseries, bstat()->id_base, $this->cache_ttl() );
 		}
 
 		// tips for using the output:
@@ -192,7 +194,7 @@ class bStat_Report
 		return $timeseries;
 	}
 
-	public function multi_timeseries( $quantize_minutes = 1, $filters = array() )
+	public function multi_timeseries( $quantize_minutes = 1, $for = FALSE, $ids = FALSE, $filters = array() )
 	{
 		if ( ! is_array( $filters ) )
 		{
@@ -202,7 +204,7 @@ class bStat_Report
 		// get the data for each filter
 		foreach ( $filters as $k => $v )
 		{
-			$filters[ $k ] = $this->timeseries( $quantize_minutes, $v );
+			$filters[ $k ] = $this->timeseries( $quantize_minutes, $for, $ids, $v );
 			$min = isset( $min ) ? min( $min, min( array_keys( $filters[ $k ] ) ) ) : min( array_keys( $filters[ $k ] ) );
 			$max = isset( $max ) ? max( $max, max( array_keys( $filters[ $k ] )	) ) : max( array_keys( $filters[ $k ] ) );
 		}
@@ -586,6 +588,50 @@ class bStat_Report
 		) );
 	}
 
+	public function components_and_actions_for_session( $session, $filter = FALSE )
+	{
+		if ( ! $filter )
+		{
+			$filter = $this->filter;
+		}
+
+		$cachekey = $this->cache_key( 'components_and_actions_for_session' . md5( serialize( $session ) ), $filter );
+
+		if ( ! $components_and_actions_for_session = wp_cache_get( $cachekey . 'asdf', bstat()->id_base ) )
+		{
+			$components_and_actions_for_session = bstat()->db()->select( 'session', $session, 'components_and_actions,hits', 1000, $filter );
+
+			foreach ( $components_and_actions_for_session as $k => $component_and_action )
+			{
+				$component_and_action->sessions = count( bstat()->report()->sessions_for( FALSE, FALSE, array_replace(
+					$filter,
+					array(
+						'component' => $component_and_action->component,
+						'action' => $component_and_action->action,
+					)
+				) ) );
+				$component_and_action->sessions_on_goal = count(
+					bstat()->report()->sessions_for(
+						'sessions',bstat()->report()->sessions_on_goal(),
+						array_replace(
+							$filter,
+							array(
+								'component' => $component_and_action->component,
+								'action' => $component_and_action->action,
+							)
+						)
+					)
+				);
+			}
+
+			usort( $components_and_actions_for_session, array( $this, 'sort_by_sessions_on_goal_desc' ) );
+
+			wp_cache_set( $cachekey, $components_and_actions_for_session, bstat()->id_base, $this->cache_ttl() );
+		}
+
+		return $components_and_actions_for_session;
+	}
+
 	public function top_components_and_actions( $filter = FALSE )
 	{
 		if ( ! $filter )
@@ -667,7 +713,7 @@ class bStat_Report
 
 		if ( ! $users_for_session = wp_cache_get( $cachekey, bstat()->id_base ) )
 		{
-			$users_for_session = bstat()->db()->select( FALSE, FALSE, 'user,hits', 1000, $filter );
+			$users_for_session = bstat()->db()->select( 'session', $session, 'user,hits', 1000, $filter );
 
 			foreach ( $users_for_session as $k => $user )
 			{
@@ -737,8 +783,17 @@ class bStat_Report
 		// goal controls
 		include __DIR__ . '/templates/report-goal.php';
 
+		// top components and actions
+		include __DIR__ . '/templates/report-top-components-and-actions.php';
+
 		if ( $this->get_goal() )
 		{
+			// a timeseries graph of all activity on goal, broken out by component:action
+			include __DIR__ . '/templates/report-goal-timeseries.php';
+
+			// a scatter plot of goal events by day and time
+			include __DIR__ . '/templates/report-goal-scatterplot.php';
+
 			// goal posts
 			include __DIR__ . '/templates/report-goal-posts.php';
 

@@ -1,10 +1,16 @@
 <?php
 
+// don't show this panel if there'r no matching sessions
+if ( ! count( bstat()->report()->sessions_on_goal() ) )
+{
+	return;
+}
+
 // enqueue the rickshaw js and style
 bstat()->rickshaw()->enqueue();
 
-// get the top five actions within this time period
-$components = array_slice( bstat()->report()->top_components_and_actions(), 0, 29 );
+// get the top actions matching the goal
+$components = array_slice( bstat()->report()->components_and_actions_for_session( bstat()->report()->sessions_on_goal() ), 0, 29 );
 
 // get an array with timeseries for each of those actions
 $filters = array();
@@ -12,7 +18,7 @@ foreach ( $components as $component )
 {
 	$filters[ $component->component .':' . $component->action ] = array_merge( bstat()->report()->filter, array( 'component' => $component->component, 'action' => $component->action ) );
 }
-$components = bstat()->report()->multi_timeseries( bstat()->options()->report->quantize_time, FALSE, FALSE, $filters );
+$components = bstat()->report()->multi_timeseries( bstat()->options()->report->quantize_time, 'session', bstat()->report()->sessions_on_goal(), $filters );
 
 // colors stolen from Rickshaw's 'munin' scheme, https://github.com/shutterstock/rickshaw/blob/master/src/js/Rickshaw.Fixtures.Color.js
 // though I guess that was stolen fron Munin

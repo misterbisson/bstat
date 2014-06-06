@@ -1,6 +1,6 @@
 <?php
 
-// don't show this panel if there'r no matching sessions
+// don't show this panel if there are no matching sessions
 if ( ! count( bstat()->report()->sessions_on_goal() ) )
 {
 	return;

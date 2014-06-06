@@ -274,7 +274,7 @@ class bStat_Report
 	{
 
 		// inherit the goal if none is provided
-		$goal = empty( $goal ) ? $this->get_goal() : NULL;
+		$goal = empty( $goal ) ? $this->get_goal() : $goal;
 
 		// do not continue without a goal
 		if ( ! $goal )

@@ -23,6 +23,42 @@ class bStat_Report
 		add_submenu_page( 'index.php', 'bStat Viewer', 'bStat Viewer', 'edit_posts', bstat()->id_base . '-report', array( $this, 'admin_menu' ) );
 	} // END admin_menu_init
 
+	public function parse_goal( $goal )
+	{
+		$temp = array_map( 'trim', (array) explode( ':', $goal ) );
+
+		if ( ! isset( $temp[0], $temp[1], $temp[2], $temp[3] ) )
+		{
+			return FALSE;
+		}
+
+		$goal = array(
+			'blog' => sanitize_title_with_dashes( $temp[0] ),
+			'component' => sanitize_title_with_dashes( $temp[1] ),
+			'action' => sanitize_title_with_dashes( $temp[2] ),
+			'frequency' => (int) $temp[3],
+		);
+
+		return $goal;
+	}
+
+	public function get_goal()
+	{
+		if ( empty( $_GET['goal'] ) )
+		{
+			return array();
+		}
+
+		return $this->parse_goal( $_GET['goal'] );
+	}
+
+	public function goal_url( $goal )
+	{
+		$url = admin_url( '/index.php?page=' . bstat()->id_base . '-report' );
+
+		return add_query_arg( array( 'goal' => $goal['blog'] . ':' . $goal['component'] . ':' . $goal['action'] . ':' . $goal['frequency'] ), $url );
+	}
+
 	public function report_url( $filter = array(), $additive = TRUE )
 	{
 		$url = admin_url( '/index.php?page=' . bstat()->id_base . '-report' );
@@ -47,7 +83,7 @@ class bStat_Report
 		// the newest part is filled in with the current time when the query is executed
 		$filter = array(
 			'timestamp' => array(
-				'min' => strtotime( 'midnight yesterday' ),
+				'min' => strtotime( 'midnight last week' ),
 			),
 		);
 
@@ -98,36 +134,16 @@ class bStat_Report
 		return ( $a->hits < $b->hits ) ? 1 : -1;
 	}
 
-	public function get_posts( $top_posts_list, $query_args = array() )
+	function sort_by_sessions_on_goal_desc( $a, $b )
 	{
-		if ( ! $get_posts = wp_cache_get( $this->cache_key( 'get_posts ' . md5( serialize( $top_posts_list ) . serialize( $query_args ) ) ), bstat()->id_base ) )
+		if ( $a->sessions_on_goal == $b->sessions_on_goal )
 		{
-			$get_posts = get_posts( array_merge(
-				array(
-					'post__in' => array_map( 'absint', wp_list_pluck( $top_posts_list, 'post' ) ),
-					'orderby' => 'post__in',
-				),
-				$query_args
-			) );
-
-			$post_hits = array();
-			foreach ( $top_posts_list as $line )
-			{
-				$post_hits[ $line->post ] = $line->hits;
-			}
-
-			foreach ( $get_posts as $k => $v )
-			{
-				$get_posts[ $k ]->hits = $post_hits[ $v->ID ];
-			}
-
-			wp_cache_set( $this->cache_key( 'get_posts ' . md5( serialize( $top_posts_list ) . serialize( $query_args ) ) ), $get_posts, bstat()->id_base, $this->cache_ttl() );
+			return 0;
 		}
-
-		return $get_posts;
+		return ( $a->sessions_on_goal < $b->sessions_on_goal ) ? 1 : -1;
 	}
 
-	public function timeseries( $quantize_minutes = 1, $filter = FALSE )
+	public function timeseries( $quantize_minutes = 1, $for = FALSE, $ids = FALSE, $filter = FALSE )
 	{
 		// minutes are a positive integer, equal to or larger than 1
 		$quantize_minutes = absint( $quantize_minutes );
@@ -139,7 +155,9 @@ class bStat_Report
 			$filter = $this->filter;
 		}
 
-		if ( ! $timeseries = wp_cache_get( $this->cache_key( 'timeseries ' . $seconds, $filter ), bstat()->id_base ) )
+		$cachekey = $this->cache_key( 'timeseries' . $seconds . $for . md5( serialize( $ids ) ), $filter );
+
+		if ( ! $timeseries = wp_cache_get( $cachekey, bstat()->id_base ) )
 		{
 			$timeseries_raw = bstat()->db()->select( FALSE, FALSE, 'all', 10000, $filter );
 
@@ -167,7 +185,7 @@ class bStat_Report
 
 			$timeseries = array_replace( $keys, $timeseries );
 
-			wp_cache_set( $this->cache_key( 'timeseries ' . $seconds, $filter ), $timeseries, bstat()->id_base, $this->cache_ttl() );
+			wp_cache_set( $cachekey, $timeseries, bstat()->id_base, $this->cache_ttl() );
 		}
 
 		// tips for using the output:
@@ -176,7 +194,7 @@ class bStat_Report
 		return $timeseries;
 	}
 
-	public function multi_timeseries( $quantize_minutes = 1, $filters = array() )
+	public function multi_timeseries( $quantize_minutes = 1, $for = FALSE, $ids = FALSE, $filters = array() )
 	{
 		if ( ! is_array( $filters ) )
 		{
@@ -186,7 +204,7 @@ class bStat_Report
 		// get the data for each filter
 		foreach ( $filters as $k => $v )
 		{
-			$filters[ $k ] = $this->timeseries( $quantize_minutes, $v );
+			$filters[ $k ] = $this->timeseries( $quantize_minutes, $for, $ids, $v );
 			$min = isset( $min ) ? min( $min, min( array_keys( $filters[ $k ] ) ) ) : min( array_keys( $filters[ $k ] ) );
 			$max = isset( $max ) ? max( $max, max( array_keys( $filters[ $k ] )	) ) : max( array_keys( $filters[ $k ] ) );
 		}
@@ -201,6 +219,39 @@ class bStat_Report
 		}
 
 		return $filters;
+	}
+
+	public function get_posts( $top_posts_list, $query_args = array() )
+	{
+
+		$cachekey = $this->cache_key( 'get_posts ' . md5( serialize( $top_posts_list ) . serialize( $query_args ) ) );
+
+		if ( ! $get_posts = wp_cache_get( $cachekey, bstat()->id_base ) )
+		{
+			$get_posts = get_posts( array_merge(
+				array(
+					'post__in' => array_map( 'absint', wp_list_pluck( $top_posts_list, 'post' ) ),
+					'orderby' => 'post__in',
+				),
+				$query_args
+			) );
+
+			$post_hits = array();
+			foreach ( $top_posts_list as $line )
+			{
+				$post_hits[ $line->post ] = clone $line;
+				unset( $post_hits[ $line->post ]->post );
+			}
+
+			foreach ( $get_posts as $k => $v )
+			{
+				$get_posts[ $k ] = (object) array_replace( (array) $get_posts[ $k ], (array) $post_hits[ $v->ID ] );
+			}
+
+			wp_cache_set( $cachekey, $get_posts, bstat()->id_base, $this->cache_ttl() );
+		}
+
+		return $get_posts;
 	}
 
 	public function top_posts( $filter = FALSE )
@@ -219,20 +270,65 @@ class bStat_Report
 		return $top_posts;
 	}
 
+	public function sessions_on_goal( $goal = NULL )
+	{
+
+		// inherit the goal if none is provided
+		$goal = empty( $goal ) ? $this->get_goal() : $goal;
+
+		// do not continue without a goal
+		if ( ! $goal )
+		{
+			return array();
+		}
+
+		// merge the goal and environmental filters
+		$filter = array_replace( $this->filter, $goal );
+
+		if ( ! $sessions_on_goal = wp_cache_get( $this->cache_key( 'sessions_on_goal', $filter ), bstat()->id_base ) )
+		{
+			// get lots of sessions
+			$sessions = bstat()->db()->select( $for, $ids, 'sessions,hits', 10000, $filter );
+
+			$sessions_on_goal = array();
+			$frequency = absint( $goal['frequency'] );
+			foreach ( $sessions as $session )
+			{
+				if ( $goal['frequency'] > 0 && $session->hits >= $frequency )
+				{
+					$sessions_on_goal[] = $session->session;
+				}
+				elseif ( $goal['frequency'] < 0 && $session->hits <= $frequency )
+				{
+					$sessions_on_goal[] = $session->session;
+				}
+			}
+
+			wp_cache_set( $this->cache_key( 'sessions_on_goal', $filter ), $sessions_on_goal, bstat()->id_base, $this->cache_ttl() );
+		}
+
+		return $sessions_on_goal;
+	}
+
 	public function top_sessions( $filter = FALSE )
+	{
+		return $this->sessions_for( FALSE, FALSE, $filter );
+	}
+
+	public function sessions_for( $for, $ids, $filter = FALSE )
 	{
 		if ( ! $filter )
 		{
 			$filter = $this->filter;
 		}
 
-		if ( ! $top_sessions = wp_cache_get( $this->cache_key( 'top_sessions', $filter ), bstat()->id_base ) )
+		if ( ! $sessions_for = wp_cache_get( $this->cache_key( 'sessions_for' . $for . md5( serialize( $ids ) ), $filter ), bstat()->id_base ) )
 		{
-			$top_sessions = bstat()->db()->select( FALSE, FALSE, 'sessions,hits', 1000, $filter );
-			wp_cache_set( $this->cache_key( 'top_sessions', $filter ), $top_sessions, bstat()->id_base, $this->cache_ttl() );
+			$sessions_for = bstat()->db()->select( $for, $ids, 'sessions,hits', 5000, $filter );
+			wp_cache_set( $this->cache_key( 'sessions_for' . $for . md5( serialize( $ids ) ), $filter ), $sessions_for, bstat()->id_base, $this->cache_ttl() );
 		}
 
-		return $top_sessions;
+		return $sessions_for;
 	}
 
 	public function posts_for_session( $session, $filter = FALSE )
@@ -242,10 +338,29 @@ class bStat_Report
 			$filter = $this->filter;
 		}
 
-		if ( ! $posts_for_session = wp_cache_get( $this->cache_key( 'posts_for_session ' . $session, $filter ), bstat()->id_base ) )
+		$cachekey = $this->cache_key( 'posts_for_session' . md5( serialize( $session ) ), $filter );
+
+		if ( ! $posts_for_session = wp_cache_get( $cachekey, bstat()->id_base ) )
 		{
 			$posts_for_session = bstat()->db()->select( 'session', $session, 'post,hits', 250, $filter );
-			wp_cache_set( $this->cache_key( 'posts_for_session ' . $session, $filter ), $posts_for_session, bstat()->id_base, $this->cache_ttl() );
+
+			foreach ( $posts_for_session as $k => $post )
+			{
+				$post->sessions = count( bstat()->report()->sessions_for( 'post', $post->post ) );
+				$post->sessions_on_goal = count(
+					bstat()->report()->sessions_for(
+						'sessions',bstat()->report()->sessions_on_goal(),
+						array_merge(
+							bstat()->report()->filter,
+							array( 'post' => $post->post )
+						)
+					)
+				);
+			}
+
+			usort( $posts_for_session, array( $this, 'sort_by_sessions_on_goal_desc' ) );
+
+			wp_cache_set( $cachekey, $posts_for_session, bstat()->id_base, $this->cache_ttl() );
 		}
 
 		return $posts_for_session;
@@ -267,52 +382,51 @@ class bStat_Report
 		return $posts_for_user;
 	}
 
-	public function top_tentpole_posts( $filter = FALSE )
+	public function authors_for_session( $session, $filter = FALSE )
 	{
 		if ( ! $filter )
 		{
 			$filter = $this->filter;
 		}
 
-		if ( ! $top_tentpole_posts = wp_cache_get( $this->cache_key( 'top_tentpole_posts', $filter ), bstat()->id_base ) )
+		$cachekey = $this->cache_key( 'authors_for_session' . md5( serialize( $session ) ), $filter );
+
+		if ( ! $authors_for_session = wp_cache_get( $cachekey, bstat()->id_base ) )
 		{
-			$top_tentpole_posts = $posts_raw = $sessions = array();
+			$posts = $this->get_posts( $this->posts_for_session( $session, $filter ), array( 'posts_per_page' => -1, 'post_type' => 'any' ) );
 
-			$sessions_raw = wp_list_pluck( $this->top_sessions( $filter ), 'session' );
-			foreach ( $sessions_raw as $session )
+			if ( ! count( $posts ) )
 			{
-				$sessions[ $session ] = wp_list_pluck( $this->posts_for_session( $session, $filter ), 'post' );
+				return FALSE;
+			}
 
-				if ( 1 >= count( $sessions[ $session ] ) )
-				{
-					continue;
-				}
+			$authors_for_session = array();
+			foreach ( $posts as $post )
+			{
 
-				$post = end( $sessions[ $session ] );
-				if ( isset( $posts_raw[ $post ] ) )
+				if ( isset( $authors_for_session[ $post->post_author ] ) )
 				{
-					$posts_raw[ $post ] ++;
+					$authors_for_session[ $post->post_author ]->hits += $post->hits;
+					$authors_for_session[ $post->post_author ]->sessions += $post->sessions;
+					$authors_for_session[ $post->post_author ]->sessions_on_goal += $post->sessions_on_goal;
 				}
 				else
 				{
-					$posts_raw[ $post ] = 0;
+					$authors_for_session[ $post->post_author ] = (object) array_intersect_key( (array) $post, array(
+						'hits' => FALSE,
+						'sessions' => FALSE,
+						'sessions_on_goal' => FALSE,
+						'post_author' => FALSE,
+					) );
 				}
 			}
-			arsort( $posts_raw );
-			$posts_raw = array_filter( $posts_raw );
-			foreach ( $posts_raw as $k => $v )
-			{
-				$top_tentpole_posts[] = (object) array(
-					'post' => $k,
-					'hits' => $v + 1,
-				);
-			}
 
-			wp_cache_set( $this->cache_key( 'top_tentpole_posts', $filter ), $top_tentpole_posts, bstat()->id_base, $this->cache_ttl() );
+			usort( $authors_for_session, array( $this, 'sort_by_sessions_on_goal_desc' ) );
+
+			wp_cache_set( $cachekey, $authors_for_session, bstat()->id_base, $this->cache_ttl() );
 		}
 
-		// this method often returns empty on sites with low activity
-		return $top_tentpole_posts;
+		return $authors_for_session;
 	}
 
 	public function top_authors( $filter = FALSE )
@@ -337,28 +451,64 @@ class bStat_Report
 
 				if ( isset( $authors[ $post->post_author ] ) )
 				{
-					$authors[ $post->post_author ] += $post->hits;
+					$top_authors[ $post->post_author ]->hits += $post->hits;
 				}
 				else
 				{
-					$authors[ $post->post_author ] = $post->hits;
+					$top_authors[ $post->post_author ] = (object) array_intersect_key( (array) $post, array( 'hits' => FALSE, 'post_author' => FALSE ) );
 				}
 			}
 
-			arsort( $authors );
-
-			foreach ( $authors as $k => $v )
-			{
-				$top_authors[] = (object) array(
-					'post_author' => $k,
-					'hits' => $v,
-				);
-			}
+			usort( $top_authors, array( $this, 'sort_by_hits_desc' ) );
 
 			wp_cache_set( $this->cache_key( 'top_authors', $filter ), $top_authors, bstat()->id_base, $this->cache_ttl() );
 		}
 
 		return $top_authors;
+	}
+
+	public function terms_for_session( $session, $filter = FALSE )
+	{
+		if ( ! $filter )
+		{
+			$filter = $this->filter;
+		}
+
+		$cachekey = $this->cache_key( 'terms_for_session' . md5( serialize( $session ) ), $filter );
+
+		if ( ! $terms_for_session = wp_cache_get( $cachekey, bstat()->id_base ) )
+		{
+			global $wpdb;
+			$sql = "SELECT b.term_id, c.term_taxonomy_id, b.slug, b.name, a.taxonomy, a.description, a.count, COUNT(c.term_taxonomy_id) AS `count_in_set`
+				FROM $wpdb->term_relationships c
+				INNER JOIN $wpdb->term_taxonomy a ON a.term_taxonomy_id = c.term_taxonomy_id
+				INNER JOIN $wpdb->terms b ON a.term_id = b.term_id
+				WHERE c.object_id IN (" . implode( ',', array_map( 'absint', wp_list_pluck( $this->posts_for_session( $session, $filter ), 'post' ) ) ) . ")
+				GROUP BY c.term_taxonomy_id ORDER BY count DESC LIMIT 2000
+				/* generated in bStat_Report::top_terms() */";
+
+			$terms_for_session = $wpdb->get_results( $sql );
+
+			// reiterate to insert hits from recent activity
+			foreach ( $terms_for_session as $k => $v )
+			{
+				$posts = $this->top_posts_for_term_and_session( $v, $session, array( 'posts_per_page' => -1, 'post_type' => 'any' ) );
+
+				$terms_for_session[ $k ]->hits = array_sum( wp_list_pluck( $posts, 'hits' ) );
+				$terms_for_session[ $k ]->hits_per_post_score = $terms_for_session[ $k ]->hits + (int) ( 100 * $terms_for_session[ $k ]->hits / $terms_for_session[ $k ]->count_in_set );
+				$terms_for_session[ $k ]->depth_of_coverage_score = (int) ( 100 * $terms_for_session[ $k ]->count_in_set / $terms_for_session[ $k ]->count );
+				$terms_for_session[ $k ]->sessions = array_sum( wp_list_pluck( $posts, 'sessions' ) );
+				$terms_for_session[ $k ]->sessions_on_goal = array_sum( wp_list_pluck( $posts, 'sessions_on_goal' ) );
+				$terms_for_session[ $k ]->sessions_per_post_score = (int) ( 100 * $terms_for_session[ $k ]->sessions / $terms_for_session[ $k ]->count_in_set );
+				$terms_for_session[ $k ]->sessions_on_goal_per_post_score = (int) ( 100 * $terms_for_session[ $k ]->sessions_on_goal / $terms_for_session[ $k ]->count_in_set );
+			}
+
+			usort( $terms_for_session, array( $this, 'sort_by_sessions_on_goal_desc' ) );
+
+			wp_cache_set( $cachekey, $terms_for_session, bstat()->id_base, 10 * $this->cache_ttl() );
+		}
+
+		return $terms_for_session;
 	}
 
 	public function top_terms( $filter = FALSE )
@@ -395,6 +545,28 @@ class bStat_Report
 		return $top_terms;
 	}
 
+	public function top_posts_for_term_and_session( $term, $session, $query_args = array(), $filter = FALSE )
+	{
+
+		if ( ! $filter )
+		{
+			$filter = $this->filter;
+		}
+
+		return $this->get_posts( $this->posts_for_session( $session, $filter ), array_merge(
+			array(
+				'tax_query' => array(
+					array(
+						'taxonomy' => $term->taxonomy,
+						'field' => 'id',
+						'terms' => $term->term_id,
+					),
+				),
+			),
+			$query_args
+		) );
+	}
+
 	public function top_posts_for_term( $term, $query_args = array(), $filter = FALSE )
 	{
 		if ( ! $filter )
@@ -414,6 +586,50 @@ class bStat_Report
 			),
 			$query_args
 		) );
+	}
+
+	public function components_and_actions_for_session( $session, $filter = FALSE )
+	{
+		if ( ! $filter )
+		{
+			$filter = $this->filter;
+		}
+
+		$cachekey = $this->cache_key( 'components_and_actions_for_session' . md5( serialize( $session ) ), $filter );
+
+		if ( ! $components_and_actions_for_session = wp_cache_get( $cachekey . 'asdf', bstat()->id_base ) )
+		{
+			$components_and_actions_for_session = bstat()->db()->select( 'session', $session, 'components_and_actions,hits', 1000, $filter );
+
+			foreach ( $components_and_actions_for_session as $k => $component_and_action )
+			{
+				$component_and_action->sessions = count( bstat()->report()->sessions_for( FALSE, FALSE, array_replace(
+					$filter,
+					array(
+						'component' => $component_and_action->component,
+						'action' => $component_and_action->action,
+					)
+				) ) );
+				$component_and_action->sessions_on_goal = count(
+					bstat()->report()->sessions_for(
+						'sessions',bstat()->report()->sessions_on_goal(),
+						array_replace(
+							$filter,
+							array(
+								'component' => $component_and_action->component,
+								'action' => $component_and_action->action,
+							)
+						)
+					)
+				);
+			}
+
+			usort( $components_and_actions_for_session, array( $this, 'sort_by_sessions_on_goal_desc' ) );
+
+			wp_cache_set( $cachekey, $components_and_actions_for_session, bstat()->id_base, $this->cache_ttl() );
+		}
+
+		return $components_and_actions_for_session;
 	}
 
 	public function top_components_and_actions( $filter = FALSE )
@@ -486,6 +702,41 @@ class bStat_Report
 		return $component_and_action_info;
 	}
 
+	public function users_for_session( $session, $filter = FALSE )
+	{
+		if ( ! $filter )
+		{
+			$filter = $this->filter;
+		}
+
+		$cachekey = $this->cache_key( 'users_for_session' . md5( serialize( $session ) ), $filter );
+
+		if ( ! $users_for_session = wp_cache_get( $cachekey, bstat()->id_base ) )
+		{
+			$users_for_session = bstat()->db()->select( 'session', $session, 'user,hits', 1000, $filter );
+
+			foreach ( $users_for_session as $k => $user )
+			{
+				$user->sessions = count( bstat()->report()->sessions_for( 'user', $user->user ) );
+				$user->sessions_on_goal = count(
+					bstat()->report()->sessions_for(
+						'sessions',bstat()->report()->sessions_on_goal(),
+						array_merge(
+							bstat()->report()->filter,
+							array( 'user' => $user->user )
+						)
+					)
+				);
+			}
+
+			usort( $users_for_session, array( $this, 'sort_by_sessions_on_goal_desc' ) );
+
+			wp_cache_set( $cachekey, $users_for_session, bstat()->id_base, $this->cache_ttl() );
+		}
+
+		return $users_for_session;
+	}
+
 	public function top_users( $filter = FALSE )
 	{
 		if ( ! $filter )
@@ -500,22 +751,6 @@ class bStat_Report
 		}
 
 		return $top_users;
-	}
-
-	public function top_groups( $filter = FALSE )
-	{
-		if ( ! $filter )
-		{
-			$filter = $this->filter;
-		}
-
-		if ( ! $top_groups = wp_cache_get( $this->cache_key( 'top_groups', $filter ), bstat()->id_base ) )
-		{
-			$top_groups = bstat()->db()->select( FALSE, FALSE, 'group,hits', 1000, $filter );
-			wp_cache_set( $this->cache_key( 'top_groups', $filter ), $top_groups, bstat()->id_base, $this->cache_ttl() );
-		}
-
-		return $top_groups;
 	}
 
 	public function top_blogs( $filter = FALSE )
@@ -545,38 +780,49 @@ class bStat_Report
 
 		echo '<h2>bStat Viewer</h2>';
 
-		// a timeseries graph of all activity, broken out by component:action
-		include __DIR__ . '/templates/report-timeseries.php';
-
-		// filter controls
-		include __DIR__ . '/templates/report-filter.php';
+		// goal controls
+		include __DIR__ . '/templates/report-goal.php';
 
 		// top components and actions
 		include __DIR__ . '/templates/report-top-components-and-actions.php';
 
-		// information for single component:action pairs
-		include __DIR__ . '/templates/report-action-info.php';
+		if ( $this->get_goal() )
+		{
+			// a timeseries graph of all activity on goal, broken out by component:action
+			include __DIR__ . '/templates/report-goal-timeseries.php';
 
-		// top posts
-		include __DIR__ . '/templates/report-top-posts.php';
+			// a scatter plot of goal events by day and time
+			include __DIR__ . '/templates/report-goal-scatterplot.php';
 
-		// tentpole posts -- the posts that led to the most follow-on pageviews
-		include __DIR__ . '/templates/report-top-tentpole-posts.php';
+			// goal posts
+			include __DIR__ . '/templates/report-goal-posts.php';
 
-		// top authors by activity on their posts
-		include __DIR__ . '/templates/report-top-authors.php';
+			// top authors by activity on their posts
+			include __DIR__ . '/templates/report-goal-authors.php';
 
-		// top taxonomy terms
-		include __DIR__ . '/templates/report-top-terms.php';
+			// top taxonomy terms
+			include __DIR__ . '/templates/report-goal-terms.php';
 
-		// top users
-		include __DIR__ . '/templates/report-top-users.php';
+			// top users
+			include __DIR__ . '/templates/report-goal-users.php';
+		}
+		else
+		{
+			// a timeseries graph of all activity, broken out by component:action
+			include __DIR__ . '/templates/report-timeseries.php';
 
-		// active sessions
-		include __DIR__ . '/templates/report-top-sessions.php';
+			// filter controls
+			include __DIR__ . '/templates/report-filter.php';
 
-		// top a/b test groups
-		include __DIR__ . '/templates/report-top-groups.php';
+			// information for single component:action pairs
+			include __DIR__ . '/templates/report-action-info.php';
+
+			// top users
+			include __DIR__ . '/templates/report-top-users.php';
+
+			// active sessions
+			include __DIR__ . '/templates/report-top-sessions.php';
+		}
 
 	}
 

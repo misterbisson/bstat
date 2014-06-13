@@ -299,9 +299,11 @@ class bStat
 	public function wp_localize_script()
 	{
 		global $wpdb;
+		$post_id = apply_filters( 'bstat_post_id', ( is_singular() ? get_queried_object_id() : FALSE ) );
 		$details = array(
-			'post'       => apply_filters( 'bstat_post_id', ( is_singular() ? get_queried_object_id() : FALSE ) ),
+			'post'       => $post_id,
 			'blog'       => $this->get_blog(),
+			'guid'       => $post_id ? get_post_field( 'guid', $post_id ) : FALSE,
 			'endpoint'   => $this->options()->endpoint,
 		);
 		$details['signature'] = $this->get_signature( $details );

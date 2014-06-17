@@ -14,7 +14,7 @@ class bStat_Report
 		bstat()->graphing();
 
 		add_action( 'admin_menu', array( $this, 'admin_menu_init' ) );
-		wp_register_style( bstat()->id_base . '-report', plugins_url( 'css/bstat-report.css', __FILE__ ), array(), bstat()->version );
+		wp_register_style( bstat()->id_base . '-report', plugins_url( 'css/bstat-report.css', __FILE__ ), array( 'rickshaw' ), bstat()->version );
 		wp_register_script( bstat()->id_base . '-report', plugins_url( 'js/bstat-report.js', __FILE__ ), array( 'rickshaw' ), bstat()->version, TRUE );
 	} // END init
 

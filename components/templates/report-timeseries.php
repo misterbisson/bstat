@@ -1,8 +1,5 @@
 <?php
 
-// enqueue the rickshaw js and style
-bstat()->rickshaw()->enqueue();
-
 // get the top five actions within this time period
 $components = array_slice( bstat()->report()->top_components_and_actions(), 0, 29 );
 
@@ -63,7 +60,7 @@ var bstat_timeseries = [
 		?>
 		{
 			name: "<?php echo $k; ?>",
-			data: <?php echo json_encode( bstat()->rickshaw()->array_to_series( $v ) ); ?>,
+			data: <?php echo json_encode( bstat()->graphing()->array_to_series( $v ) ); ?>,
 			color: "<?php echo current( $colors ); ?>",
 		},
 		<?php

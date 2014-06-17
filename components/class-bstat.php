@@ -6,7 +6,6 @@ class bStat
 	public  $id_base            = 'bstat';
 	private $options            = FALSE;
 	private $report             = FALSE;
-	private $rickshaw           = FALSE;
 	private $user_qv            = 'bstat_user';  // query var for the user id
 	private $redirect_qv        = 'bstat_redirect'; // query var for the redirect url
 	// these are the valid test keys. All tests are named x1 through x7.
@@ -84,17 +83,19 @@ class bStat
 		return $this->report;
 	} // END report
 
-	// a object accessor for the rickshaw object
-	public function rickshaw()
+	/**
+	 * helper function for go_graphing libraries
+	 */
+	public function graphing()
 	{
-		if ( ! $this->rickshaw )
+		// check for the existence of this library before including our local copy of it
+		if ( ! function_exists( 'go_graphing' ) )
 		{
-			require_once __DIR__ . '/class-bstat-rickshaw.php';
-			$this->rickshaw = new bStat_Rickshaw();
-		}
+			require_once __DIR__ . '/external/go-graphing/go-graphing.php';
+		}//end if
 
-		return $this->rickshaw;
-	} // END rickshaw
+		return go_graphing();
+	} // END graphing
 
 	// a object accessor for the db object
 	public function db()

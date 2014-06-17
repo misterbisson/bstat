@@ -6,9 +6,6 @@ if ( ! count( bstat()->report()->sessions_on_goal() ) )
 	return;
 }
 
-// enqueue the rickshaw js and style
-bstat()->rickshaw()->enqueue();
-
 // get the top actions matching the goal
 $components = array_slice( bstat()->report()->components_and_actions_for_session( bstat()->report()->sessions_on_goal() ), 0, 29 );
 
@@ -69,7 +66,7 @@ var bstat_timeseries = [
 		?>
 		{
 			name: "<?php echo $k; ?>",
-			data: <?php echo json_encode( bstat()->rickshaw()->array_to_series( $v ) ); ?>,
+			data: <?php echo json_encode( bstat()->graphing()->array_to_series( $v ) ); ?>,
 			color: "<?php echo current( $colors ); ?>",
 		},
 		<?php

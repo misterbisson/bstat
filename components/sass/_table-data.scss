@@ -1,0 +1,175 @@
+#bstat-viewer {
+	padding-right: 1rem;
+
+	a {
+		text-decoration: none;
+
+		&:hover {
+			text-decoration: underline;
+		}
+	}
+
+	table.stats {
+		width: 100%;
+		background: #ececec;
+		border-collapse: collapse;
+		border: 1px solid #ddd;
+		margin-bottom: 1em;
+		padding: 0;
+	}
+
+	th,
+	td {
+		padding: 0.5em;
+	}
+
+	th {
+		text-align: center;
+		background-color: #464646;
+		color: #eeeeee;
+
+	}
+
+	td {
+		border: 1px solid #ddd;
+		text-align: right;
+	}
+
+	tbody {
+		td {
+			background-color: #f9f9f9;
+		}
+
+		tr:nth-child( 4n + 1 ):not(.stat-row-posts) td,
+		tr:nth-child( 4n + 2 ):not(.stat-row-posts) td {
+			background-color: #fff;
+		}
+
+		.stat-row-posts {
+			display: none;
+
+			&.loaded {
+				display: table-row;
+			}
+
+			table {
+				border-width: 2px;
+				margin: 0;
+			}
+
+			& > td {
+				background-color: #eee;
+				background: linear-gradient( #e5e5e5 20px, #eee );
+
+				tr:nth-child( even ) td {
+					background-color: #fff;
+				}
+
+				tr:nth-child( odd ) td {
+					background-color: #f9f9f9;
+				}
+			}
+
+			.matches {
+				text-align: center;
+				text-transform: capitalize;
+			}
+		}
+	}
+
+	.stat-summary .item,
+	.stat-summary .posts,
+	.item,
+	.posts {
+		text-align: center;
+	}
+
+	.title {
+		text-align: left;
+	}
+
+	.posts {
+		a {
+			position: relative;
+			display: block;
+		}
+
+		i {
+			margin-left: .5rem;
+			position: absolute;
+			right: 0;
+			top: .25em;
+		}
+	}
+
+	.stat-summary {
+		td {
+			border: none;
+		}
+
+		th {
+			background-color: #7f7f7f;
+			color: #fff;
+			text-align: right;
+		}
+	}
+
+	.stat-row {
+		&[data-num-posts="0"],
+		&[data-num-posts=""] {
+			.posts a {
+				display: none;
+			}
+		}
+	}
+
+	.tabs {
+		font-size: .75rem;
+		margin-top: 2rem;
+
+		a {
+			color: #0074a2;
+
+			&:hover {
+				color: #2ea2cc;
+			}
+		}
+
+		&.ui-widget-content {
+			background: transparent;
+			border: 0;
+		}
+
+		& > div {
+			background: #fff;
+			border-top-right-radius: 4px;
+		}
+
+		.ui-tabs-nav {
+			padding: 0;
+		}
+
+		.ui-widget-header {
+			background: transparent;
+			border: 0;
+		}
+
+		.ui-state-default {
+			background: transparent;
+			border: 0;
+
+			&.ui-state-hover {
+				background: #eee;
+			}
+		}
+
+		.ui-tabs-focus,
+		.ui-tabs-active {
+			background: #fff;
+
+			&.ui-state-hover {
+				background: #fff;
+			}
+		}
+	}
+}

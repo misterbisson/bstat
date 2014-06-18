@@ -65,5 +65,14 @@ Preserved because I'd love to figure out why
 
 	$( function() {
 		$( '#bstat-viewer .tabs' ).tabs();
+		$( document ).on( 'click', '#bstat-goal .set', function( e ) {
+			e.preventDefault();
+
+			var $el = $( this );
+			var $container = $( '#bstat-goal' );
+
+			$container.toggleClass( 'show-goals' );
+			$container.find( 'ul' ).slideToggle( 'fast' );
+		});
 	});
 })(jQuery);

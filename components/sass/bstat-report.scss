@@ -237,7 +237,7 @@
 	}
 
 	.tabs {
-		font-size: 1em;
+		font-size: .75rem;
 		margin-top: 2rem;
 
 		a {
@@ -255,6 +255,7 @@
 
 		& > div {
 			background: #fff;
+			border-top-right-radius: 4px;
 		}
 
 		.ui-tabs-nav {

@@ -21,15 +21,17 @@
 		// don't show this panel if there are no matching sessions
 		if ( count( $sessions_on_goal ) )
 		{
+			$ajax_url = admin_url( 'admin-ajax.php?action=bstat_report_goal_items&goal=' . $_GET['goal'] );
 			?>
 			<div class="tabs">
 				<ul>
-					<li><a href="#goal-posts">Posts</a></li>
-					<li><a href="#goal-authors">Authors</a></li>
-					<li><a href="#goal-terms">Terms</a></li>
-					<li><a href="#goal-users">Users</a></li>
+					<li><a href="<?php echo esc_url( "{$ajax_url}&type=post" ); ?>">Posts</a></li>
+					<li><a href="<?php echo esc_url( "{$ajax_url}&type=author" ); ?>">Authors</a></li>
+					<li><a href="<?php echo esc_url( "{$ajax_url}&type=term" ); ?>">Terms</a></li>
+					<li><a href="<?php echo esc_url( "{$ajax_url}&type=user" ); ?>">Users</a></li>
 				</ul>
 				<?php
+			/*
 				// goal posts
 				$this->report_goal_template( 'post', $sessions_on_goal );
 
@@ -41,6 +43,7 @@
 
 				// top users
 				$this->report_goal_template( 'user', $sessions_on_goal );
+			 */
 				?>
 			</div>
 			<?php

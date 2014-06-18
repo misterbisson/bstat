@@ -6,7 +6,8 @@ class bStat_Report
 	public function __construct()
 	{
 		add_action( 'init', array( $this, 'init' ) );
-	}
+		add_action( 'wp_ajax_bstat_report_goal_items', array( $this, 'goal_items_ajax' ) );
+	}//end __construct
 
 	public function init()
 	{
@@ -97,7 +98,6 @@ class bStat_Report
 
 	public function set_filter( $filter = FALSE )
 	{
-
 		// are there filter vars in the $_GET? Okay, use those
 		if ( ! $filter )
 		{
@@ -905,6 +905,25 @@ class bStat_Report
 
 		return $item_data;
 	}//end report_goal_user
+
+	public function goal_items_ajax()
+	{
+		$type = empty( $_GET['type'] ) ? '' : $_GET['type'];
+		$type = trim( $type );
+
+		if ( ! in_array( $type, array( 'post', 'author', 'term', 'user' ) ) )
+		{
+			die( 'invalid request' );
+		}//end if
+
+		// let's make sure the ajax parameters aren't included in the filter setup
+		unset( $_GET['action'], $_GET['type'] );
+
+		$this->set_filter();
+		$sessions_on_goal = $this->sessions_on_goal();
+		$this->report_goal_template( $type, $sessions_on_goal );
+		die;
+	}//end goal_items_ajax
 
 	public function report_goal_template( $type, $sessions_on_goal )
 	{

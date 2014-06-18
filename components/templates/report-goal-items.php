@@ -6,8 +6,15 @@ $fetch = "{$type}s_for_session";
 $items = bstat()->report()->$fetch( $sessions_on_goal );
 if ( ! count( $items ) )
 {
-	return;
-}
+	?>
+	<div id="goal-<?php echo esc_attr( $type ); ?>s">
+		<h2><?php echo esc_html( ucwords( $type ) ); ?>s contributing to goal</h2>
+		<p>
+			There were no <?php echo esc_html( $type ); ?>s that contributed to the goal.
+		</p>
+	</div>
+	<?php
+}//end if
 
 $data = bstat()->report()->report_goal_items( $type, $items );
 ?>

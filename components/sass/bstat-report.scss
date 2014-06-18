@@ -235,4 +235,53 @@
 			}
 		}
 	}
+
+	.tabs {
+		font-size: 1em;
+		margin-top: 2rem;
+
+		a {
+			color: #0074a2;
+
+			&:hover {
+				color: #2ea2cc;
+			}
+		}
+
+		&.ui-widget-content {
+			background: transparent;
+			border: 0;
+		}
+
+		& > div {
+			background: #fff;
+		}
+
+		.ui-tabs-nav {
+			padding: 0;
+		}
+
+		.ui-widget-header {
+			background: transparent;
+			border: 0;
+		}
+
+		.ui-state-default {
+			background: transparent;
+			border: 0;
+
+			&.ui-state-hover {
+				background: #eee;
+			}
+		}
+
+		.ui-tabs-focus,
+		.ui-tabs-active {
+			background: #fff;
+
+			&.ui-state-hover {
+				background: #fff;
+			}
+		}
+	}
 }

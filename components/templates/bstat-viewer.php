@@ -21,17 +21,29 @@
 		// don't show this panel if there are no matching sessions
 		if ( count( $sessions_on_goal ) )
 		{
-			// goal posts
-			$this->report_goal_template( 'post', $sessions_on_goal );
+			?>
+			<div class="tabs">
+				<ul>
+					<li><a href="#goal-posts">Posts</a></li>
+					<li><a href="#goal-authors">Authors</a></li>
+					<li><a href="#goal-terms">Terms</a></li>
+					<li><a href="#goal-users">Users</a></li>
+				</ul>
+				<?php
+				// goal posts
+				$this->report_goal_template( 'post', $sessions_on_goal );
 
-			// top authors by activity on their posts
-			$this->report_goal_template( 'author', $sessions_on_goal );
+				// top authors by activity on their posts
+				$this->report_goal_template( 'author', $sessions_on_goal );
 
-			// top taxonomy terms
-			$this->report_goal_template( 'term', $sessions_on_goal );
+				// top taxonomy terms
+				$this->report_goal_template( 'term', $sessions_on_goal );
 
-			// top users
-			$this->report_goal_template( 'user', $sessions_on_goal );
+				// top users
+				$this->report_goal_template( 'user', $sessions_on_goal );
+				?>
+			</div>
+			<?php
 		}//end if
 	}//end if
 	else

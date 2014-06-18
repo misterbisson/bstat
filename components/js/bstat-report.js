@@ -9,8 +9,6 @@ Preserved because I'd love to figure out why
 	    bstat_timeseries.color = palette.color();
 	}
 */
-
-
 	var graph = new Rickshaw.Graph( {
 		element: document.getElementById("bstat-timeseries-container-chart"),
 		width: $('#wpbody-content').width() - 20,
@@ -60,10 +58,12 @@ Preserved because I'd love to figure out why
 				this.show();
 
 			}, this );
-	        }
+		}
 	});
 
 	var hover = new Hover( { graph: graph } );
 
-
+	$( function() {
+		$( '#bstat-viewer .tabs' ).tabs();
+	});
 })(jQuery);

@@ -13,90 +13,66 @@ if ( ! count( $terms ) )
 	return;
 }
 
-$sum_sessions = array_sum( wp_list_pluck( $terms, 'sessions' ) );
-$sum_sessions_on_goal = array_sum( wp_list_pluck( $terms, 'sessions_on_goal' ) );
-$avg_cvr = $sum_sessions_on_goal / $sum_sessions;
-$sum_matching_posts = array_sum( wp_list_pluck( $terms, 'count_in_set' ) );
-$sum_posts_in_session = count( bstat()->report()->posts_for_session( bstat()->report()->sessions_on_goal() ) );
-
-// for sanity, limit this to just the top few terms
-$terms = array_slice( $terms, 0, bstat()->options()->report->max_items );
-
-echo '<h2>Terms contributing to goal</h2>';
-echo '<p>Showing ' . count( $terms ) . ' top terms contributing to ' . number_format( count( bstat()->report()->sessions_on_goal() ) ) . ' goal completions.</p>';
-echo '<table>
+$data = bstat()->report()->report_goal_items( 'term', $terms );
+?>
+<h2>Terms contributing to goal</h2>
+<p>
+	Showing <?php echo count( $terms ); ?> top terms contributing to <?php echo number_format( count( bstat()->report()->sessions_on_goal() ) ); ?> goal completions.
+</p>
+<table class="stats">
 	<tr>
-		<td>Term</td>
-		<td>All sessions</td>
-		<td>Sessions on goal</td>
-		<td>CVR</td>
-		<td>Expected sessions on goal</td>
-		<td>Difference: goal - expected</td>
-		<td>Multiple: goal / expected</td>
+		<th>Term</th>
+		<th>All sessions</th>
+		<th>Sessions on goal</th>
+		<th>CVR</th>
+		<th>Expected sessions on goal</th>
+		<th>Difference: goal - expected</th>
+		<th>Multiple: goal / expected</th>
 	</tr>
-';
-
-foreach ( $terms as $term )
-{
-
-	// adjust the numbers to reflect the contribution an individual term has among many on each post
-	$term->sessions = $term->sessions / $term->count_in_set;
-	$term->sessions_on_goal = $term->sessions_on_goal / $term->count_in_set;
-
-	$term->sessions_on_goal_expected = $avg_cvr * $term->sessions;
-
-	printf(
-		'<tr>
-			<td>%1$s</td>
-			<td>%2$s</td>
-			<td>%3$s</td>
-			<td>%4$s</td>
-			<td>%5$s</td>
-			<td>%6$s</td>
-			<td>%7$s</td>
+	<?php
+	$summary_row = sprintf(
+		'<tr class="stat-summary">
+			<th>%1$s</th>
+			<th>%2$s</th>
+			<th>%3$s</th>
+			<th>%4$s</th>
+			<th>%5$s</th>
+			<th>%6$s</th>
+			<th>%7$s</th>
 		</tr>',
-		$term->taxonomy . ':' . $term->slug,
-		number_format(  $term->sessions, 2 ),
-		number_format(  $term->sessions_on_goal, 2 ),
-		number_format( ( $term->sessions_on_goal / $term->sessions ) * 100 , 2 ) . '%',
-		number_format( $term->sessions_on_goal_expected, 2 ),
-		number_format( $term->sessions_on_goal - $term->sessions_on_goal_expected, 2 ),
-		number_format( $term->sessions_on_goal / $term->sessions_on_goal_expected, 2 )
+		'Totals:',
+		number_format( $data['sum_sessions'] ),
+		number_format( $data['sum_sessions_on_goal'] ),
+		number_format( $data['avg_cvr'], 2 ) . '%',
+		'&nbsp;',
+		'&nbsp;',
+		'&nbsp;'
 	);
 
-/*
-	$posts = bstat()->report()->top_posts_for_term( $term, array( 'posts_per_page' => 3, 'post_type' => 'any' ) );
-	echo '<ol>';
-	foreach ( $posts as $post )
+	echo $summary_row;
+
+	foreach ( $data['items'] as $item )
 	{
 		printf(
-			'<li %1$s><a href="%2$s">%3$s</a> (%4$s hits)</li>',
-			get_post_class( '', $post->ID ),
-			bstat()->report()->report_url( array( 'post' => $post->ID, ) ),
-			get_the_title( $post->ID ),
-			(int) $post->hits
+			'<tr>
+				<td>%1$s</td>
+				<td>%2$s</td>
+				<td>%3$s</td>
+				<td>%4$s</td>
+				<td>%5$s</td>
+				<td>%6$s</td>
+				<td>%7$s</td>
+			</tr>',
+			$item['taxonomy'] . ':' . $item['slug'],
+			number_format( $item['sessions'] ),
+			number_format( $item['sessions_on_goal'] ),
+			number_format( $item['cvr'], 2 ) . '%',
+			number_format( $item['sessions_on_goal_expected'], 2 ),
+			number_format( $item['difference'], 2 ),
+			number_format( $item['multiple'], 2 )
 		);
-	}
-	echo '</ol></li>';
-*/
-}
+	}//end foreach
 
-printf(
-	'<tr>
-		<td>%1$s</td>
-		<td>%2$s</td>
-		<td>%3$s</td>
-		<td>%4$s</td>
-		<td>%5$s</td>
-		<td>%6$s</td>
-		<td>%7$s</td>
-	</tr>',
-	'Totals:',
-	number_format( $sum_sessions ),
-	number_format( $sum_sessions_on_goal ),
-	number_format( ( $sum_sessions_on_goal / $sum_sessions ) * 100 , 2 ) . '%',
-	'&nbsp;',
-	'&nbsp;',
-	'&nbsp;'
-);
-echo '</table>';
+	echo $summary_row;
+	?>
+</table>

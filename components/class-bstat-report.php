@@ -772,7 +772,144 @@ class bStat_Report
 		}
 
 		return $top_blogs;
-	}
+	}//end top_blogs
+
+	public function report_goal_items( $type, $items )
+	{
+		$data = array(
+			'sum_sessions' => 0,
+			'sum_sessions_on_goal' => 0,
+			'avg_cvr' => 0,
+			'items' => array(),
+		);
+
+		if ( ! $items )
+		{
+			return $data;
+		}//end if
+
+		$data['sum_sessions'] = array_sum( wp_list_pluck( $items, 'sessions' ) );
+		$data['sum_sessions_on_goal'] = array_sum( wp_list_pluck( $items, 'sessions_on_goal' ) );
+		$data['avg_cvr'] = $data['sum_sessions_on_goal'] / $data['sum_sessions'] * 100;
+
+		if ( 'term' == $type )
+		{
+			$data['sum_matching_posts'] = array_sum( wp_list_pluck( $items, 'count_in_set' ) );
+			$data['sum_posts_in_session'] = count( bstat()->report()->posts_for_session( bstat()->report()->sessions_on_goal() ) );
+		}//end if
+
+		// for sanity, limit this to just the top few users
+		$items = array_slice( $items, 0, bstat()->options()->report->max_items );
+
+		foreach ( $items as $item )
+		{
+			$goal_function = 'report_goal_' . $type;
+
+			$data['items'][] = $this->$goal_function( $item, $data );
+		}//end foreach
+
+		return $data;
+	}//end report_goal_items
+
+	private function report_goal_author( $item, $data )
+	{
+		$user = new WP_User( $item->post_author );
+		if ( ! isset( $user->display_name ) )
+		{
+			continue;
+		}//end if
+
+		$item->sessions_on_goal_expected = $data['avg_cvr'] * $item->sessions / 100;
+
+		$item_data = array(
+			'display_name' => $user->display_name,
+			'sessions' => $item->sessions,
+			'sessions_on_goal' => $item->sessions_on_goal,
+			'cvr' => ( $item->sessions_on_goal / $item->sessions ) * 100,
+			'sessions_on_goal_expected' => $item->sessions_on_goal_expected,
+			'difference' => $item->sessions_on_goal - $item->sessions_on_goal_expected,
+			'multiple' => $item->sessions_on_goal / $item->sessions_on_goal_expected,
+		);
+
+		// $item_data['posts'] = $this->get_posts( $this->posts_fo_session( $this->sessions_on_goal() ), array( 'author' => $item->post_author, 'posts_per_page' => 3, 'post_type' => 'any' ) );
+
+		return $item_data;
+	}//end report_goal_author
+
+	private function report_goal_post( $item, $data )
+	{
+		$item->sessions_on_goal_expected = $data['avg_cvr'] * $item->sessions / 100;
+
+		$item_data = array(
+			'report_url' => $this->report_url( array( 'post' => $item->post ) ),
+			'title' => get_the_title( $item->post ),
+			'permalink' => get_permalink( $item->post ),
+			'sessions' => $item->sessions,
+			'sessions_on_goal' => $item->sessions_on_goal,
+			'cvr' => ( $item->sessions_on_goal / $item->sessions ) * 100,
+			'sessions_on_goal_expected' => $item->sessions_on_goal_expected,
+			'difference' => $item->sessions_on_goal - $item->sessions_on_goal_expected,
+			'multiple' => $item->sessions_on_goal / $item->sessions_on_goal_expected,
+		);
+
+		return $item_data;
+	}//end report_goal_post
+
+	private function report_goal_term( $item, $data )
+	{
+		// adjust the numbers to reflect the contribution an individual term has among many on each post
+		$item->sessions = $item->sessions / $item->count_in_set;
+		$item->sessions_on_goal = $item->sessions_on_goal / $item->count_in_set;
+
+		$item->sessions_on_goal_expected = $data['avg_cvr'] * $item->sessions / 100;
+
+		$item_data = array(
+			'taxonomy' => $item->taxonomy,
+			'slug' => $item->slug,
+			'sessions' => $item->sessions,
+			'sessions_on_goal' => $item->sessions_on_goal,
+			'cvr' => ( $item->sessions_on_goal / $item->sessions ) * 100,
+			'sessions_on_goal_expected' => $item->sessions_on_goal_expected,
+			'difference' => $item->sessions_on_goal - $item->sessions_on_goal_expected,
+			'multiple' => $item->sessions_on_goal / $item->sessions_on_goal_expected,
+		);
+
+		// $item_data['posts'] = $this->top_posts_for_term( $item, array( 'posts_per_page' => 3, 'post_type' => 'any' ) );
+
+		return $item_data;
+	}//end report_goal_term
+
+	private function report_goal_user( $item, $data )
+	{
+		$user_object = new WP_User( $item->user );
+		if ( ! isset( $user_object->display_name ) )
+		{
+			$user_object->display_name = 'not logged in';
+		}//end if
+
+		$item->sessions_on_goal_expected = $data['avg_cvr'] * $item->sessions / 100;
+
+		$item_data = array(
+			'display_name' => $user_object->display_name,
+			'report_url' => $this->report_url( array( 'user' => $user_object->ID, ) ),
+			'edit_url' => get_edit_user_link( $item->user ),
+			'sessions' => $item->sessions,
+			'sessions_on_goal' => $item->sessions_on_goal,
+			'cvr' => ( $item->sessions_on_goal / $item->sessions ) * 100,
+			'sessions_on_goal_expected' => $item->sessions_on_goal_expected,
+			'difference' => $item->sessions_on_goal - $item->sessions_on_goal_expected,
+			'multiple' => $item->sessions_on_goal / $item->sessions_on_goal_expected,
+		);
+
+		// $item_data['posts'] = $this->get_posts( $this->posts_fo_user( $item->user ), array( 'posts_per_page' => 3, 'post_type' => 'any' ) );
+
+		return $item_data;
+	}//end report_goal_user
+
+	public function report_goal_template( $type, $sessions_on_goal )
+	{
+		include __DIR__ . '/templates/report-goal-items.php';
+	}//end report_goal_template
 
 	public function admin_menu()
 	{
@@ -781,52 +918,6 @@ class bStat_Report
 		wp_enqueue_style( bstat()->id_base . '-report' );
 		wp_enqueue_script( bstat()->id_base . '-report' );
 
-		echo '<h2>bStat Viewer</h2>';
-
-		// goal controls
-		include __DIR__ . '/templates/report-goal.php';
-
-		// top components and actions
-		include __DIR__ . '/templates/report-top-components-and-actions.php';
-
-		if ( $this->get_goal() )
-		{
-			// a timeseries graph of all activity on goal, broken out by component:action
-			include __DIR__ . '/templates/report-goal-timeseries.php';
-
-			// a scatter plot of goal events by day and time
-			include __DIR__ . '/templates/report-goal-scatterplot.php';
-
-			// goal posts
-			include __DIR__ . '/templates/report-goal-posts.php';
-
-			// top authors by activity on their posts
-			include __DIR__ . '/templates/report-goal-authors.php';
-
-			// top taxonomy terms
-			include __DIR__ . '/templates/report-goal-terms.php';
-
-			// top users
-			include __DIR__ . '/templates/report-goal-users.php';
-		}
-		else
-		{
-			// a timeseries graph of all activity, broken out by component:action
-			include __DIR__ . '/templates/report-timeseries.php';
-
-			// filter controls
-			include __DIR__ . '/templates/report-filter.php';
-
-			// information for single component:action pairs
-			include __DIR__ . '/templates/report-action-info.php';
-
-			// top users
-			include __DIR__ . '/templates/report-top-users.php';
-
-			// active sessions
-			include __DIR__ . '/templates/report-top-sessions.php';
-		}
-
-	}
-
-}
+		require_once __DIR__ . '/templates/bstat-viewer.php';
+	}//end admin_menu
+}//end class

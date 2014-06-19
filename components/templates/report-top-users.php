@@ -17,7 +17,7 @@ foreach ( $users as $user )
 }
 
 echo '<h2>Users</h2>';
-echo '<p>Showing ' . count( $users ) . ' users with ' . $total_activity . ' total actions.</p>';
+echo '<p>Showing ' . count( $users ) . ' users with ' . number_format( $total_activity ) . ' total actions.</p>';
 echo '<ol>';
 foreach ( $users as $user )
 {
@@ -34,7 +34,7 @@ foreach ( $users as $user )
 		'<li><a href="%1$s">%2$s</a> (%3$s hits)',
 		bstat()->report()->report_url( array( 'user' => $user_object->ID, ) ),
 		$user_object->display_name,
-		(int) $user->hits
+		number_format( (int) $user->hits )
 	);
 
 	echo '<ol>';
@@ -45,12 +45,10 @@ foreach ( $users as $user )
 			get_post_class( '', $post->ID ),
 			bstat()->report()->report_url( array( 'post' => $post->ID, ) ),
 			get_the_title( $post->ID ),
-			(int) $post->hits
+			number_format( (int) $post->hits )
 		);
 	}
 
 	echo '</ol></li>';
-
-
-}
+}//end foreach
 echo '</ol>';

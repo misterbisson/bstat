@@ -1,0 +1,35 @@
+#bstat-goal {
+	border-radius: 4px;
+	margin: 0 -.5rem 1rem;
+	padding: .5rem;
+
+	&.show-goals {
+		background: #fafafa;
+	}
+
+	label {
+		font-size: 1.1rem;
+		font-weight: bold;
+		margin-right: .25rem;
+
+		span {
+			color: #bbb;
+		}
+	}
+
+	.goal {
+		display: inline-block;
+		font-size: 1.1rem;
+		margin-right: 1rem;
+		vertical-align: middle;
+	}
+
+	ul {
+		display: none;
+		margin-left: 2em;
+	}
+
+	li {
+		list-style-type: disc;
+	}
+}

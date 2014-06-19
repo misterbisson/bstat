@@ -15,36 +15,36 @@ foreach ( $sessions as $user )
 {
 	$total_activity += $user->hits;
 }
-
-echo '<h2>Sessions</h2>';
-echo '<p>Showing ' . count( $sessions ) . ' sessions with ' . $total_activity . ' total actions.</p>';
-echo '<ol>';
-foreach ( $sessions as $user )
-{
-	$posts = bstat()->report()->get_posts( bstat()->report()->posts_for_session( $user->session ), array( 'posts_per_page' => 3, 'post_type' => 'any' ) );
-
-	// it appears WP's get_the_author() emits the author display name with no sanitization
-	printf(
-		'<li><a href="%1$s">%2$s</a> (%3$s hits)',
-		bstat()->report()->report_url( array( 'session' => $user->session, ) ),
-		$user->session,
-		(int) $user->hits
-	);
-
-	echo '<ol>';
-	foreach ( $posts as $post )
+?>
+<h2>Sessions</h2>
+<p>Showing <?php echo count( $sessions ); ?> sessions with <?php echo number_format( $total_activity ); ?> total actions.</p>
+<ol>
+	<?php
+	foreach ( $sessions as $user )
 	{
+		$posts = bstat()->report()->get_posts( bstat()->report()->posts_for_session( $user->session ), array( 'posts_per_page' => 3, 'post_type' => 'any' ) );
+
+		// it appears WP's get_the_author() emits the author display name with no sanitization
 		printf(
-			'<li %1$s><a href="%2$s">%3$s</a> (%4$s hits)</li>',
-			get_post_class( '', $post->ID ),
-			bstat()->report()->report_url( array( 'post' => $post->ID, ) ),
-			get_the_title( $post->ID ),
-			(int) $post->hits
+			'<li><a href="%1$s">%2$s</a> (%3$s hits)',
+			bstat()->report()->report_url( array( 'session' => $user->session, ) ),
+			$user->session,
+			number_format( (int) $user->hits )
 		);
-	}
 
-	echo '</ol></li>';
+		echo '<ol>';
+		foreach ( $posts as $post )
+		{
+			printf(
+				'<li %1$s><a href="%2$s">%3$s</a> (%4$s hits)</li>',
+				get_post_class( '', $post->ID ),
+				bstat()->report()->report_url( array( 'post' => $post->ID, ) ),
+				get_the_title( $post->ID ),
+				number_format( (int) $post->hits )
+			);
+		}
 
-
-}
-echo '</ol>';
+		echo '</ol></li>';
+	}//end foreach
+	?>
+</ol>

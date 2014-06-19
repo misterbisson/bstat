@@ -1,69 +1,180 @@
+if ( 'undefined' == typeof bstat ) {
+	var bstat = {};
+}//end if
+
 (function($){
+	'use strict';
 
-/*
-Disabled because palette.color() returns black for every iteration in this context
-Preserved because I'd love to figure out why
-	var palette = new Rickshaw.Color.Palette();
+	bstat.report = {};
 
-	for (var i = 0; i < bstat_timeseries.length; i++) {
-	    bstat_timeseries.color = palette.color();
-	}
-*/
+	bstat.report.init = function() {
+		this.$parset = $( '#bstat-parset' );
 
+		var graph = new Rickshaw.Graph( {
+			element: $( '#bstat-timeseries-container-chart' ).get( 0 ),
+			width: $( '#wpbody-content' ).width() - 20,
+			height: ( $( '#wpbody-content' ).width() - 20 ) / 3.5,
+			renderer: 'bar',
+			series: bstat_timeseries,
+		} );
 
-	var graph = new Rickshaw.Graph( {
-		element: document.getElementById("bstat-timeseries-container-chart"),
-		width: $('#wpbody-content').width() - 20,
-		height: ( $('#wpbody-content').width() - 20 ) / 3.5,
-		renderer: 'bar',
-		series: bstat_timeseries,
-	} );
+		var x_axis = new Rickshaw.Graph.Axis.Time( { graph: graph } );
 
-	var x_axis = new Rickshaw.Graph.Axis.Time( { graph: graph } );
+		graph.render();
 
-	graph.render();
+		var $legend = $( '#bstat-timeseries-container-legend' );
+		var Hover = Rickshaw.Class.create( Rickshaw.Graph.HoverDetail, {
+			render: function( args ) {
 
-	var legend = document.querySelector('#bstat-timeseries-container-legend');
-	var Hover = Rickshaw.Class.create(Rickshaw.Graph.HoverDetail, {
+				$legend.html( args.formattedXValue );
 
-		render: function(args) {
+				args.detail.sort(function(a, b) { return a.order - b.order }).forEach( function(d) {
+					var $line = $( '<div class="line" />');
+					var $swatch = $( '<div class="swatch"/> ');
+					$swatch.css( 'background-color', d.series.color );
 
-			legend.innerHTML = args.formattedXValue;
+					var $label = $( '<div class="label">' + d.name + ": " + d.formattedYValue + '</div>' );
 
-			args.detail.sort(function(a, b) { return a.order - b.order }).forEach( function(d) {
+					$line.append( $swatch ).append( $label );
 
-				var line = document.createElement('div');
-				line.className = 'line';
+					$legend.append( $line );
 
-				var swatch = document.createElement('div');
-				swatch.className = 'swatch';
-				swatch.style.backgroundColor = d.series.color;
+					var $dot = $( '<div class="dot active" />' );
+					$dot.css( {
+						'top': graph.y(d.value.y0 + d.value.y) + 'px',
+						'border-color': d.series.color
+					})
 
-				var label = document.createElement('div');
-				label.className = 'label';
-				label.innerHTML = d.name + ": " + d.formattedYValue;
+					$( this.element ).append( $dot );
 
-				line.appendChild(swatch);
-				line.appendChild(label);
+					this.show();
 
-				legend.appendChild(line);
+				}, this );
+			}
+		} );
 
-				var dot = document.createElement('div');
-				dot.className = 'dot';
-				dot.style.top = graph.y(d.value.y0 + d.value.y) + 'px';
-				dot.style.borderColor = d.series.color;
+		var hover = new Hover( { graph: graph } );
 
-				this.element.appendChild(dot);
+		if ( ! this.$parset.length ) {
+			return;
+		}//end if
 
-				dot.className = 'dot active';
+		this.init_parset();
+	};
 
-				this.show();
+	bstat.report.init_parset = function() {
+		this.chart = d3.parsets().dimensions( [ 'Action -1', 'Action -2', 'Action -3', 'Action -4', 'Action -5', 'Action -6', 'Action -7', 'Action -8', 'Action -9', 'Action -10' ] );
+		this.chart.tension( 0.25 );
+		this.chart.width( this.$parset.width() * 0.75 );
+		this.chart.height( 850 );
+		this.chart.tooltip( function( d ) {
+			var count = d.count;
+			var path = [];
 
-			}, this );
-	        }
+			while ( d.parent ) {
+				if ( d.name ) {
+					path.push( d.name );
+				}//end if
+
+				d = d.parent;
+			}//end while
+
+			var comma = d3.format( ',f' );
+			var percent = d3.format( '%' );
+
+			var html = '';
+			html += '<div class="count">Hits: ' + comma( count ) + ' (' + percent( count / d.count ) + ')</div>';
+			html += '<ol reversed><li class="step">' + path.join( '</li><li class="step">' ) + '</li></ol>';
+
+			html.replace( '(  )', '' );
+
+			return html;
+		} );
+		this.svg = d3.select( '#bstat-parset' ).append( 'svg' )
+			.attr( 'width', this.chart.width() )
+			.attr( 'height', this.chart.height() );
+
+		d3.csv( '/content/sessions-that-converted.csv', function( error, csv ) {
+			data = [];
+
+			var data = {};
+
+			var current_session = '';
+			var step = 0;
+
+			for ( var i in csv ) {
+				var item = csv[ i ];
+				//var site = ( 4 == item.blog ? 'Research' : 'Accounts' );
+
+				if ( current_session !== $.trim( item.session ) ) {
+					if ( 'go-subsc' !== item.component || 'start' !== item.action ) {
+						continue;
+					}//end if
+
+					step = 0;
+					current_session = $.trim( item.session );
+					data[ current_session ] = {};
+					//data[ current_session ]['Final'] = 'Subscribed on ' + site;
+					step++;
+					continue;
+				}//end if
+
+				data[ current_session ][ 'Action -' + step ] = bstat.report.translate_action( item.action ) + '( ' + item.info + ' )';
+				step++;
+			}//end for
+
+			var massaged_data = [];
+			for ( i in data ) {
+				massaged_data.push( data[ i ] );
+			}//end for
+
+			bstat.report.svg.datum( massaged_data ).call( bstat.report.chart );
+		});
+	};
+
+	bstat.report.translate_action = function ( action ) {
+		switch ( action ) {
+			case 'pageview': return 'page view';
+			case 'clklink': return 'link';
+			case 'u_medium': return 'utm medium';
+			case 'userauth': return 'login';
+			case 'u_source': return 'utm source';
+			case 'r_search': return 'search';
+			case 'r_host': return 'referring host';
+			case 'u_campgn': return 'utm campaign';
+			default: return action;
+		}//end switch
+	};
+
+	$( function() {
+		bstat.report.init();
+
+		$( '#bstat-viewer .tabs' ).tabs( {
+			beforeLoad: function( event, ui ) {
+				if ( ui.tab.data( 'loaded' ) ) {
+					event.preventDefault();
+					return;
+				}//end if
+
+				ui.ajaxSettings.cache = false;
+				ui.panel.html( '<i class="fa fa-spinner fa-spin" />' );
+				ui.jqXHR.success( function() {
+					ui.tab.data( 'loaded', true );
+				});
+				ui.jqXHR.error( function() {
+					ui.panel.html( 'There was a problem loading this data. Please try reloading the page.' );
+				});
+			}
+		} );
+
+		$( document ).on( 'click', '#bstat-goal .set', function( e ) {
+			e.preventDefault();
+
+			var $el = $( this );
+			var $container = $( '#bstat-goal' );
+
+			$container.toggleClass( 'show-goals' );
+			$container.find( 'ul' ).slideToggle( 'fast' );
+		});
 	});
-
-	var hover = new Hover( { graph: graph } );
-
-
 })(jQuery);

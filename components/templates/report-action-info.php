@@ -17,16 +17,20 @@ foreach ( $infos as $info )
 {
 	$total_activity += $info->hits;
 }
-
-echo '<h2>Additional info for ' . $filter['component'] . ' ' . $filter['action'] . '</h2>';
-echo '<p>Showing ' . count( $infos ) . ' info with ' . $total_activity . ' total actions.</p>';
-echo '<ol>';
-foreach ( $infos as $info )
-{
-	printf(
-		'<li>%1$s (%2$s hits)</li>',
-		$info->info,
-		$info->hits
-	);
-}
-echo '</ol>';
+?>
+<div id="bstat-additional-info">
+	<h2>Additional info for <?php echo esc_html( $filter['component'] ); ?> <?php echo esc_html( $filter['action'] ); ?></h2>
+	<p>Showing <?php echo count( $infos ); ?> info with <?php echo number_format( $total_activity ); ?> total actions.</p>
+	<ol>
+		<?php
+		foreach ( $infos as $info )
+		{
+			printf(
+				'<li>%1$s (%2$s hits)</li>',
+				$info->info,
+				number_format( $info->hits )
+			);
+		}
+		?>
+	</ol>
+</div>

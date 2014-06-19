@@ -136,6 +136,39 @@
 		font-size: .75rem;
 		margin-top: 2rem;
 
+		.ui-tabs-panel {
+			& > ol {
+				margin-left: 2.25rem;
+
+				& > li {
+					padding: .5rem .25rem;
+					position: relative;
+					z-index: 1;
+
+					&:before {
+						bottom: 0;
+						content: '';
+						left: -3em;
+						position: absolute;
+						right: 0;
+						top: 0;
+						z-index: -1;
+					}
+
+					&:nth-child( 2n+1 ) {
+						&:before {
+							background: #fafafa;
+							z-index: -1;
+						}
+					}
+				}
+
+				ol {
+					margin-top: .25rem;
+				}
+			}
+		}
+
 		a {
 			color: #0074a2;
 			outline: 0;

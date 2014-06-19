@@ -8,9 +8,9 @@ $current_goal = $_GET['goal'] ? preg_replace( '/[0-9]+:(.+):[0-9]+/', '$1', $_GE
 
 ?>
 <div id="bstat-goal">
-	<label>Goal <span>&#8594;</span></label>
+	<label for="set-goal">Goal <span>&#8594;</span></label>
 	<span class="goal"><?php echo esc_html( $current_goal ?: 'none' ); ?></span>
-	<a class="button set"><?php echo $current_goal ? 'Change' : 'Set'; ?></a>
+	<button id="set-goal" class="button set"><?php echo $current_goal ? 'Change' : 'Set'; ?></button>
 	<ul>
 		<?php
 		foreach ( $components_and_actions as $component_and_action )

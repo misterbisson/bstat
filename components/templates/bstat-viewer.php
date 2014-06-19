@@ -23,10 +23,10 @@
 		{
 			$ajax_url = 'admin-ajax.php?action=bstat_report_goal_items&goal=' . $_GET['goal'];
 
-		if ( isset( $_GET['component'] ) )
-		{
-			$ajax_url .= '&component=' . $_GET['component'];
-		}//end if
+			if ( isset( $_GET['component'] ) )
+			{
+				$ajax_url .= '&component=' . $_GET['component'];
+			}//end if
 
 			if ( isset( $_GET['action'] ) )
 			{
@@ -81,13 +81,9 @@
 				<li><a href="<?php echo esc_url( admin_url( sprintf( $ajax_url, 'users' ) ) ); ?>">Users</a></li>
 				<li><a href="<?php echo esc_url( admin_url( sprintf( $ajax_url, 'sessions' ) ) ); ?>">Sessions</a></li>
 			</ul>
+			<?php /* these tabs are loaded in via ajax */ ?>
 		</div>
 		<?php
-		// top users
-		//include __DIR__ . '/report-top-users.php';
-
-		// active sessions
-		//include __DIR__ . '/report-top-sessions.php';
 	}//end else
 	?>
 </div>

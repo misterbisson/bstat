@@ -9,6 +9,15 @@
 		}
 	}
 
+	.fa-spinner {
+		background: url( '../img/throbber.png' );
+		background-repeat: no-repeat;
+		display: block;
+		margin: 1rem auto;
+		height: 32px;
+		width: 32px;
+	}
+
 	table.stats {
 		width: 100%;
 		background: #ececec;

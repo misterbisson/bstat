@@ -7,6 +7,8 @@ class bStat_Report
 	{
 		add_action( 'init', array( $this, 'init' ) );
 		add_action( 'wp_ajax_bstat_report_goal_items', array( $this, 'goal_items_ajax' ) );
+		add_action( 'wp_ajax_bstat_report_top_sessions', array( $this, 'top_sessions_ajax' ) );
+		add_action( 'wp_ajax_bstat_report_top_users', array( $this, 'top_users_ajax' ) );
 	}//end __construct
 
 	public function init()
@@ -916,14 +918,54 @@ class bStat_Report
 			die( 'invalid request' );
 		}//end if
 
-		// let's make sure the ajax parameters aren't included in the filter setup
-		unset( $_GET['action'], $_GET['type'] );
+		$_GET = $this->fix_ajax_args( $_GET );
 
 		$this->set_filter();
 		$sessions_on_goal = $this->sessions_on_goal();
 		$this->report_goal_template( $type, $sessions_on_goal );
 		die;
 	}//end goal_items_ajax
+
+	/**
+	 * ajax response to a top sessions request
+	 */
+	public function top_sessions_ajax()
+	{
+		$_GET = $this->fix_ajax_args( $_GET );
+		$this->set_filter();
+		include __DIR__ . '/templates/report-top-sessions.php';
+		die;
+	}//end top_sessions_ajax
+
+	/**
+	 * ajax response to a top users request
+	 */
+	public function top_users_ajax()
+	{
+		$_GET = $this->fix_ajax_args( $_GET );
+		$this->set_filter();
+		include __DIR__ . '/templates/report-top-users.php';
+		die;
+	}//end top_users_ajax
+
+	/**
+	 * massages ajax parameters, fixing collisions and removing garbage
+	 */
+	public function fix_ajax_args( $args )
+	{
+		// let's make sure the ajax parameters aren't included in the filter setup
+		unset( $args['action'], $args['type'] );
+
+		// There is a variable name collision between WP ajax requests and the bstat "action", we had to
+		// pass the bstat action with a different name. Let's fix it for the filter.
+		if ( isset( $args['bstat_action'] ) )
+		{
+			$args['action'] = $args['bstat_action'];
+			unset( $args['bstat_action'] );
+		}//end if
+
+		return $args;
+	}//end fix_ajax_args
 
 	public function report_goal_template( $type, $sessions_on_goal )
 	{

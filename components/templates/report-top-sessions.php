@@ -17,7 +17,7 @@ foreach ( $sessions as $user )
 }
 
 echo '<h2>Sessions</h2>';
-echo '<p>Showing ' . count( $sessions ) . ' sessions with ' . $total_activity . ' total actions.</p>';
+echo '<p>Showing ' . count( $sessions ) . ' sessions with ' . number_format( $total_activity ) . ' total actions.</p>';
 echo '<ol>';
 foreach ( $sessions as $user )
 {
@@ -44,7 +44,5 @@ foreach ( $sessions as $user )
 	}
 
 	echo '</ol></li>';
-
-
-}
+}//end foreach
 echo '</ol>';

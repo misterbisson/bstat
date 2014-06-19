@@ -21,14 +21,24 @@
 		// don't show this panel if there are no matching sessions
 		if ( count( $sessions_on_goal ) )
 		{
-			$ajax_url = admin_url( 'admin-ajax.php?action=bstat_report_goal_items&goal=' . $_GET['goal'] );
+			$ajax_url = 'admin-ajax.php?action=bstat_report_goal_items&goal=' . $_GET['goal'];
+
+		if ( isset( $_GET['component'] ) )
+		{
+			$ajax_url .= '&component=' . $_GET['component'];
+		}//end if
+
+			if ( isset( $_GET['action'] ) )
+			{
+				$ajax_url .= '&bstat_action=' . $_GET['action'];
+			}//end if
 			?>
 			<div class="tabs">
 				<ul>
-					<li><a href="<?php echo esc_url( "{$ajax_url}&type=post" ); ?>">Posts</a></li>
-					<li><a href="<?php echo esc_url( "{$ajax_url}&type=author" ); ?>">Authors</a></li>
-					<li><a href="<?php echo esc_url( "{$ajax_url}&type=term" ); ?>">Terms</a></li>
-					<li><a href="<?php echo esc_url( "{$ajax_url}&type=user" ); ?>">Users</a></li>
+					<li><a href="<?php echo esc_url( admin_url( "{$ajax_url}&type=post" ) ); ?>">Posts</a></li>
+					<li><a href="<?php echo esc_url( admin_url( "{$ajax_url}&type=author" ) ); ?>">Authors</a></li>
+					<li><a href="<?php echo esc_url( admin_url( "{$ajax_url}&type=term" ) ); ?>">Terms</a></li>
+					<li><a href="<?php echo esc_url( admin_url( "{$ajax_url}&type=user" ) ); ?>">Users</a></li>
 				</ul>
 				<?php /* goal data is loaded in via ajax */ ?>
 			</div>
@@ -46,11 +56,31 @@
 		// information for single component:action pairs
 		include __DIR__ . '/report-action-info.php';
 
+		$ajax_url = 'admin-ajax.php?action=bstat_report_top_%s';
+
+		if ( isset( $_GET['component'] ) )
+		{
+			$ajax_url .= '&component=' . $_GET['component'];
+		}//end if
+
+		if ( isset( $_GET['action'] ) )
+		{
+			$ajax_url .= '&bstat_action=' . $_GET['action'];
+		}//end if
+
+		?>
+		<div class="tabs">
+			<ul>
+				<li><a href="<?php echo esc_url( admin_url( sprintf( $ajax_url, 'users' ) ) ); ?>">Users</a></li>
+				<li><a href="<?php echo esc_url( admin_url( sprintf( $ajax_url, 'sessions' ) ) ); ?>">Sessions</a></li>
+			</ul>
+		</div>
+		<?php
 		// top users
-		include __DIR__ . '/report-top-users.php';
+		//include __DIR__ . '/report-top-users.php';
 
 		// active sessions
-		include __DIR__ . '/report-top-sessions.php';
+		//include __DIR__ . '/report-top-sessions.php';
 	}//end else
 	?>
 </div>

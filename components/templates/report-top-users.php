@@ -17,7 +17,7 @@ foreach ( $users as $user )
 }
 
 echo '<h2>Users</h2>';
-echo '<p>Showing ' . count( $users ) . ' users with ' . $total_activity . ' total actions.</p>';
+echo '<p>Showing ' . count( $users ) . ' users with ' . number_format( $total_activity ) . ' total actions.</p>';
 echo '<ol>';
 foreach ( $users as $user )
 {
@@ -50,7 +50,5 @@ foreach ( $users as $user )
 	}
 
 	echo '</ol></li>';
-
-
-}
+}//end foreach
 echo '</ol>';

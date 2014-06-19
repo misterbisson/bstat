@@ -833,8 +833,6 @@ class bStat_Report
 			'multiple' => $item->sessions_on_goal / $item->sessions_on_goal_expected,
 		);
 
-		// $item_data['posts'] = $this->get_posts( $this->posts_fo_session( $this->sessions_on_goal() ), array( 'author' => $item->post_author, 'posts_per_page' => 3, 'post_type' => 'any' ) );
-
 		return $item_data;
 	}//end report_goal_author
 
@@ -876,8 +874,6 @@ class bStat_Report
 			'multiple' => $item->sessions_on_goal / $item->sessions_on_goal_expected,
 		);
 
-		// $item_data['posts'] = $this->top_posts_for_term( $item, array( 'posts_per_page' => 3, 'post_type' => 'any' ) );
-
 		return $item_data;
 	}//end report_goal_term
 
@@ -902,8 +898,6 @@ class bStat_Report
 			'difference' => $item->sessions_on_goal - $item->sessions_on_goal_expected,
 			'multiple' => $item->sessions_on_goal / $item->sessions_on_goal_expected,
 		);
-
-		// $item_data['posts'] = $this->get_posts( $this->posts_fo_user( $item->user ), array( 'posts_per_page' => 3, 'post_type' => 'any' ) );
 
 		return $item_data;
 	}//end report_goal_user

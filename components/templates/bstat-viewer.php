@@ -45,6 +45,9 @@
 				/* goal data is loaded in via ajax */
 				include __DIR__ . '/goal-parsets.php';
 				?>
+				<div id="bstat-report-flow">
+					<div id="bstat-parset"></div>
+				</div>
 			</div>
 			<?php
 		}//end if

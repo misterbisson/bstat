@@ -39,8 +39,12 @@
 					<li><a href="<?php echo esc_url( admin_url( "{$ajax_url}&type=author" ) ); ?>">Authors</a></li>
 					<li><a href="<?php echo esc_url( admin_url( "{$ajax_url}&type=term" ) ); ?>">Terms</a></li>
 					<li><a href="<?php echo esc_url( admin_url( "{$ajax_url}&type=user" ) ); ?>">Users</a></li>
+					<li><a href="#bstat-report-flow">Flow</a></li>
 				</ul>
-				<?php /* goal data is loaded in via ajax */ ?>
+				<?php
+				/* goal data is loaded in via ajax */
+				include __DIR__ . '/goal-parsets.php';
+				?>
 			</div>
 			<?php
 		}//end if

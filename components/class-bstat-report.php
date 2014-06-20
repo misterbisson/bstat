@@ -34,7 +34,7 @@ class bStat_Report
 				continue;
 			}//end if
 
-			$this->missing_dependencies[] = $dependency;
+			$this->missing_dependencies[ $dependency ] = $url;
 		}//end foreach
 
 		if ( $this->missing_dependencies )

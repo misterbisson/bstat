@@ -17,16 +17,6 @@ class bStat_Report
 
 	public function init()
 	{
-		$this->check_dependencies();
-
-		if ( $this->missing_dependencies )
-		{
-			return;
-		}//end if
-
-		// make sure the graphing libraries have been initialized
-		bstat()->graphing();
-
 		add_action( 'admin_menu', array( $this, 'admin_menu_init' ) );
 		wp_register_style( bstat()->id_base . '-report', plugins_url( 'css/bstat-report.css', __FILE__ ), array( 'rickshaw', 'd3-parsets' ), bstat()->version );
 		wp_register_script( bstat()->id_base . '-report', plugins_url( 'js/bstat-report.js', __FILE__ ), array( 'rickshaw', 'd3-parsets', 'jquery-ui-tabs' ), bstat()->version, TRUE );
@@ -80,6 +70,16 @@ class bStat_Report
 	// add the menu item to the dashboard
 	public function admin_menu_init()
 	{
+		$this->check_dependencies();
+
+		if ( $this->missing_dependencies )
+		{
+			return;
+		}//end if
+
+		// make sure the graphing libraries have been initialized
+		bstat()->graphing();
+
 		$this->menu_url = admin_url( 'index.php?page=' . bstat()->id_base . '-report' );
 
 		add_submenu_page( 'index.php', 'bStat Viewer', 'bStat Viewer', 'edit_posts', bstat()->id_base . '-report', array( $this, 'admin_menu' ) );

@@ -2,6 +2,10 @@
 class bStat_Report
 {
 	public $filter = array();
+	private $dependencies = array(
+		'go-graphing' => 'https://github.com/GigaOM/go-graphing',
+	);
+	private $missing_dependencies = array();
 
 	public function __construct()
 	{
@@ -13,17 +17,69 @@ class bStat_Report
 
 	public function init()
 	{
-		// make sure the graphing libraries have been initialized
-		bstat()->graphing();
-
 		add_action( 'admin_menu', array( $this, 'admin_menu_init' ) );
 		wp_register_style( bstat()->id_base . '-report', plugins_url( 'css/bstat-report.css', __FILE__ ), array( 'rickshaw', 'd3-parsets' ), bstat()->version );
 		wp_register_script( bstat()->id_base . '-report', plugins_url( 'js/bstat-report.js', __FILE__ ), array( 'rickshaw', 'd3-parsets', 'jquery-ui-tabs' ), bstat()->version, TRUE );
 	} // END init
 
+	/**
+	 * check plugin dependencies
+	 */
+	public function check_dependencies()
+	{
+		foreach ( $this->dependencies as $dependency => $url )
+		{
+			if ( function_exists( str_replace( '-', '_', $dependency ) ) )
+			{
+				continue;
+			}//end if
+
+			$this->missing_dependencies[] = $dependency;
+		}//end foreach
+
+		if ( $this->missing_dependencies )
+		{
+			add_action( 'admin_notices', array( $this, 'admin_notices' ) );
+		}//end if
+	}//end check_dependencies
+
+	/**
+	 * hooked to the admin_notices action to inject a message if depenencies are not activated
+	 */
+	public function admin_notices()
+	{
+		?>
+		<div class="error">
+			<p>
+				You must <a href="<?php echo esc_url( admin_url( 'plugins.php' ) ); ?>">activate</a> the following plugins before using <code>bstat</code>'s report:
+			</p>
+			<ul>
+				<?php
+				foreach ( $this->missing_dependencies as $dependency => $url )
+				{
+					?>
+					<li><a href="<?php echo esc_url( $url ); ?>"><?php echo esc_html( $dependency ); ?></a></li>
+					<?php
+				}//end foreach
+				?>
+			</ul>
+		</div>
+		<?php
+	}//end admin_notices
+
 	// add the menu item to the dashboard
 	public function admin_menu_init()
 	{
+		$this->check_dependencies();
+
+		if ( $this->missing_dependencies )
+		{
+			return;
+		}//end if
+
+		// make sure the graphing libraries have been initialized
+		bstat()->graphing();
+
 		$this->menu_url = admin_url( 'index.php?page=' . bstat()->id_base . '-report' );
 
 		add_submenu_page( 'index.php', 'bStat Viewer', 'bStat Viewer', 'edit_posts', bstat()->id_base . '-report', array( $this, 'admin_menu' ) );
@@ -46,7 +102,7 @@ class bStat_Report
 		);
 
 		return $goal;
-	}
+	}//end parse_goal
 
 	public function get_goal()
 	{
@@ -76,7 +132,7 @@ class bStat_Report
 		}
 
 		return add_query_arg( $filter, $url );
-	}
+	}//end report_url
 
 	public function default_filter( $add_filter = array() )
 	{
@@ -96,7 +152,7 @@ class bStat_Report
 		date_default_timezone_set( $old_tz );
 
 		return array_merge( $filter, (array) $add_filter );
-	}
+	}//end default_filter
 
 	public function set_filter( $filter = FALSE )
 	{
@@ -113,7 +169,7 @@ class bStat_Report
 		}
 
 		$this->filter = (array) $filter;
-	}
+	}//end set_filter
 
 	public function cache_key( $part, $filter = FALSE )
 	{
@@ -130,7 +186,7 @@ class bStat_Report
 		return mt_rand( 101, 503 ); // prime numbers for almost 2 minutes or a little over 8 minutes
 	}
 
-	function sort_by_hits_desc( $a, $b )
+	public function sort_by_hits_desc( $a, $b )
 	{
 		if ( $a->hits == $b->hits )
 		{
@@ -139,7 +195,7 @@ class bStat_Report
 		return ( $a->hits < $b->hits ) ? 1 : -1;
 	}
 
-	function sort_by_sessions_on_goal_desc( $a, $b )
+	public function sort_by_sessions_on_goal_desc( $a, $b )
 	{
 		if ( $a->sessions_on_goal == $b->sessions_on_goal )
 		{
@@ -158,7 +214,7 @@ class bStat_Report
 		if ( ! $filter )
 		{
 			$filter = $this->filter;
-		}
+		}//end if
 
 		$cachekey = $this->cache_key( 'timeseries' . $seconds . $for . md5( serialize( $ids ) ), $filter );
 
@@ -174,13 +230,12 @@ class bStat_Report
 				if ( isset( $timeseries[ $quantized_time ] ) )
 				{
 					$timeseries[ $quantized_time ] ++;
-				}
+				}//end if
 				else
 				{
 					$timeseries[ $quantized_time ] = 1;
-				}
-
-			}
+				}//end else
+			}//end foreach
 
 			ksort( $timeseries );
 
@@ -191,13 +246,13 @@ class bStat_Report
 			$timeseries = array_replace( $keys, $timeseries );
 
 			wp_cache_set( $cachekey, $timeseries, bstat()->id_base, $this->cache_ttl() );
-		}
+		}//end if
 
 		// tips for using the output:
 		// the array key is a quantized timestamp, pass it into date( $format, $quantized_time ) and get a human readable date.
 		// the value is the count of activity hits for that quantized time segment.
 		return $timeseries;
-	}
+	}//end timeseries
 
 	public function multi_timeseries( $quantize_minutes = 1, $for = FALSE, $ids = FALSE, $filters = array() )
 	{
@@ -224,7 +279,7 @@ class bStat_Report
 		}
 
 		return $filters;
-	}
+	}//end multi_timeseries
 
 	public function get_posts( $top_posts_list, $query_args = array() )
 	{
@@ -246,34 +301,34 @@ class bStat_Report
 			{
 				$post_hits[ $line->post ] = clone $line;
 				unset( $post_hits[ $line->post ]->post );
-			}
+			}//end foreach
 
 			foreach ( $get_posts as $k => $v )
 			{
 				$get_posts[ $k ] = (object) array_replace( (array) $get_posts[ $k ], (array) $post_hits[ $v->ID ] );
-			}
+			}//end foreach
 
 			wp_cache_set( $cachekey, $get_posts, bstat()->id_base, $this->cache_ttl() );
-		}
+		}//end if
 
 		return $get_posts;
-	}
+	}//end get_posts
 
 	public function top_posts( $filter = FALSE )
 	{
 		if ( ! $filter )
 		{
 			$filter = $this->filter;
-		}
+		}//end if
 
 		if ( ! $top_posts = wp_cache_get( $this->cache_key( 'top_posts', $filter ), bstat()->id_base ) )
 		{
 			$top_posts = bstat()->db()->select( FALSE, FALSE, 'post,hits', 1000, $filter );
 			wp_cache_set( $this->cache_key( 'top_posts', $filter ), $top_posts, bstat()->id_base, $this->cache_ttl() );
-		}
+		}//end if
 
 		return $top_posts;
-	}
+	}//end top_posts
 
 	public function sessions_on_goal( $goal = NULL )
 	{
@@ -285,7 +340,7 @@ class bStat_Report
 		if ( ! $goal )
 		{
 			return array();
-		}
+		}//end if
 
 		// merge the goal and environmental filters
 		$filter = array_replace( $this->filter, $goal );
@@ -302,18 +357,18 @@ class bStat_Report
 				if ( $goal['frequency'] > 0 && $session->hits >= $frequency )
 				{
 					$sessions_on_goal[] = $session->session;
-				}
+				}//end if
 				elseif ( $goal['frequency'] < 0 && $session->hits <= $frequency )
 				{
 					$sessions_on_goal[] = $session->session;
-				}
-			}
+				}//end elseif
+			}//end foreach
 
 			wp_cache_set( $this->cache_key( 'sessions_on_goal', $filter ), $sessions_on_goal, bstat()->id_base, $this->cache_ttl() );
-		}
+		}//end if
 
 		return $sessions_on_goal;
-	}
+	}//end sessions_on_goal
 
 	public function top_sessions( $filter = FALSE )
 	{
@@ -334,7 +389,7 @@ class bStat_Report
 		}
 
 		return $sessions_for;
-	}
+	}//end sessions_for
 
 	public function posts_for_session( $session, $filter = FALSE )
 	{
@@ -361,38 +416,38 @@ class bStat_Report
 						)
 					)
 				);
-			}
+			}//end foreach
 
 			usort( $posts_for_session, array( $this, 'sort_by_sessions_on_goal_desc' ) );
 
 			wp_cache_set( $cachekey, $posts_for_session, bstat()->id_base, $this->cache_ttl() );
-		}
+		}//end if
 
 		return $posts_for_session;
-	}
+	}//end posts_for_session
 
 	public function posts_for_user( $user, $filter = FALSE )
 	{
 		if ( ! $filter )
 		{
 			$filter = $this->filter;
-		}
+		}//end if
 
 		if ( ! $posts_for_user = wp_cache_get( $this->cache_key( 'posts_for_user ' . $user, $filter ), bstat()->id_base ) )
 		{
 			$posts_for_user = bstat()->db()->select( 'user', $user, 'post,hits', 250, $filter );
 			wp_cache_set( $this->cache_key( 'posts_for_user ' . $user, $filter ), $posts_for_user, bstat()->id_base, $this->cache_ttl() );
-		}
+		}//end if
 
 		return $posts_for_user;
-	}
+	}//end posts_for_user
 
 	public function authors_for_session( $session, $filter = FALSE )
 	{
 		if ( ! $filter )
 		{
 			$filter = $this->filter;
-		}
+		}//end if
 
 		$cachekey = $this->cache_key( 'authors_for_session' . md5( serialize( $session ) ), $filter );
 
@@ -403,18 +458,17 @@ class bStat_Report
 			if ( ! count( $posts ) )
 			{
 				return FALSE;
-			}
+			}//end if
 
 			$authors_for_session = array();
 			foreach ( $posts as $post )
 			{
-
 				if ( isset( $authors_for_session[ $post->post_author ] ) )
 				{
 					$authors_for_session[ $post->post_author ]->hits += $post->hits;
 					$authors_for_session[ $post->post_author ]->sessions += $post->sessions;
 					$authors_for_session[ $post->post_author ]->sessions_on_goal += $post->sessions_on_goal;
-				}
+				}//end if
 				else
 				{
 					$authors_for_session[ $post->post_author ] = (object) array_intersect_key( (array) $post, array(
@@ -423,23 +477,23 @@ class bStat_Report
 						'sessions_on_goal' => FALSE,
 						'post_author' => FALSE,
 					) );
-				}
-			}
+				}//end else
+			}//end foreach
 
 			usort( $authors_for_session, array( $this, 'sort_by_sessions_on_goal_desc' ) );
 
 			wp_cache_set( $cachekey, $authors_for_session, bstat()->id_base, $this->cache_ttl() );
-		}
+		}//end if
 
 		return $authors_for_session;
-	}
+	}//end authors_for_session
 
 	public function top_authors( $filter = FALSE )
 	{
 		if ( ! $filter )
 		{
 			$filter = $this->filter;
-		}
+		}//end if
 
 		if ( ! $top_authors = wp_cache_get( $this->cache_key( 'top_authors', $filter ), bstat()->id_base ) )
 		{
@@ -448,29 +502,28 @@ class bStat_Report
 			if ( ! count( $posts ) )
 			{
 				return FALSE;
-			}
+			}//end if
 
 			$top_authors = $authors = array();
 			foreach ( $posts as $post )
 			{
-
 				if ( isset( $authors[ $post->post_author ] ) )
 				{
 					$top_authors[ $post->post_author ]->hits += $post->hits;
-				}
+				}//end if
 				else
 				{
 					$top_authors[ $post->post_author ] = (object) array_intersect_key( (array) $post, array( 'hits' => FALSE, 'post_author' => FALSE ) );
-				}
-			}
+				}//end else
+			}//end foreach
 
 			usort( $top_authors, array( $this, 'sort_by_hits_desc' ) );
 
 			wp_cache_set( $this->cache_key( 'top_authors', $filter ), $top_authors, bstat()->id_base, $this->cache_ttl() );
-		}
+		}//end if
 
 		return $top_authors;
-	}
+	}//end top_authors
 
 	public function terms_for_session( $session, $filter = FALSE )
 	{
@@ -506,15 +559,15 @@ class bStat_Report
 				$terms_for_session[ $k ]->sessions_on_goal = array_sum( wp_list_pluck( $posts, 'sessions_on_goal' ) );
 				$terms_for_session[ $k ]->sessions_per_post_score = (int) ( 100 * $terms_for_session[ $k ]->sessions / $terms_for_session[ $k ]->count_in_set );
 				$terms_for_session[ $k ]->sessions_on_goal_per_post_score = (int) ( 100 * $terms_for_session[ $k ]->sessions_on_goal / $terms_for_session[ $k ]->count_in_set );
-			}
+			}//end foreach
 
 			usort( $terms_for_session, array( $this, 'sort_by_sessions_on_goal_desc' ) );
 
 			wp_cache_set( $cachekey, $terms_for_session, bstat()->id_base, 10 * $this->cache_ttl() );
-		}
+		}//end if
 
 		return $terms_for_session;
-	}
+	}//end terms_for_session
 
 	public function top_terms( $filter = FALSE )
 	{
@@ -545,10 +598,10 @@ class bStat_Report
 			}
 
 			wp_cache_set( $this->cache_key( 'top_terms', $filter ), $top_terms, bstat()->id_base, 10 * $this->cache_ttl() );
-		}
+		}//end if
 
 		return $top_terms;
-	}
+	}//end top_terms
 
 	public function top_posts_for_term_and_session( $term, $session, $query_args = array(), $filter = FALSE )
 	{
@@ -570,7 +623,7 @@ class bStat_Report
 			),
 			$query_args
 		) );
-	}
+	}//end top_posts_for_term_and_session
 
 	public function top_posts_for_term( $term, $query_args = array(), $filter = FALSE )
 	{
@@ -591,7 +644,7 @@ class bStat_Report
 			),
 			$query_args
 		) );
-	}
+	}//end top_posts_for_term
 
 	public function components_and_actions_for_session( $session, $filter = FALSE )
 	{
@@ -627,35 +680,34 @@ class bStat_Report
 						)
 					)
 				);
-			}
+			}//end foreach
 
 			usort( $components_and_actions_for_session, array( $this, 'sort_by_sessions_on_goal_desc' ) );
 
 			wp_cache_set( $cachekey, $components_and_actions_for_session, bstat()->id_base, $this->cache_ttl() );
-		}
+		}//end if
 
 		return $components_and_actions_for_session;
-	}
+	}//end components_and_actions_for_session
 
 	public function top_components_and_actions( $filter = FALSE )
 	{
 		if ( ! $filter )
 		{
 			$filter = $this->filter;
-		}
+		}//end if
 
 		if ( ! $top_components_and_actions = wp_cache_get( $this->cache_key( 'top_components_and_actions', $filter ), bstat()->id_base ) )
 		{
 			$top_components_and_actions = bstat()->db()->select( FALSE, FALSE, 'components_and_actions,hits', 1000, $filter );
 			wp_cache_set( $this->cache_key( 'top_components_and_actions', $filter ), $top_components_and_actions, bstat()->id_base, $this->cache_ttl() );
-		}
+		}//end if
 
 		return $top_components_and_actions;
-	}
+	}//end top_components_and_actions
 
 	public function component_and_action_info( $component_and_action, $filter = FALSE )
 	{
-
 		if ( is_string( $component_and_action ) )
 		{
 			$temp = explode( ':', $component_and_action );
@@ -663,19 +715,19 @@ class bStat_Report
 				'component' => trim( $temp[0] ),
 				'action' => trim( $temp[1] ),
 			);
-		}
+		}//end if
 
 		if ( 2 != count( $component_and_action ) )
 		{
 			return FALSE;
-		}
+		}//end if
 
 		if ( ! $filter )
 		{
 			$filter = $this->filter;
-		}
+		}//end if
 
-		$filter = array_merge( array( 'component' => $component_and_action['component'], 'action' => $component_and_action['action'], ),  $filter );
+		$filter = array_merge( array( 'component' => $component_and_action['component'], 'action' => $component_and_action['action'], ), $filter );
 
 		if ( ! $component_and_action_info = wp_cache_get( $this->cache_key( 'component_and_action_info', $filter ), bstat()->id_base ) )
 		{
@@ -687,25 +739,25 @@ class bStat_Report
 				if ( empty( $row ) )
 				{
 					$row = 'no information provided for action';
-				}
+				}//end if
 
 				if ( ! isset( $component_and_action_info[ $row ] ) )
 				{
 					$component_and_action_info[ $row ] = (object) array( 'info' => $row, 'hits' => 1 );
-				}
+				}//end if
 				else
 				{
 					$component_and_action_info[ $row ]->hits ++;
-				}
-			}
+				}//end else
+			}//end foreach
 
 			usort( $component_and_action_info, array( $this, 'sort_by_hits_desc' ) );
 
 			wp_cache_set( $this->cache_key( 'component_and_action_info', $filter ), $component_and_action_info, bstat()->id_base, $this->cache_ttl() );
-		}
+		}//end if
 
 		return $component_and_action_info;
-	}
+	}//end component_and_action_info
 
 	public function users_for_session( $session, $filter = FALSE )
 	{
@@ -732,15 +784,15 @@ class bStat_Report
 						)
 					)
 				);
-			}
+			}//end foreach
 
 			usort( $users_for_session, array( $this, 'sort_by_sessions_on_goal_desc' ) );
 
 			wp_cache_set( $cachekey, $users_for_session, bstat()->id_base, $this->cache_ttl() );
-		}
+		}//end if
 
 		return $users_for_session;
-	}
+	}//end users_for_session
 
 	public function top_users( $filter = FALSE )
 	{
@@ -756,7 +808,7 @@ class bStat_Report
 		}
 
 		return $top_users;
-	}
+	}//end top_users
 
 	public function top_blogs( $filter = FALSE )
 	{

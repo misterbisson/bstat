@@ -12,6 +12,8 @@ Log and analyze activity.
 
 Log and analyze activity related to posts. Pageview, comment, and click activity trackers are built-in. Other activity can be easily integrated and correlated.
 
+Dependencies (only for viewing reports in the dashboard): [go-graphing](https://github.com/GigaOM/go-graphing) plugin.
+
 == Fork me! ==
 
 This plugin is on Github: https://github.com/misterbisson/bstat

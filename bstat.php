@@ -6,6 +6,7 @@ Description: Blog stats and activity stream
 Version: 6.0
 Author: Casey Bisson
 Author URI: http://maisonbisson.com/blog/
+Dependencies: go-graphing
 */
 
 require_once __DIR__ . '/components/class-bstat.php';

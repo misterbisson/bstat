@@ -4,6 +4,8 @@ class bStat_Report
 	public $filter = array();
 	private $dependencies = array(
 		'go-graphing' => 'https://github.com/GigaOM/go-graphing',
+		'go-timepicker' => 'https://github.com/GigaOM/go-timepicker',
+		'go-ui' => 'https://github.com/GigaOM/go-ui',
 	);
 	private $missing_dependencies = array();
 
@@ -18,9 +20,35 @@ class bStat_Report
 
 	public function init()
 	{
+		// make sure go-ui has been instantiated and its resources registered
+		go_ui();
+		wp_register_style(
+			bstat()->id_base . '-report',
+			plugins_url( 'css/bstat-report.css', __FILE__ ),
+			array(
+				'bootstrap-daterangepicker',
+				'd3-parsets',
+				'fontawesome',
+				'go-timepicker-daterangepicker',
+				'rickshaw',
+			),
+			bstat()->version
+		);
+
+		wp_register_script(
+			bstat()->id_base . '-report',
+			plugins_url( 'js/bstat-report.js', __FILE__ ),
+			array(
+				'bootstrap-daterangepicker',
+				'd3-parsets',
+				'jquery-ui-tabs',
+				'rickshaw',
+			),
+			bstat()->version,
+			TRUE
+		);
+
 		add_action( 'admin_menu', array( $this, 'admin_menu_init' ) );
-		wp_register_style( bstat()->id_base . '-report', plugins_url( 'css/bstat-report.css', __FILE__ ), array( 'rickshaw', 'd3-parsets' ), bstat()->version );
-		wp_register_script( bstat()->id_base . '-report', plugins_url( 'js/bstat-report.js', __FILE__ ), array( 'rickshaw', 'd3-parsets', 'jquery-ui-tabs' ), bstat()->version, TRUE );
 	} // END init
 
 	/**
@@ -168,6 +196,26 @@ class bStat_Report
 		{
 			$filter = array_merge( $this->default_filter(), array_filter( (array) bstat()->db()->sanitize_footstep( $_GET, TRUE ) ) );
 		}
+
+		if ( isset( $_GET['timestamp']['min'] ) )
+		{
+			if ( ! is_array( $filter['timestamp'] ) )
+			{
+				$filter['timestamp'] = array();
+			}//end if
+
+			$filter['timestamp']['min'] = strtotime( $_GET['timestamp']['min'] );
+		}//end if
+
+		if ( isset( $_GET['timestamp']['max'] ) )
+		{
+			if ( ! is_array( $filter['timestamp'] ) )
+			{
+				$filter['timestamp'] = array();
+			}//end if
+
+			$filter['timestamp']['max'] = strtotime( $_GET['timestamp']['max'] );
+		}//end if
 
 		$this->filter = (array) $filter;
 	}//end set_filter

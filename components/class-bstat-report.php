@@ -348,7 +348,7 @@ class bStat_Report
 		if ( ! $sessions_on_goal = wp_cache_get( $this->cache_key( 'sessions_on_goal', $filter ), bstat()->id_base ) )
 		{
 			// get lots of sessions
-			$sessions = bstat()->db()->select( $for, $ids, 'sessions,hits', 10000, $filter );
+			$sessions = bstat()->db()->select( FALSE, FALSE, 'sessions,hits', 10000, $filter );
 
 			$sessions_on_goal = array();
 			$frequency = absint( $goal['frequency'] );

@@ -39,14 +39,13 @@
 					<li><a href="<?php echo esc_url( admin_url( "{$ajax_url}&type=author" ) ); ?>">Authors</a></li>
 					<li><a href="<?php echo esc_url( admin_url( "{$ajax_url}&type=term" ) ); ?>">Terms</a></li>
 					<li><a href="<?php echo esc_url( admin_url( "{$ajax_url}&type=user" ) ); ?>">Users</a></li>
-					<li><a href="#bstat-report-flow">Flow</a></li>
+					<?php
+					$ajax_url = str_replace( 'bstat_report_goal_items', 'bstat_report_goal_flow', $ajax_url );
+					?>
+					<li><a href="#bstat-report-flow" class="flow-tab" data-url="<?php echo esc_url( admin_url( "{$ajax_url}&type=flow" ) ); ?>">Flow</a></li>
 				</ul>
-				<?php
-				/* goal data is loaded in via ajax */
-				include __DIR__ . '/goal-parsets.php';
-				?>
 				<div id="bstat-report-flow">
-					<div id="bstat-parset"></div>
+					<div id="bstat-parset"><i class="fa fa-spin fa-spinner"></i></div>
 				</div>
 			</div>
 			<?php

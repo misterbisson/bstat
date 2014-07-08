@@ -1,4 +1,4 @@
-if ( 'undefined' == typeof bstat ) {
+if ( 'undefined' === typeof bstat ) {
 	var bstat = {};
 }//end if
 
@@ -6,9 +6,12 @@ if ( 'undefined' == typeof bstat ) {
 	'use strict';
 
 	bstat.report = {};
+	bstat.report.event = {};
 
 	bstat.report.init = function() {
 		this.$parset = $( '#bstat-parset' );
+
+		$( document ).on( 'go-timepicker-daterange-changed-dates', this.event.change_dates );
 
 		var graph = new Rickshaw.Graph( {
 			element: $( '#bstat-timeseries-container-chart' ).get( 0 ),
@@ -28,12 +31,12 @@ if ( 'undefined' == typeof bstat ) {
 
 				$legend.html( args.formattedXValue );
 
-				args.detail.sort(function(a, b) { return a.order - b.order }).forEach( function(d) {
+				args.detail.sort(function(a, b) { return a.order - b.order; }).forEach( function(d) {
 					var $line = $( '<div class="line" />');
 					var $swatch = $( '<div class="swatch"/> ');
 					$swatch.css( 'background-color', d.series.color );
 
-					var $label = $( '<div class="label">' + d.name + ": " + d.formattedYValue + '</div>' );
+					var $label = $( '<div class="label">' + d.name + ': ' + d.formattedYValue + '</div>' );
 
 					$line.append( $swatch ).append( $label );
 
@@ -43,7 +46,7 @@ if ( 'undefined' == typeof bstat ) {
 					$dot.css( {
 						'top': graph.y(d.value.y0 + d.value.y) + 'px',
 						'border-color': d.series.color
-					})
+					});
 
 					$( this.element ).append( $dot );
 
@@ -90,6 +93,7 @@ if ( 'undefined' == typeof bstat ) {
 
 			return html;
 		} );
+
 		d3.json( $( '.flow-tab' ).data( 'url' ), function( error, json ) {
 			data = [];
 
@@ -142,6 +146,38 @@ if ( 'undefined' == typeof bstat ) {
 		}//end switch
 	};
 
+	/**
+	 * handle the changing of dates
+	 */
+	bstat.report.event.change_dates = function() {
+		// get the query params, strip off the "?", explode on "&" and explode each sub element on "="
+		var get_vars = window.location.search.substring( 1 ).split( '&' ).map( function( item ) {
+			return item.split( '=' );
+		} );
+
+		var i = null;
+		var get_vars_object = {};
+		for ( i in get_vars ) {
+			get_vars_object[ get_vars[ i ][ 0 ] ] = decodeURI( get_vars[ i ][ 1 ] );
+		}//end for
+
+		get_vars_object['timestamp[min]'] = $( '.daterange-start' ).val();
+		get_vars_object['timestamp[max]'] = $( '.daterange-end' ).val();
+
+		console.log( get_vars_object );
+
+		var query_string = '';
+		for ( i in get_vars_object ) {
+			if ( query_string ) {
+				query_string += '&';
+			}//end if
+
+			query_string += i + '=' + encodeURI( get_vars_object[ i ] );
+		}//end for
+
+		window.location.href = window.location.origin + window.location.pathname + '?' + query_string;
+	};
+
 	$( function() {
 		bstat.report.init();
 
@@ -166,7 +202,6 @@ if ( 'undefined' == typeof bstat ) {
 		$( document ).on( 'click', '#bstat-goal .set', function( e ) {
 			e.preventDefault();
 
-			var $el = $( this );
 			var $container = $( '#bstat-goal' );
 
 			$container.toggleClass( 'show-goals' );

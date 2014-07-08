@@ -2,6 +2,16 @@
 	<h2>bStat Viewer</h2>
 
 	<?php
+	$start = isset( $_GET['timestamp']['min'] ) ? preg_replace( '/[^0-9\-]/', '', $_GET['timestamp']['min'] ) : date( 'Y-m-d', strtotime( 'midnight last week' ) );
+	$end = isset( $_GET['timestamp']['max'] ) ? preg_replace( '/[^0-9\-]/', '', $_GET['timestamp']['max'] ) : NULL;
+
+	do_action( 'go_timepicker_date_range_picker', array(
+		'start' => $start,
+		'start_field_name' => 'timestamp[min]',
+		'end' => $end,
+		'end_field_name' => 'timestamp[max]',
+	) );
+
 	// goal controls
 	include __DIR__ . '/report-goal.php';
 

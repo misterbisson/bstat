@@ -90,11 +90,7 @@ if ( 'undefined' == typeof bstat ) {
 
 			return html;
 		} );
-		this.svg = d3.select( '#bstat-parset' ).append( 'svg' )
-			.attr( 'width', this.chart.width() )
-			.attr( 'height', this.chart.height() );
-
-		d3.csv( '/content/sessions-that-converted.csv', function( error, csv ) {
+		d3.json( $( '.flow-tab' ).data( 'url' ), function( error, json ) {
 			data = [];
 
 			var data = {};
@@ -102,19 +98,13 @@ if ( 'undefined' == typeof bstat ) {
 			var current_session = '';
 			var step = 0;
 
-			for ( var i in csv ) {
-				var item = csv[ i ];
-				//var site = ( 4 == item.blog ? 'Research' : 'Accounts' );
+			for ( var i in json ) {
+				var item = json[ i ];
 
 				if ( current_session !== $.trim( item.session ) ) {
-					if ( 'go-subsc' !== item.component || 'start' !== item.action ) {
-						continue;
-					}//end if
-
 					step = 0;
 					current_session = $.trim( item.session );
 					data[ current_session ] = {};
-					//data[ current_session ]['Final'] = 'Subscribed on ' + site;
 					step++;
 					continue;
 				}//end if
@@ -127,6 +117,12 @@ if ( 'undefined' == typeof bstat ) {
 			for ( i in data ) {
 				massaged_data.push( data[ i ] );
 			}//end for
+
+			$( '#bstat-parset' ).html( '' );
+
+			bstat.report.svg = d3.select( '#bstat-parset' ).append( 'svg' )
+				.attr( 'width', bstat.report.chart.width() )
+				.attr( 'height', bstat.report.chart.height() );
 
 			bstat.report.svg.datum( massaged_data ).call( bstat.report.chart );
 		});

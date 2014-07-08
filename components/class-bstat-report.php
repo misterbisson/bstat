@@ -11,6 +11,7 @@ class bStat_Report
 	{
 		add_action( 'init', array( $this, 'init' ) );
 		add_action( 'wp_ajax_bstat_report_goal_items', array( $this, 'goal_items_ajax' ) );
+		add_action( 'wp_ajax_bstat_report_goal_flow', array( $this, 'goal_flow_ajax' ) );
 		add_action( 'wp_ajax_bstat_report_top_sessions', array( $this, 'top_sessions_ajax' ) );
 		add_action( 'wp_ajax_bstat_report_top_users', array( $this, 'top_users_ajax' ) );
 	}//end __construct
@@ -993,6 +994,15 @@ class bStat_Report
 		include __DIR__ . '/templates/report-top-users.php';
 		die;
 	}//end top_users_ajax
+
+	public function goal_flow_ajax()
+	{
+		$_GET = $this->fix_ajax_args( $_GET );
+		$this->set_filter();
+		$data = bstat()->db()->select( 'sessions', bstat()->report()->sessions_on_goal(), 'all', 5000, bstat()->report()->filter );
+		echo json_encode( $data );
+		die;
+	}//end goal_flow_ajax
 
 	/**
 	 * massages ajax parameters, fixing collisions and removing garbage

@@ -20,8 +20,16 @@ class bStat_Report
 
 	public function init()
 	{
+
+		$this->check_dependencies();
+
+		if ( $this->missing_dependencies )
+		{
+			return;
+		}//end if
 		// make sure go-ui has been instantiated and its resources registered
 		go_ui();
+
 		wp_register_style(
 			bstat()->id_base . '-report',
 			plugins_url( 'css/bstat-report.css', __FILE__ ),
@@ -458,7 +466,8 @@ class bStat_Report
 				$post->sessions = count( bstat()->report()->sessions_for( 'post', $post->post ) );
 				$post->sessions_on_goal = count(
 					bstat()->report()->sessions_for(
-						'sessions',bstat()->report()->sessions_on_goal(),
+						'sessions',
+						bstat()->report()->sessions_on_goal(),
 						array_merge(
 							bstat()->report()->filter,
 							array( 'post' => $post->post )
@@ -719,7 +728,8 @@ class bStat_Report
 				) ) );
 				$component_and_action->sessions_on_goal = count(
 					bstat()->report()->sessions_for(
-						'sessions',bstat()->report()->sessions_on_goal(),
+						'sessions',
+						bstat()->report()->sessions_on_goal(),
 						array_replace(
 							$filter,
 							array(
@@ -826,7 +836,8 @@ class bStat_Report
 				$user->sessions = count( bstat()->report()->sessions_for( 'user', $user->user ) );
 				$user->sessions_on_goal = count(
 					bstat()->report()->sessions_for(
-						'sessions',bstat()->report()->sessions_on_goal(),
+						'sessions',
+						bstat()->report()->sessions_on_goal(),
 						array_merge(
 							bstat()->report()->filter,
 							array( 'user' => $user->user )

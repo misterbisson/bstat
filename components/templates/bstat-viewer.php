@@ -95,6 +95,15 @@
 			$ajax_url .= '&bstat_action=' . $_GET['action'];
 		}//end if
 
+		if ( isset( $_GET['timestamp']['min'] ) )
+		{
+			$ajax_url .= '&timestamp%5Bmin%5D=' . $_GET['timestamp']['min'];
+		}//end if
+
+		if ( isset( $_GET['timestamp']['max'] ) )
+		{
+			$ajax_url .= '&timestamp%5Bmax%5D=' . $_GET['timestamp']['max'];
+		}//end if
 		?>
 		<div class="tabs">
 			<ul>

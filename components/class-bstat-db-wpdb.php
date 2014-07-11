@@ -137,65 +137,17 @@ class bStat_Db_Wpdb extends bStat_Db
 				break;
 
 			case 'x1':
-				$ids = array_filter( array_map( 'sanitize_title_with_dashes', $ids ) );
-				$where = "WHERE x1 IN ('" . implode( "','", $ids ) . "')";
-				if ( ! $return )
-				{
-					$return = 'x1';
-				}
-				break;
-
 			case 'x2':
-				$ids = array_filter( array_map( 'sanitize_title_with_dashes', $ids ) );
-				$where = "WHERE x2 IN ('" . implode( "','", $ids ) . "')";
-				if ( ! $return )
-				{
-					$return = 'x2';
-				}
-				break;
-
 			case 'x3':
-				$ids = array_filter( array_map( 'sanitize_title_with_dashes', $ids ) );
-				$where = "WHERE x3 IN ('" . implode( "','", $ids ) . "')";
-				if ( ! $return )
-				{
-					$return = 'x3';
-				}
-				break;
-
 			case 'x4':
-				$ids = array_filter( array_map( 'sanitize_title_with_dashes', $ids ) );
-				$where = "WHERE x4 IN ('" . implode( "','", $ids ) . "')";
-				if ( ! $return )
-				{
-					$return = 'x4';
-				}
-				break;
-
 			case 'x5':
-				$ids = array_filter( array_map( 'sanitize_title_with_dashes', $ids ) );
-				$where = "WHERE x5 IN ('" . implode( "','", $ids ) . "')";
-				if ( ! $return )
-				{
-					$return = 'x5';
-				}
-				break;
-
 			case 'x6':
-				$ids = array_filter( array_map( 'sanitize_title_with_dashes', $ids ) );
-				$where = "WHERE x6 IN ('" . implode( "','", $ids ) . "')";
-				if ( ! $return )
-				{
-					$return = 'x6';
-				}
-				break;
-
 			case 'x7':
 				$ids = array_filter( array_map( 'sanitize_title_with_dashes', $ids ) );
-				$where = "WHERE x7 IN ('" . implode( "','", $ids ) . "')";
+				$where = "WHERE {$for} IN ('" . implode( "','", $ids ) . "')";
 				if ( ! $return )
 				{
-					$return = 'x7';
+					$return = $for;
 				}
 				break;
 
@@ -264,8 +216,8 @@ class bStat_Db_Wpdb extends bStat_Db
 			case 'x5':
 			case 'x6':
 			case 'x7':
-				$select = 'SELECT `' . $for . '`, COUNT(1) AS hits';
-				$group = 'GROUP BY `' . $for . '`';
+				$select = 'SELECT `' . $return . '`, COUNT(1) AS hits';
+				$group = 'GROUP BY `' . $return . '`';
 				$order = 'ORDER BY hits DESC, date DESC, time DESC';
 				break;
 

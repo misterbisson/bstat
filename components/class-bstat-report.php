@@ -27,6 +27,7 @@ class bStat_Report
 		{
 			return;
 		}//end if
+
 		// make sure go-ui has been instantiated and its resources registered
 		go_ui();
 
@@ -104,7 +105,9 @@ class bStat_Report
 		<?php
 	}//end admin_notices
 
-	// add the menu item to the dashboard
+	/**
+	 * add the menu item to the dashboard
+	 */
 	public function admin_menu_init()
 	{
 		$this->check_dependencies();
@@ -463,13 +466,13 @@ class bStat_Report
 
 			foreach ( $posts_for_session as $k => $post )
 			{
-				$post->sessions = count( bstat()->report()->sessions_for( 'post', $post->post ) );
+				$post->sessions = count( $this->sessions_for( 'post', $post->post ) );
 				$post->sessions_on_goal = count(
-					bstat()->report()->sessions_for(
+					$this->sessions_for(
 						'sessions',
-						bstat()->report()->sessions_on_goal(),
+						$this->sessions_on_goal(),
 						array_merge(
-							bstat()->report()->filter,
+							$this->filter,
 							array( 'post' => $post->post )
 						)
 					)
@@ -601,7 +604,7 @@ class bStat_Report
 				INNER JOIN $wpdb->terms b ON a.term_id = b.term_id
 				WHERE c.object_id IN (" . implode( ',', array_map( 'absint', wp_list_pluck( $this->posts_for_session( $session, $filter ), 'post' ) ) ) . ")
 				GROUP BY c.term_taxonomy_id ORDER BY count DESC LIMIT 2000
-				/* generated in bStat_Report::top_terms() */";
+				/* generated in bStat_Report::terms_for_session() */";
 
 			$terms_for_session = $wpdb->get_results( $sql );
 
@@ -719,7 +722,7 @@ class bStat_Report
 
 			foreach ( $components_and_actions_for_session as $k => $component_and_action )
 			{
-				$component_and_action->sessions = count( bstat()->report()->sessions_for( FALSE, FALSE, array_replace(
+				$component_and_action->sessions = count( $this->sessions_for( FALSE, FALSE, array_replace(
 					$filter,
 					array(
 						'component' => $component_and_action->component,
@@ -727,9 +730,9 @@ class bStat_Report
 					)
 				) ) );
 				$component_and_action->sessions_on_goal = count(
-					bstat()->report()->sessions_for(
+					$this->sessions_for(
 						'sessions',
-						bstat()->report()->sessions_on_goal(),
+						$this->sessions_on_goal(),
 						array_replace(
 							$filter,
 							array(
@@ -818,6 +821,71 @@ class bStat_Report
 		return $component_and_action_info;
 	}//end component_and_action_info
 
+	/**
+	 * gets a/b tests for sessions on goal
+	 *
+	 * @param array $sessions_on_goal The sessions for the goal
+	 * @param mixed $filter Filter used for the retrieving activity data
+	 */
+	public function tests_for_session( $sessions_on_goal, $filter = FALSE )
+	{
+		if ( ! $filter )
+		{
+			$filter = $this->filter;
+		}
+
+		$cachekey = $this->cache_key( 'tests_for_session' . md5( serialize( $sessions_on_goal ) ), $filter );
+
+		if ( ! $tests_for_session = wp_cache_get( $cachekey, bstat()->id_base ) )
+		{
+			$all_sessions = bstat()->db()->select( 'sessions', $sessions_on_goal, 'all', 10000, $filter );
+			$tests_for_session = array();
+
+			foreach ( $all_sessions as $k => $session )
+			{
+				for ( $i = 1; $i <= 7; $i++ )
+				{
+					$test = "x{$i}";
+
+					if ( ! $session->$test )
+					{
+						continue;
+					}//end if
+
+					$variation = $session->$test;
+
+					$test_variation = "{$test}:{$variation}";
+
+					if ( isset( $tests_for_session[ $test_variation ] ) )
+					{
+						continue;
+					}//end if
+
+					$tests_for_session[ $test_variation ] = new stdClass;
+					$tests_for_session[ $test_variation ]->test = $test;
+					$tests_for_session[ $test_variation ]->variation = $variation;
+					$tests_for_session[ $test_variation ]->sessions = count( $this->sessions_for( $test, $variation ) );
+					$tests_for_session[ $test_variation ]->sessions_on_goal = count(
+						$this->sessions_for(
+							'sessions',
+							$this->sessions_on_goal(),
+							array_merge(
+								$filter,
+								array( $test => $variation )
+							)
+						)
+					);
+				}//end for
+			}//end foreach
+
+			usort( $tests_for_session, array( $this, 'sort_by_sessions_on_goal_desc' ) );
+
+			wp_cache_set( $cachekey, $tests_for_session, bstat()->id_base, $this->cache_ttl() );
+		}//end if
+
+		return $tests_for_session;
+	}//end tests_for_session
+
 	public function users_for_session( $session, $filter = FALSE )
 	{
 		if ( ! $filter )
@@ -833,13 +901,13 @@ class bStat_Report
 
 			foreach ( $users_for_session as $k => $user )
 			{
-				$user->sessions = count( bstat()->report()->sessions_for( 'user', $user->user ) );
+				$user->sessions = count( $this->sessions_for( 'user', $user->user ) );
 				$user->sessions_on_goal = count(
-					bstat()->report()->sessions_for(
+					$this->sessions_for(
 						'sessions',
-						bstat()->report()->sessions_on_goal(),
+						$this->sessions_on_goal(),
 						array_merge(
-							bstat()->report()->filter,
+							$this->filter,
 							array( 'user' => $user->user )
 						)
 					)
@@ -909,7 +977,7 @@ class bStat_Report
 		if ( 'term' == $type )
 		{
 			$data['sum_matching_posts'] = array_sum( wp_list_pluck( $items, 'count_in_set' ) );
-			$data['sum_posts_in_session'] = count( bstat()->report()->posts_for_session( bstat()->report()->sessions_on_goal() ) );
+			$data['sum_posts_in_session'] = count( $this->posts_for_session( $this->sessions_on_goal() ) );
 		}//end if
 
 		// for sanity, limit this to just the top few users
@@ -989,6 +1057,24 @@ class bStat_Report
 		return $item_data;
 	}//end report_goal_term
 
+	private function report_goal_test( $item, $data )
+	{
+		$item->sessions_on_goal_expected = $data['avg_cvr'] * $item->sessions / 100;
+
+		$item_data = array(
+			'test' => $item->test,
+			'variation' => $item->variation,
+			'sessions' => $item->sessions,
+			'sessions_on_goal' => $item->sessions_on_goal,
+			'cvr' => ( $item->sessions_on_goal / $item->sessions ) * 100,
+			'sessions_on_goal_expected' => $item->sessions_on_goal_expected,
+			'difference' => $item->sessions_on_goal - $item->sessions_on_goal_expected,
+			'multiple' => $item->sessions_on_goal / $item->sessions_on_goal_expected,
+		);
+
+		return $item_data;
+	}//end report_goal_test
+
 	private function report_goal_user( $item, $data )
 	{
 		$user_object = new WP_User( $item->user );
@@ -1019,7 +1105,7 @@ class bStat_Report
 		$type = empty( $_GET['type'] ) ? '' : $_GET['type'];
 		$type = trim( $type );
 
-		if ( ! in_array( $type, array( 'post', 'author', 'term', 'user' ) ) )
+		if ( ! in_array( $type, array( 'post', 'author', 'term', 'user', 'test' ) ) )
 		{
 			die( 'invalid request' );
 		}//end if
@@ -1058,7 +1144,7 @@ class bStat_Report
 	{
 		$_GET = $this->fix_ajax_args( $_GET );
 		$this->set_filter();
-		$data = bstat()->db()->select( 'sessions', bstat()->report()->sessions_on_goal(), 'all', 5000, bstat()->report()->filter );
+		$data = bstat()->db()->select( 'sessions', $this->sessions_on_goal(), 'all', 5000, $this->filter );
 		echo json_encode( $data );
 		die;
 	}//end goal_flow_ajax

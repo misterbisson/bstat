@@ -13,25 +13,44 @@ if ( 'undefined' === typeof bstat ) {
 
 		$( document ).on( 'go-timepicker-daterange-changed-dates', this.event.change_dates );
 
-		var graph = new Rickshaw.Graph( {
+		this.init_rickshaw();
+
+		if ( ! this.$parset.length ) {
+			return;
+		}//end if
+
+		this.init_parset();
+	};
+
+	bstat.report.init_rickshaw = function() {
+		if ( ! bstat_timeseries.length ) {
+			return;
+		}//end if
+
+		var graph,
+			x_axis,
+			hover,
+			$legend;
+
+		graph = new Rickshaw.Graph( {
 			element: $( '#bstat-timeseries-container-chart' ).get( 0 ),
 			width: $( '#wpbody-content' ).width() - 20,
 			height: ( $( '#wpbody-content' ).width() - 20 ) / 3.5,
 			renderer: 'bar',
-			series: bstat_timeseries,
+			series: bstat_timeseries
 		} );
 
-		var x_axis = new Rickshaw.Graph.Axis.Time( { graph: graph } );
+		x_axis = new Rickshaw.Graph.Axis.Time( { graph: graph } );
 
 		graph.render();
 
-		var $legend = $( '#bstat-timeseries-container-legend' );
+		$legend = $( '#bstat-timeseries-container-legend' );
 		var Hover = Rickshaw.Class.create( Rickshaw.Graph.HoverDetail, {
 			render: function( args ) {
 
 				$legend.html( args.formattedXValue );
 
-				args.detail.sort(function(a, b) { return a.order - b.order; }).forEach( function(d) {
+				args.detail.sort( function( a, b ) { return a.order - b.order; } ).forEach( function( d ) {
 					var $line = $( '<div class="line" />');
 					var $swatch = $( '<div class="swatch"/> ');
 					$swatch.css( 'background-color', d.series.color );
@@ -56,13 +75,7 @@ if ( 'undefined' === typeof bstat ) {
 			}
 		} );
 
-		var hover = new Hover( { graph: graph } );
-
-		if ( ! this.$parset.length ) {
-			return;
-		}//end if
-
-		this.init_parset();
+		hover = new Hover( { graph: graph } );
 	};
 
 	bstat.report.init_parset = function() {
@@ -163,8 +176,6 @@ if ( 'undefined' === typeof bstat ) {
 
 		get_vars_object['timestamp[min]'] = $( '.daterange-start' ).val();
 		get_vars_object['timestamp[max]'] = $( '.daterange-end' ).val();
-
-		console.log( get_vars_object );
 
 		var query_string = '';
 		for ( i in get_vars_object ) {

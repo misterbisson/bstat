@@ -136,6 +136,69 @@ class bStat_Db_Wpdb extends bStat_Db
 				}
 				break;
 
+			case 'x1':
+				$ids = array_filter( array_map( 'sanitize_title_with_dashes', $ids ) );
+				$where = "WHERE x1 IN ('" . implode( "','", $ids ) . "')";
+				if ( ! $return )
+				{
+					$return = 'x1';
+				}
+				break;
+
+			case 'x2':
+				$ids = array_filter( array_map( 'sanitize_title_with_dashes', $ids ) );
+				$where = "WHERE x2 IN ('" . implode( "','", $ids ) . "')";
+				if ( ! $return )
+				{
+					$return = 'x2';
+				}
+				break;
+
+			case 'x3':
+				$ids = array_filter( array_map( 'sanitize_title_with_dashes', $ids ) );
+				$where = "WHERE x3 IN ('" . implode( "','", $ids ) . "')";
+				if ( ! $return )
+				{
+					$return = 'x3';
+				}
+				break;
+
+			case 'x4':
+				$ids = array_filter( array_map( 'sanitize_title_with_dashes', $ids ) );
+				$where = "WHERE x4 IN ('" . implode( "','", $ids ) . "')";
+				if ( ! $return )
+				{
+					$return = 'x4';
+				}
+				break;
+
+			case 'x5':
+				$ids = array_filter( array_map( 'sanitize_title_with_dashes', $ids ) );
+				$where = "WHERE x5 IN ('" . implode( "','", $ids ) . "')";
+				if ( ! $return )
+				{
+					$return = 'x5';
+				}
+				break;
+
+			case 'x6':
+				$ids = array_filter( array_map( 'sanitize_title_with_dashes', $ids ) );
+				$where = "WHERE x6 IN ('" . implode( "','", $ids ) . "')";
+				if ( ! $return )
+				{
+					$return = 'x6';
+				}
+				break;
+
+			case 'x7':
+				$ids = array_filter( array_map( 'sanitize_title_with_dashes', $ids ) );
+				$where = "WHERE x7 IN ('" . implode( "','", $ids ) . "')";
+				if ( ! $return )
+				{
+					$return = 'x7';
+				}
+				break;
+
 			default:
 				return FALSE;
 		}
@@ -344,7 +407,7 @@ class bStat_Db_Wpdb extends bStat_Db
 		{
 			// The DB connector can have custom options in the bstat options
 			// The class name of the connector is the key to check for those options
-			if ( is_object( bstat()->options()->{__CLASS__} ) )
+			if ( isset( bstat()->options()->{__CLASS__} ) && is_object( bstat()->options()->{__CLASS__} ) )
 			{
 				// typically a custom WPDB object is only useful to isolate DB load from normal WP operations
 				$this->wpdb = new wpdb(

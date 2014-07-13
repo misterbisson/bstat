@@ -1097,10 +1097,10 @@ class bStat_Report
 			'edit_url' => get_edit_user_link( $item->user ),
 			'sessions' => $item->sessions,
 			'sessions_on_goal' => $item->sessions_on_goal,
-			'cvr' => ( $item->sessions_on_goal / $item->sessions ) * 100,
+			'cvr' => $item->sessions ? ( ( $item->sessions_on_goal / $item->sessions ) * 100 ) : 0,
 			'sessions_on_goal_expected' => $item->sessions_on_goal_expected,
 			'difference' => $item->sessions_on_goal - $item->sessions_on_goal_expected,
-			'multiple' => $item->sessions_on_goal / $item->sessions_on_goal_expected,
+			'multiple' => $item->sessions_on_goal_expected ? ( $item->sessions_on_goal / $item->sessions_on_goal_expected ) : 0,
 		);
 
 		return $item_data;

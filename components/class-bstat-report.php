@@ -365,6 +365,12 @@ class bStat_Report
 
 			foreach ( $get_posts as $k => $v )
 			{
+				if ( ! isset( $post_hits[ $v->ID ] ) )
+				{
+					$get_posts[ $k ] = (object) $get_posts[ $k ];
+					continue;
+				}//end if
+
 				$get_posts[ $k ] = (object) array_replace( (array) $get_posts[ $k ], (array) $post_hits[ $v->ID ] );
 			}//end foreach
 

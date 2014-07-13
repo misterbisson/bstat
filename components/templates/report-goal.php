@@ -4,7 +4,7 @@
 $components_and_actions = bstat()->report()->top_components_and_actions();
 $components_and_actions = array_slice( $components_and_actions, 0, bstat()->options()->report->max_items );
 
-$current_goal = $_GET['goal'] ? preg_replace( '/[0-9]+:(.+):[0-9]+/', '$1', $_GET['goal'] ) : NULL;
+$current_goal = ! empty( $_GET['goal'] ) ? preg_replace( '/[0-9]+:(.+):[0-9]+/', '$1', $_GET['goal'] ) : NULL;
 
 ?>
 <div id="bstat-goal">

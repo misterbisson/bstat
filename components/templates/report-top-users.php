@@ -41,8 +41,8 @@ foreach ( $users as $user )
 	foreach ( $posts as $post )
 	{
 		printf(
-			'<li %1$s><a href="%2$s">%3$s</a> (%4$s hits)</li>',
-			get_post_class( '', $post->ID ),
+			'<li class="%1$s"><a href="%2$s">%3$s</a> (%4$s hits)</li>',
+			implode( ' ', get_post_class( '', $post->ID ) ),
 			bstat()->report()->report_url( array( 'post' => $post->ID, ) ),
 			get_the_title( $post->ID ),
 			number_format( (int) $post->hits )

@@ -42,12 +42,23 @@
 			{
 				$ajax_url .= '&bstat_action=' . $_GET['action'];
 			}//end if
+
+			if ( isset( $_GET['timestamp']['min'] ) )
+			{
+				$ajax_url .= '&timestamp%5Bmin%5D=' . $_GET['timestamp']['min'];
+			}//end if
+
+			if ( isset( $_GET['timestamp']['max'] ) )
+			{
+				$ajax_url .= '&timestamp%5Bmax%5D=' . $_GET['timestamp']['max'];
+			}//end if
 			?>
 			<div class="tabs">
 				<ul>
 					<li><a href="<?php echo esc_url( admin_url( "{$ajax_url}&type=post" ) ); ?>">Posts</a></li>
 					<li><a href="<?php echo esc_url( admin_url( "{$ajax_url}&type=author" ) ); ?>">Authors</a></li>
 					<li><a href="<?php echo esc_url( admin_url( "{$ajax_url}&type=term" ) ); ?>">Terms</a></li>
+					<li><a href="<?php echo esc_url( admin_url( "{$ajax_url}&type=test" ) ); ?>">Tests</a></li>
 					<li><a href="<?php echo esc_url( admin_url( "{$ajax_url}&type=user" ) ); ?>">Users</a></li>
 					<?php
 					$ajax_url = str_replace( 'bstat_report_goal_items', 'bstat_report_goal_flow', $ajax_url );
@@ -84,6 +95,15 @@
 			$ajax_url .= '&bstat_action=' . $_GET['action'];
 		}//end if
 
+		if ( isset( $_GET['timestamp']['min'] ) )
+		{
+			$ajax_url .= '&timestamp%5Bmin%5D=' . $_GET['timestamp']['min'];
+		}//end if
+
+		if ( isset( $_GET['timestamp']['max'] ) )
+		{
+			$ajax_url .= '&timestamp%5Bmax%5D=' . $_GET['timestamp']['max'];
+		}//end if
 		?>
 		<div class="tabs">
 			<ul>

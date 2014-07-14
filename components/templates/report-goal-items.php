@@ -14,6 +14,7 @@ if ( ! count( $items ) )
 		</p>
 	</div>
 	<?php
+	return;
 }//end if
 
 $data = bstat()->report()->report_goal_items( $type, $items );
@@ -113,6 +114,27 @@ $data = bstat()->report()->report_goal_items( $type, $items );
 							<td>%7$s</td>
 						</tr>',
 						$item['taxonomy'] . ':' . $item['slug'],
+						number_format( $item['sessions'] ),
+						number_format( $item['sessions_on_goal'] ),
+						number_format( $item['cvr'], 2 ) . '%',
+						number_format( $item['sessions_on_goal_expected'], 2 ),
+						number_format( $item['difference'], 2 ),
+						number_format( $item['multiple'], 2 )
+					);
+					break;
+				case 'test':
+					printf(
+						'<tr>
+							<td>%1$s:%2$s</td>
+							<td>%3$s</td>
+							<td>%4$s</td>
+							<td>%5$s</td>
+							<td>%6$s</td>
+							<td>%7$s</td>
+							<td>%8$s</td>
+						</tr>',
+						$item['test'],
+						$item['variation'],
 						number_format( $item['sessions'] ),
 						number_format( $item['sessions_on_goal'] ),
 						number_format( $item['cvr'], 2 ) . '%',

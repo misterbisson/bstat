@@ -136,6 +136,21 @@ class bStat_Db_Wpdb extends bStat_Db
 				}
 				break;
 
+			case 'x1':
+			case 'x2':
+			case 'x3':
+			case 'x4':
+			case 'x5':
+			case 'x6':
+			case 'x7':
+				$ids = array_filter( array_map( 'sanitize_title_with_dashes', $ids ) );
+				$where = "WHERE {$for} IN ('" . implode( "','", $ids ) . "')";
+				if ( ! $return )
+				{
+					$return = $for;
+				}
+				break;
+
 			default:
 				return FALSE;
 		}
@@ -195,44 +210,14 @@ class bStat_Db_Wpdb extends bStat_Db
 				break;
 
 			case 'x1':
-				$select = 'SELECT `x1`, COUNT(1) AS hits';
-				$group = 'GROUP BY `x1`';
-				$order = 'ORDER BY hits DESC, date DESC, time DESC';
-				break;
-
 			case 'x2':
-				$select = 'SELECT `x2`, COUNT(1) AS hits';
-				$group = 'GROUP BY `x2`';
-				$order = 'ORDER BY hits DESC, date DESC, time DESC';
-				break;
-
 			case 'x3':
-				$select = 'SELECT `x3`, COUNT(1) AS hits';
-				$group = 'GROUP BY `x3`';
-				$order = 'ORDER BY hits DESC, date DESC, time DESC';
-				break;
-
 			case 'x4':
-				$select = 'SELECT `x4`, COUNT(1) AS hits';
-				$group = 'GROUP BY `x4`';
-				$order = 'ORDER BY hits DESC, date DESC, time DESC';
-				break;
-
 			case 'x5':
-				$select = 'SELECT `x5`, COUNT(1) AS hits';
-				$group = 'GROUP BY `x5`';
-				$order = 'ORDER BY hits DESC, date DESC, time DESC';
-				break;
-
 			case 'x6':
-				$select = 'SELECT `x6`, COUNT(1) AS hits';
-				$group = 'GROUP BY `x6`';
-				$order = 'ORDER BY hits DESC, date DESC, time DESC';
-				break;
-
 			case 'x7':
-				$select = 'SELECT `x7`, COUNT(1) AS hits';
-				$group = 'GROUP BY `x7`';
+				$select = 'SELECT `' . $return . '`, COUNT(1) AS hits';
+				$group = 'GROUP BY `' . $return . '`';
 				$order = 'ORDER BY hits DESC, date DESC, time DESC';
 				break;
 
@@ -344,7 +329,7 @@ class bStat_Db_Wpdb extends bStat_Db
 		{
 			// The DB connector can have custom options in the bstat options
 			// The class name of the connector is the key to check for those options
-			if ( is_object( bstat()->options()->{__CLASS__} ) )
+			if ( isset( bstat()->options()->{__CLASS__} ) && is_object( bstat()->options()->{__CLASS__} ) )
 			{
 				// typically a custom WPDB object is only useful to isolate DB load from normal WP operations
 				$this->wpdb = new wpdb(

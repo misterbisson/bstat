@@ -203,7 +203,13 @@ if ( 'undefined' === typeof bstat ) {
 			var action_text = item.action;
 
 			if ( actions[ item.action ] ) {
-				action_text += '( ' + item.info + ' )';
+				var details = item.info;
+
+				if ( 'pageview' === action_text ) {
+					details = item.post;
+				}//end if
+
+				action_text += '( ' + details + ' )';
 			}//end if
 
 			data[ current_session ][ 'Action -' + step ] = action_text;

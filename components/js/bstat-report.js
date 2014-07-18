@@ -126,7 +126,7 @@ if ( 'undefined' === typeof bstat ) {
 					continue;
 				}//end if
 
-				data[ current_session ][ 'Action -' + step ] = bstat.report.translate_action( item.action ) + '( ' + item.info + ' )';
+				data[ current_session ][ 'Action -' + step ] = item.action + '( ' + item.info + ' )';
 				step++;
 			}//end for
 
@@ -143,20 +143,6 @@ if ( 'undefined' === typeof bstat ) {
 
 			bstat.report.svg.datum( massaged_data ).call( bstat.report.chart );
 		});
-	};
-
-	bstat.report.translate_action = function ( action ) {
-		switch ( action ) {
-			case 'pageview': return 'page view';
-			case 'clklink': return 'link';
-			case 'u_medium': return 'utm medium';
-			case 'userauth': return 'login';
-			case 'u_source': return 'utm source';
-			case 'r_search': return 'search';
-			case 'r_host': return 'referring host';
-			case 'u_campgn': return 'utm campaign';
-			default: return action;
-		}//end switch
 	};
 
 	/**

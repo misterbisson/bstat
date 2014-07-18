@@ -1,4 +1,5 @@
 (function($){
+	'use strict';
 
 	// don't bother if the endpoint isn't defined
 	if ( ! ('endpoint' in bstat) ) {
@@ -149,9 +150,9 @@
 
 	// capture the referring domain (unless it was an internal referral)
 	if (
-		undefined != referrer_url.host && // not an empty referrer
+		'undefined' !== typeof referrer_url.host && // not an empty referrer
 		'' != referrer_url.host && // not an empty referrer
-		undefined == bstat.track.get_search_engine( referrer_url.host ) && // don't bother with search engines, they're logged elsewhere
+		'undefined' === typeof bstat.track.get_search_engine( referrer_url.host ) && // don't bother with search engines, they're logged elsewhere
 		document.location.domain != referrer_url.host // ignore self-referrers
 	)
 	{
@@ -174,7 +175,7 @@
 		var engine = bstat.track.get_search_engine( parsed_url.host );
 		var search_string;
 
-		if( undefined == engine )
+		if( 'undefined' === typeof engine )
 		{
 			return;
 		}
@@ -182,21 +183,21 @@
 		switch ( engine ) {
 			case 'google':
 			case 'bing':
-				if ( undefined != parsed_url.queryKey.q )
+				if ( 'undefined' !== typeof parsed_url.queryKey.q )
 				{
 					search_string = parsed_url.queryKey.q;
 				}
 				break;
 
 			case 'yahoo':
-				if ( undefined != parsed_url.queryKey.p )
+				if ( 'undefined' !== typeof parsed_url.queryKey.p )
 				{
 					search_string = parsed_url.queryKey.p;
 				}
 				break;
 
 			case 'internal':
-				if ( undefined != parsed_url.queryKey.s )
+				if ( 'undefined' !== typeof parsed_url.queryKey.s )
 				{
 					search_string = parsed_url.queryKey.s;
 				}
@@ -214,7 +215,7 @@
 	// capture the search query from recognized search engines
 	bstat.track.search_string = bstat.track.get_search_string( referrer_url );
 	if(
-		undefined != bstat.track.search_string &&
+		'undefined' !== typeof bstat.track.search_string &&
 		'' != bstat.track.search_string
 	)
 	{
@@ -237,7 +238,7 @@
 	var this_url = bstat.track.parse_uri( document.location );
 
 	// capture the UTM campaign code
-	if ( undefined != this_url.queryKey.utm_campaign )
+	if ( 'undefined' !== typeof this_url.queryKey.utm_campaign )
 	{
 		$.ajax({
 			type : "POST",
@@ -255,7 +256,7 @@
 	}
 
 	// capture the UTM medium code
-	if ( undefined != this_url.queryKey.utm_medium )
+	if ( 'undefined' !== typeof this_url.queryKey.utm_medium )
 	{
 		$.ajax({
 			type : "POST",
@@ -273,7 +274,7 @@
 	}
 
 	// capture the UTM source code
-	if ( undefined != this_url.queryKey.utm_source )
+	if ( 'undefined' !== typeof this_url.queryKey.utm_source )
 	{
 		$.ajax({
 			type : "POST",

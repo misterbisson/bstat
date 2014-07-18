@@ -130,7 +130,7 @@ if ( 'undefined' === typeof bstat ) {
 					'<li class="action" data-action="' + bstat.report.actions[ i ] + '">' +
 						'<input id="show-action-' + bstat.report.actions[ i ] + '" class="show" type="checkbox" value="1" checked>' +
 						'<label for="show-action-' + bstat.report.actions[ i ] + '">' + bstat.report.actions[ i ] + '</label>' +
-						'<button class="info button button-small button-primary" type="button">hide details</button>' +
+						'<button class="info button button-small button-primary" type="button">details on</button>' +
 					'</li>'
 				);
 			}//end for
@@ -146,10 +146,10 @@ if ( 'undefined' === typeof bstat ) {
 
 				if ( $el.hasClass( 'button-primary' ) ) {
 					$el.removeClass( 'button-primary' );
-					$el.html( 'show details' );
+					$el.html( 'details off' );
 				} else {
 					$el.addClass( 'button-primary' );
-					$el.html( 'hide details' );
+					$el.html( 'details on' );
 				}//end else
 
 				bstat.report.generate_parset();

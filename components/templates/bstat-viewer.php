@@ -66,6 +66,9 @@
 					<li><a href="#bstat-report-flow" class="flow-tab" data-url="<?php echo esc_url( admin_url( "{$ajax_url}&type=flow" ) ); ?>">Flow</a></li>
 				</ul>
 				<div id="bstat-report-flow">
+					<h3>Actions</h3>
+					<ul class="actions">
+					</ul>
 					<div id="bstat-parset"><i class="fa fa-spin fa-spinner"></i></div>
 				</div>
 			</div>

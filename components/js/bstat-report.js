@@ -79,6 +79,10 @@ if ( 'undefined' === typeof bstat ) {
 	};
 
 	bstat.report.init_parset = function() {
+		this.$bstat_report_flow = $( '#bstat-report-flow' );
+		this.$flow_actions = this.$bstat_report_flow.find( '.actions' );
+		this.actions = [];
+		this.original_json = [];
 		this.chart = d3.parsets().dimensions( [ 'Action -1', 'Action -2', 'Action -3', 'Action -4', 'Action -5', 'Action -6', 'Action -7', 'Action -8', 'Action -9', 'Action -10' ] );
 		this.chart.tension( 0.25 );
 		this.chart.width( this.$parset.width() * 0.75 );
@@ -108,32 +112,48 @@ if ( 'undefined' === typeof bstat ) {
 		} );
 
 		d3.json( $( '.flow-tab' ).data( 'url' ), function( error, json ) {
-			data = [];
+			bstat.report.original_json = json;
+			var i;
 
-			var data = {};
-
-			var current_session = '';
-			var step = 0;
-
-			for ( var i in json ) {
+			for ( i in json ) {
 				var item = json[ i ];
 
-				if ( current_session !== $.trim( item.session ) ) {
-					step = 0;
-					current_session = $.trim( item.session );
-					data[ current_session ] = {};
-					step++;
-					continue;
+				if ( -1 === bstat.report.actions.indexOf( item.action ) ) {
+					bstat.report.actions.push( item.action );
 				}//end if
-
-				data[ current_session ][ 'Action -' + step ] = item.action + '( ' + item.info + ' )';
-				step++;
 			}//end for
 
-			var massaged_data = [];
-			for ( i in data ) {
-				massaged_data.push( data[ i ] );
+			bstat.report.actions.sort();
+
+			for ( i in bstat.report.actions ) {
+				bstat.report.$flow_actions.append(
+					'<li class="action" data-action="' + bstat.report.actions[ i ] + '">' +
+						'<input id="show-action-' + bstat.report.actions[ i ] + '" class="show" type="checkbox" value="1" checked>' +
+						'<label for="show-action-' + bstat.report.actions[ i ] + '">' + bstat.report.actions[ i ] + '</label>' +
+						'<button class="info button button-small button-primary" type="button">hide details</button>' +
+					'</li>'
+				);
 			}//end for
+
+			$( document ).on( 'change', '#bstat-report-flow .actions input', function() {
+				bstat.report.generate_parset();
+			});
+
+			$( document ).on( 'click', '#bstat-report-flow .actions button', function( e ) {
+				e.preventDefault();
+
+				var $el = $( this );
+
+				if ( $el.hasClass( 'button-primary' ) ) {
+					$el.removeClass( 'button-primary' );
+					$el.html( 'show details' );
+				} else {
+					$el.addClass( 'button-primary' );
+					$el.html( 'hide details' );
+				}//end else
+
+				bstat.report.generate_parset();
+			});
 
 			$( '#bstat-parset' ).html( '' );
 
@@ -141,8 +161,61 @@ if ( 'undefined' === typeof bstat ) {
 				.attr( 'width', bstat.report.chart.width() )
 				.attr( 'height', bstat.report.chart.height() );
 
-			bstat.report.svg.datum( massaged_data ).call( bstat.report.chart );
+			bstat.report.generate_parset();
 		});
+	};
+
+	bstat.report.generate_parset = function() {
+		var massaged_data = this.massage_data();
+		bstat.report.svg.datum( massaged_data ).call( bstat.report.chart );
+	};
+
+	bstat.report.massage_data = function() {
+		var i;
+		var data = {};
+		var current_session = '';
+		var step = 0;
+		var actions = {};
+
+		this.$flow_actions.find( '.action' ).each( function() {
+			var $el = $( this );
+
+			if ( $el.find( '.show:checked' ).length > 0 ) {
+				actions[ $el.data( 'action' ) ] = $el.find( '.info.button-primary' ).length ? true : false;
+			}//end if
+		});
+
+		for ( i in this.original_json ) {
+			var item = this.original_json[ i ];
+
+			if ( current_session !== $.trim( item.session ) ) {
+				step = 0;
+				current_session = $.trim( item.session );
+				data[ current_session ] = {};
+				step++;
+				continue;
+			}//end if
+
+			if ( 'undefined' === typeof actions[ item.action ] ) {
+				continue;
+			}//end if
+
+			var action_text = item.action;
+
+			if ( actions[ item.action ] ) {
+				action_text += '( ' + item.info + ' )';
+			}//end if
+
+			data[ current_session ][ 'Action -' + step ] = action_text;
+			step++;
+		}//end for
+
+		var massaged_data = [];
+		for ( i in data ) {
+			massaged_data.push( data[ i ] );
+		}//end for
+
+		return massaged_data;
 	};
 
 	/**

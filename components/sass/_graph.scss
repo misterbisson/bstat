@@ -111,3 +111,36 @@
 	}
 }
 
+#bstat-report-flow {
+	.actions {
+		-moz-column-count: 3;
+		-moz-column-gap: 20px;
+		-webkit-column-count: 3;
+		-webkit-column-gap: 20px;
+	}
+
+	.action {
+		background: #fafafa;
+		border-radius: 4px;
+		padding: .25rem;
+
+		input {
+			vertical-align: middle;
+		}
+
+		label {
+			color: #ccc;
+			display: inline-block;
+			min-width: 100px;
+			vertical-align: middle;
+		}
+
+		input:checked + label {
+			color: #343434;
+		}
+
+		button {
+			min-width: 88px;
+		}
+	}
+}

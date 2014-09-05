@@ -3,7 +3,7 @@ Contributors: misterbisson
 Donate link: http://MaisonBisson.com/
 Tags: bSuite, webstats, activity stream, activity, stats, statistics
 Requires at least: 3.7
-Tested up to: 3.8
+Tested up to: 4.0
 Stable tag: trunk
 
 Log and analyze activity.

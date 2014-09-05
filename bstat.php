@@ -3,7 +3,7 @@
 Plugin Name: bStat
 Plugin URI: http://wordpress.org/plugins/bstats/
 Description: Blog stats and activity stream
-Version: 6.0
+Version: 6.1
 Author: Casey Bisson
 Author URI: http://maisonbisson.com/blog/
 Dependencies: go-graphing

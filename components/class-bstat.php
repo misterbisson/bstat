@@ -42,6 +42,8 @@ class bStat
 			// non-admin hooks
 			add_action( 'template_redirect', array( $this, 'template_redirect' ), 15 );
 			wp_enqueue_script( $this->id_base );
+
+			add_action( 'bstat_db_insert', array( $this, 'db_insert' ) );
 		}
 
 		// set up a rewrite rule to cookie users
@@ -264,6 +266,16 @@ class bStat
 		wp_safe_redirect( $redirect_url );
 		exit;
 	}//END cookie_and_redirect
+
+	/**
+	 * hooked to 'bstat_db_insert' action to track events triggered by calling this action.
+	 *
+	 * @param $data data being tracked in this footstep
+	 */
+	public function db_insert( $data )
+	{
+		$this->db()->insert( $data );
+	}//end db_insert
 
 	/**
 	 * hooked to 'set_auth_cookie' action to track when WP sets the auth

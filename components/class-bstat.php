@@ -309,7 +309,7 @@ class bStat
 		);
 		$details['signature'] = $this->get_signature( $details );
 
-		if ( is_object( $this->options()->tests ) )
+		if ( isset( $this->options()->tests ) && is_object( $this->options()->tests ) )
 		{
 			// filter valid configured tests
 			$current_time = time();
@@ -386,7 +386,10 @@ class bStat
 
 	public function get_variation( $test_name )
 	{
-		if ( ! $this->test_cookie_parsed )
+		if (
+			! $this->test_cookie_parsed &&
+			isset( $_COOKIE[ $this->id_base ][ $this->options()->test_cookie->name ] )
+		)
 		{
 			$this->test_cookie_parsed = json_decode( stripslashes( $_COOKIE[ $this->id_base ][ $this->options()->test_cookie->name ] ) );
 		} //end if

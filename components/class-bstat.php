@@ -42,8 +42,6 @@ class bStat
 			// non-admin hooks
 			add_action( 'template_redirect', array( $this, 'template_redirect' ), 15 );
 			wp_enqueue_script( $this->id_base );
-
-			add_action( 'bstat_db_insert', array( $this, 'db_insert' ) );
 		}
 
 		// set up a rewrite rule to cookie users
@@ -52,6 +50,9 @@ class bStat
 		add_rewrite_rule( $this->options()->identity_cookie->rewrite_base . '//(https?:\/\/.+)/?$', 'index.php?' . $this->redirect_qv . '=$matches[1]', 'top' );
 		add_rewrite_tag( "%{$this->user_qv}%", '[0-9]+' );
 		add_rewrite_tag( "%{$this->redirect_qv}%", 'https?:.+' );
+
+		// support tracking from other plugins without a breaking dependency
+		add_action( 'bstat_insert', array( $this, 'insert' ) );
 
 		// set the identity cookie when WP sets the auth cookie
 		add_action( 'set_auth_cookie', array( $this, 'set_auth_cookie' ), 10, 5 );
@@ -272,7 +273,7 @@ class bStat
 	 *
 	 * @param $data data being tracked in this footstep
 	 */
-	public function db_insert( $data )
+	public function insert( $data )
 	{
 		$this->db()->insert( $data );
 	}//end db_insert

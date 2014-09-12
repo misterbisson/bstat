@@ -64,7 +64,7 @@ class bStat_Admin
 			'action'    => $footstep['action'],
 			'timestamp' => time(),
 			'session'   => bstat()->get_session(),
-			'info'      => $footstep['info'],
+			'info'      => isset( $footstep['info'] ) ? $footstep['info'] : '',
 		) );
 
 	}

@@ -266,10 +266,10 @@ if ( 'undefined' === typeof bstat ) {
 
 				ui.ajaxSettings.cache = false;
 				ui.panel.html( '<i class="fa fa-spinner fa-spin" />' );
-				ui.jqXHR.success( function() {
+				ui.jqXHR.done( function() {
 					ui.tab.data( 'loaded', true );
 				});
-				ui.jqXHR.error( function() {
+				ui.jqXHR.fail( function() {
 					ui.panel.html( 'There was a problem loading this data. Please try reloading the page.' );
 				});
 			}

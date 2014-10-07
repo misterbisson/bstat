@@ -51,6 +51,9 @@ class bStat
 		add_rewrite_tag( "%{$this->user_qv}%", '[0-9]+' );
 		add_rewrite_tag( "%{$this->redirect_qv}%", 'https?:.+' );
 
+		// support tracking from other plugins without a breaking dependency
+		add_action( 'bstat_insert', array( $this, 'insert' ) );
+
 		// set the identity cookie when WP sets the auth cookie
 		add_action( 'set_auth_cookie', array( $this, 'set_auth_cookie' ), 10, 5 );
 
@@ -264,6 +267,16 @@ class bStat
 		wp_safe_redirect( $redirect_url );
 		exit;
 	}//END cookie_and_redirect
+
+	/**
+	 * hooked to 'bstat_db_insert' action to track events triggered by calling this action.
+	 *
+	 * @param $data data being tracked in this footstep
+	 */
+	public function insert( $data )
+	{
+		$this->db()->insert( $data );
+	}//end db_insert
 
 	/**
 	 * hooked to 'set_auth_cookie' action to track when WP sets the auth

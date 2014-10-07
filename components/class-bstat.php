@@ -275,6 +275,24 @@ class bStat
 	 */
 	public function insert( $data )
 	{
+		// set up some default values
+		$default_data = array(
+			'blog'      => $this->get_blog(),
+			'user'      => $this->get_current_user_id(),
+			'x1'        => $this->get_variation( 'x1' ),
+			'x2'        => $this->get_variation( 'x2' ),
+			'x3'        => $this->get_variation( 'x3' ),
+			'x4'        => $this->get_variation( 'x4' ),
+			'x5'        => $this->get_variation( 'x5' ),
+			'x6'        => $this->get_variation( 'x6' ),
+			'x7'        => $this->get_variation( 'x7' ),
+			'timestamp' => time(),
+			'session'   => $this->get_session(),
+		);
+
+		// override values in $default_data with any from $data
+		$data = (object) array_merge( $default_data, (array) $data );
+
 		$this->db()->insert( $data );
 	}//end db_insert
 

@@ -1,9 +1,15 @@
 # === bStat ===
+
 Contributors: misterbisson
+
 Donate link: http://MaisonBisson.com/
+
 Tags: bSuite, webstats, activity stream, activity, stats, statistics
+
 Requires at least: 3.7
+
 Tested up to: 4.0
+
 Stable tag: trunk
 
 Log and analyze activity.
@@ -14,7 +20,11 @@ Log and analyze activity related to posts. Pageview, comment, and click activity
 
 Dependencies (only for viewing reports in the dashboard): [go-graphing](https://github.com/GigaOM/go-graphing) plugin.
 
-## = Fork me! =
+### = In the WordPress.org plugin repo =
+
+Here: https://wordpress.org/plugins/bstats/
+
+### = Fork me! =
 
 This plugin is on Github: https://github.com/misterbisson/bstat
 

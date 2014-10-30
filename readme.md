@@ -20,11 +20,11 @@ Log and analyze activity related to posts. Pageview, comment, and click activity
 
 Dependencies (only for viewing reports in the dashboard): [go-graphing](https://github.com/GigaOM/go-graphing) plugin.
 
-## = In the WordPress.org plugin repo =
+### = In the WordPress.org plugin repo =
 
 Here: https://wordpress.org/plugins/bstats/
 
-## = Fork me! =
+### = Fork me! =
 
 This plugin is on Github: https://github.com/misterbisson/bstat
 

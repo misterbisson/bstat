@@ -120,7 +120,7 @@ class bStat_Comments
 			'info'      => $comment->comment_ID . '|' . $comment->comment_author_email,
 		);
 
-		if ( is_array( $comment_meta['tests'] ) )
+		if ( isset( $comment_meta['tests'] ) && is_array( $comment_meta['tests'] ) )
 		{
 			$footstep = (object) array_replace(
 				(array) $footstep,

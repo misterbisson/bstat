@@ -36,7 +36,7 @@ To learn more about <a href="http://wordpress.org/extend/plugins/tags/bsuite">th
 
 ### = Build status =
 
-- Master: <a href="https://travis-ci.org/misterbisson/bstat"><img src="https://travis-ci.org/misterbisson/bstat.svg?branch=master" alt="build status" /></a>
+[Master build status at Travis-CI](https://travis-ci.org/misterbisson/bstat): [![Build Status](https://travis-ci.org/misterbisson/bstat.svg?branch=master)](https://travis-ci.org/misterbisson/bstat)
 
 ## == Installation ==
 

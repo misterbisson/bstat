@@ -24,8 +24,6 @@ Dependencies (only for viewing reports in the dashboard): [go-graphing](https://
 
 Here: https://wordpress.org/plugins/bstats/
 
-https://wordpress.org/plugins/bstats/
-
 ## = Fork me! =
 
 This plugin is on Github: https://github.com/misterbisson/bstat

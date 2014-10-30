@@ -82,6 +82,15 @@ class bStat_Report
 	}//end check_dependencies
 
 	/**
+	 * Are any dependencies missing?
+	 */
+	public function missing_dependencies()
+	{
+		$this->check_dependencies();
+		return $this->missing_dependencies;
+	}//end check_dependencies
+
+	/**
 	 * hooked to the admin_notices action to inject a message if depenencies are not activated
 	 */
 	public function admin_notices()

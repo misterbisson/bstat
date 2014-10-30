@@ -1,12 +1,18 @@
 <?php
 
+// The $_tests_dir includes the wp-config for the test instance, 
+// and the contents of: https://core.trac.wordpress.org/browser/trunk/tests/phpunit/includes
 $_tests_dir = getenv( 'WP_TESTS_DIR' );
 if ( ! $_tests_dir )
 {
 	$_tests_dir = '/tmp/wordpress-tests-lib';
 }
+
+// see source in https://core.trac.wordpress.org/browser/trunk/tests/phpunit/includes/functions.php
 require_once $_tests_dir . '/includes/functions.php';
 
+// because we're testing in an all-new WP install with mostly empty database
+// the plugins won't be active unless we include them manually
 function _manually_load_plugin()
 {
 	$directory_of_this_plugin = dirname( dirname( __FILE__ ) );
@@ -42,4 +48,3 @@ function _manually_load_plugin()
 tests_add_filter( 'muplugins_loaded', '_manually_load_plugin' );
 
 require $_tests_dir . '/includes/bootstrap.php';
-

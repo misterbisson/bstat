@@ -11,39 +11,48 @@ if ( ! $_tests_dir )
 // see source in https://core.trac.wordpress.org/browser/trunk/tests/phpunit/includes/functions.php
 require_once $_tests_dir . '/includes/functions.php';
 
+// load the plugins we need active in order to test this plugin
+// this runs before we load the main plugin so, well, so the dependencies are in place first
+function _manually_load_dependencies()
+{
+	// when testing locally, this will likely resolve to the plugins directory in your working WordPress install, not the test install elsewhere
+	$local_plugin_directory = dirname( dirname( dirname( __FILE__ ) ) );
+
+	// get the array specifying the dependencies
+	$dependencies = require __DIR__ . '/dependencies-array.php';
+
+	foreach ( $dependencies as $k => $dependency )
+	{
+
+		// first try to get the plugin from the "real" WP install
+		if ( is_dir( $local_plugin_directory . $k ) )
+		{
+			require $local_plugin_directory . $dependency['include'];
+			echo "Loaded $k\n";
+		}
+
+		// try again, but in the "test" install (this is mostly for Travis)
+		elseif ( is_dir( WP_PLUGIN_DIR .'/' . $k ) )
+		{
+			require WP_PLUGIN_DIR .'/' . $dependency['include'];
+			echo "Loaded $k\n";
+		}
+
+		// give up
+		else
+		{
+			echo "COULD NOT LOAD $k\n";
+		}
+	}
+}
+tests_add_filter( 'muplugins_loaded', '_manually_load_dependencies' );
+
 // because we're testing in an all-new WP install with mostly empty database
 // the plugins won't be active unless we include them manually
 function _manually_load_plugin()
 {
-	$directory_of_this_plugin = dirname( dirname( __FILE__ ) );
-
-	// the plugins we need active in order to test this plugin
-	$dependencies = array(
-		'go-ui/go-ui.php',
-		'go-graphing/go-graphing.php',
-		'go-timepicker/go-timepicker.php',
-	);
-
-	foreach ( $dependencies as $dependency )
-	{
-		if ( is_dir( dirname( $directory_of_this_plugin ) . dirname( $dependency ) ) )
-		{
-			require dirname( $directory_of_this_plugin ) . $dependency;
-			echo "Loaded $dependency\n";
-		}
-		elseif ( is_dir( WP_PLUGIN_DIR .'/' . dirname( $dependency ) ) )
-		{
-			require WP_PLUGIN_DIR .'/' . $dependency;
-			echo "Loaded $dependency\n";
-		}
-		else
-		{
-			echo "COULD NOT LOAD $dependency\n";
-		}
-	}
-
 	// Load our plugin
-	require $directory_of_this_plugin . '/bstat.php';
+	require dirname( dirname( __FILE__ ) ) . '/bstat.php';
 }
 tests_add_filter( 'muplugins_loaded', '_manually_load_plugin' );
 
